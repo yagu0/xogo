@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8"/>
+    <title>xogo</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1"/>
+    <link id="_common_css"
+          rel="stylesheet" href="./common.css"/>
+  </head>
+
+  <body>
+    <div id="gameInfos"></div>
+    <div id="boardContainer"></div>
+    <div id="gameStopped">
+      <h1>Game over</h1>
+      <button id="rematchBtn"
+              onClick="sendRematch()">
+        Rematch
+      </button>
+      <button class="cancel-something"
+              onClick="cancelRematch()">
+        Close
+      </button>
+    </div>
+    <div id="pendingRematch">
+      <div class="loader hour-glass"></div>
+      <button class="cancel-something"
+              onClick="cancelRematch()">
+        Cancel
+      </button>
+    </div>
+    <div id="newGame">
+      <button id="seekGame"
+              class="block-btn"
+              onClick="seekGame()">
+        Play!
+      </button>
+      <div id="ng-select">
+        <select id="selectVariant"></select>
+        <span id="playCustom"
+              onClick="showNewGameForm()">
+          Customize
+        </span>
+      </div>
+      <div id="ng-name">
+        <label for="myName">Name:</label>
+        <input id="myName"
+               type="text"
+               onChange="setName()"/>
+      </div>
+      <footer>
+        <a href="https://discord.gg/QC7Aa5WMYp">Discord</a>
+        /
+        <a href="https://github.com/yagu0/xogo">GitHub</a>
+      </footer>
+    </div>
+    <div id="pendingSeek">
+      <div class="loader hour-glass"></div>
+      <button class="cancel-something"
+              onClick="cancelSeek()">
+        Cancel
+      </button>
+    </div>
+    <div id="newGameForm">
+      <fieldset>
+        <label for="selectColor">Play as</label>
+        <select id="selectColor">
+          <option value=""></option>
+          <option value="w">Player 1</option>
+          <option value="b">Player 2</option>
+        </select>
+      </fieldset>
+      <fieldset id="gameOptions"></fieldset>
+      <button onClick="getGameLink()">Get link</button>
+      <button onClick="backToNormalSeek()">Cancel</button>
+      <div id="gameLink"></div>
+    </div>
+
+    <script src="/parameters.js"></script>
+    <script src="/variants.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,8 @@
+Dark Racing Kings ?
+Checkered-Teleport ?
+
+// TODO: playvisual enlightened test (pas forcément mode dark...)
+
+// rem ref to bordContainer --> rethink CSS design...
+
+// TODO: Otage, Emergo, Pacosako : fonction "buildPiece(arg1, arg2)" returns HTML element with 2 SVG or SVG + number

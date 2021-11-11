@@ -1,0 +1,16 @@
+const Params = {
+
+  // Usage on client:
+  http_server: "http://localhost:8000", //https://xogo.live
+  socket_server: "ws://localhost:8080", //wss://xogo.live
+
+  // Usage on (socket) server:
+  socket_port: 8080, //...
+
+  // Usage on both:
+  socket_path: "/ws",
+
+};
+
+// Next line for usage on server (Node.js)
+if (typeof window === 'undefined') module.exports = Params;

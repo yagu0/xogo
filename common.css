@@ -1,0 +1,225 @@
+body {
+  margin: 0;
+  text-align: center;
+  background-color: #f8f8f8;
+  font-family:  Arial, Verdana, Tahoma, sans-serif;
+}
+
+#gameInfos, #boardContainer, #gameStopped, #pendingSeek, #pendingRematch, #newGameForm {
+  display: none;
+}
+
+#gameStopped > h1 {
+  margin-bottom: 10px;
+}
+
+/* Sticky footer */
+footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+}
+
+button {
+  background-color: green;
+  border: none;
+  color: white;
+  padding: 10px 15px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 1em;
+  cursor: pointer;
+  border-radius: 20%;
+  margin: 15px 0;
+}
+
+button:hover {
+  background-color: darkblue;
+}
+
+button.block-btn {
+  display: block;
+  margin: 30px auto 20px auto;
+  font-size: 1.5em;
+  padding: 15px 32px;
+}
+
+#upLeftInfos {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+#upRightStop {
+  position: absolute;
+  left: calc(100% - 25px);
+  top: 0;
+}
+
+#upLeftInfos > img, #upRightStop > img {
+  width: 25px;
+  cursor: pointer;
+}
+
+#ng-select {
+  margin-bottom: 20px;
+}
+
+#ng-name {
+  /* TODO */
+}
+
+/* Options when starting custom game */
+.word {
+  cursor: pointer;
+  padding: 3px;
+}
+.highlight-word {
+  background-color: lightblue;
+}
+
+/* Game link div + custom game "button" */
+#gameLink span, #gameLink a, #playCustom {
+  text-decoration: underline;
+  color: blue;
+  cursor: pointer;
+}
+
+#selectVariant {
+  margin-right: 15px;
+}
+
+/* Board container (without reserves) */
+#chessboard {
+  position: absolute;
+  cursor: pointer;
+}
+
+/* Board container can be resized */
+.resizeable {
+  resize: both;
+  overflow: hidden;
+  min-width: 200px;
+  min-height: 200px;
+}
+
+piece {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-size: cover;
+  z-index: 2;
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* Drawing of the board */
+#chessboard_SVG {
+  width: 100%;
+  height: 100%;
+}
+
+.reserves {
+  position: absolute;
+  display: block;
+  cursor: pointer;
+}
+
+.reserve-cell {
+  position: relative;
+  display: block;
+  float: left;
+}
+
+/* Pieces' counter for reserves */
+.reserve-num {
+  color: red;
+  position: absolute;
+  display: block;
+  font-weight: bold;
+  /*z-index: 10;*/
+}
+
+/* Choices div after a promotion (TODO: do not hide board) */
+#choices, .choice {
+  position: absolute;
+  cursor: pointer;
+}
+
+/* https://theanam.github.io/css-only-loaders/ ("hour-glass") */
+:root{
+  --loader-width: 70px;
+  --loader-height: 70px;
+  --loader-color-primary: #141D58;
+  --loader-color-secondary: #EEE;
+  --line-width: 3px;
+  --animation-duration: 3s;
+  --loader-initial-scale: 0.1;
+}
+.loader,.loader:before,.loader:after{
+  box-sizing: border-box;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+@keyframes slide {
+  0% {
+    transform: translateY(0%);
+  }
+  25% {
+    transform: translateY(100%);
+  }
+  50% {
+    transform: translateY(100%);
+  }
+  75% {
+    transform: translateY(0%);
+  }
+  100% {
+    transform: translateY(0%);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  75% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loader.hour-glass {
+  position: relative;
+  width: var(--loader-width, 100px);
+  height: var(--loader-height, 100px);
+  background-color: var(--loader-color-primary, #00f);
+  -webkit-clip-path: polygon(0% 0%, 100% 0%, 50% 50%, 100% 100%, 0% 100%, 50% 50%);
+  clip-path: polygon(0% 0%, 100% 0%, 50% 50%, 100% 100%, 0% 100%, 50% 50%);
+  overflow: hidden;
+  animation: spin var(--animation-duration, 4s) infinite ease-in-out;
+  margin: 20px auto;
+}
+
+.hour-glass:before {
+  content: "";
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: var(--loader-width, 100px);
+  height: 50%;
+  background-color: var(--loader-color-secondary, #eee);
+  animation: slide var(--animation-duration, 4s) infinite ease-in-out;
+}
