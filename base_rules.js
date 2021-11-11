@@ -2067,6 +2067,13 @@ export default class ChessRules {
   }
 
   playReceivedMove(moves, callback) {
+    if (!document.hasFocus()) {
+      window.onfocus = () => {
+        window.onfocus = undefined;
+        setTimeout(() => this.playReceivedMove(moves, callback), 700);
+      };
+      return;
+    }
     const r =
       document.getElementById(this.containerId).getBoundingClientRect();
     const animateRec = i => {
