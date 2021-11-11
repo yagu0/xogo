@@ -13,7 +13,6 @@ A static web server like "php -S localhost:8000".
 Rename parameters.js.dist &rarr; parameters.js, and edit file. <br>
 ```npm i```
 
-```./start.sh``` <br>
-```php -S localhost:PORT``` (or other static server) <br>
+```./start.sh``` (edit 'php -S ...' line if necessary) <br>
 ... <br>
 ```./stop.sh```
