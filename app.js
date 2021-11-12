@@ -328,7 +328,7 @@ const afterPlay = (move) => { //pack into one moves array, then send
     start: move.start,
     end: move.end
   });
-  if (vr.turn != color) {
+  if (vr.turn != playerColor) {
     toggleTurnIndicator(false);
     send("newmove", { gid: gid, moves: curMoves, fen: vr.getFen() });
     curMoves = [];
@@ -354,13 +354,13 @@ const conditionalLoadCSS = (vname) => {
   }
 };
 
-let vr, color;
+let vr, playerColor;
 function initializeGame(obj) {
   const options = obj.options || {};
   import(`/variants/${obj.vname}/class.js`).then(module => {
     const Rules = module.default;
     conditionalLoadCSS(obj.vname);
-    color = (sid == obj.players[0].sid ? "w" : "b");
+    playerColor = (sid == obj.players[0].sid ? "w" : "b");
     // Init + remove potential extra DOM elements from a previous game:
     document.getElementById("boardContainer").innerHTML = `
       <div id="upLeftInfos"
@@ -376,13 +376,13 @@ function initializeGame(obj) {
       seed: obj.seed, //may be null if FEN already exists (running game)
       fen: obj.fen,
       element: "chessboard",
-      color: color,
+      color: playerColor,
       afterPlay: afterPlay,
       options: options
     });
     if (!obj.fen) {
       // Game creation
-      if (color == "w") send("setfen", {gid: obj.gid, fen: vr.getFen()});
+      if (playerColor == "w") send("setfen", {gid: obj.gid, fen: vr.getFen()});
       localStorage.setItem("gid", obj.gid);
     }
     const select = $.getElementById("selectVariant");
@@ -393,10 +393,10 @@ function initializeGame(obj) {
         break;
       }
     }
-    fillGameInfos(obj, color == "w" ? 1 : 0);
+    fillGameInfos(obj, playerColor == "w" ? 1 : 0);
     if (obj.randvar) toggleVisible("gameInfos");
     else toggleVisible("boardContainer");
-    toggleTurnIndicator(vr.turn == color);
+    toggleTurnIndicator(vr.turn == playerColor);
   });
 }
 
@@ -411,7 +411,11 @@ function confirmStopGame() {
 function toggleGameInfos() {
   if ($.getElementById("gameInfos").style.display == "none")
     toggleVisible("gameInfos");
-  else toggleVisible("boardContainer");
+  else {
+    toggleVisible("boardContainer");
+    // Quickfix for the "vanished piece" bug (move played while on game infos)
+    vr.setupPieces(); //TODO: understand better
+  }
 }
 
 $.body.addEventListener("keydown", (e) => {

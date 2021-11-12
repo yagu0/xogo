@@ -664,6 +664,7 @@ export default class ChessRules {
     }
     else this.g_pieces = ArrayFun.init(this.size.x, this.size.y, null);
     let container = document.getElementById(this.containerId);
+    if (!r) r = container.getBoundingClientRect();
     const pieceWidth = this.getPieceWidth(r.width);
     for (let i=0; i < this.size.x; i++) {
       for (let j=0; j < this.size.y; j++) {
@@ -2067,24 +2068,36 @@ export default class ChessRules {
   }
 
   playReceivedMove(moves, callback) {
+    const launchAnimation = () => {
+      const r =
+        document.getElementById(this.containerId).getBoundingClientRect();
+      const animateRec = i => {
+        this.animate(moves[i], () => {
+          this.playVisual(moves[i], r);
+          this.play(moves[i]);
+          if (i < moves.length - 1) setTimeout(() => animateRec(i+1), 300);
+          else callback();
+        });
+      };
+      animateRec(0);
+    };
+    const checkDisplayThenAnimate = () => {
+      if (boardContainer.style.display == "none") {
+        alert("New move! Let's go back to game...");
+        document.getElementById("gameInfos").style.display = "none";
+        boardContainer.style.display = "block";
+        setTimeout(launchAnimation, 700);
+      }
+      else launchAnimation(); //focused user!
+    };
+    let boardContainer = document.getElementById("boardContainer");
     if (!document.hasFocus()) {
       window.onfocus = () => {
         window.onfocus = undefined;
-        setTimeout(() => this.playReceivedMove(moves, callback), 700);
+        checkDisplayThenAnimate();
       };
-      return;
     }
-    const r =
-      document.getElementById(this.containerId).getBoundingClientRect();
-    const animateRec = i => {
-      this.animate(moves[i], () => {
-        this.playVisual(moves[i], r);
-        this.play(moves[i]);
-        if (i < moves.length - 1) setTimeout(() => animateRec(i+1), 300);
-        else callback();
-      });
-    };
-    animateRec(0);
+    else checkDisplayThenAnimate();
   }
 
 };
