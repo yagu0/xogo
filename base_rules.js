@@ -628,12 +628,12 @@ export default class ChessRules {
         const ii = (flipped ? this.size.x - 1 - i : i);
         const jj = (flipped ? this.size.y - 1 - j : j);
         let fillOpacity = '1';
-        if (this.options["dark"] && !this.enlightened[ii][jj])
-          fillOpacity = '0.5';
+        let classes = this.getSquareColorClass(ii, jj);
+        if (this.enlightened && !this.enlightened[ii][jj])
+          classes += " in-shadow";
         // NOTE: x / y reversed because coordinates system is reversed.
-        // TODO: CSS "wood" style, rect --> style --> background-image ?
-        board += `<rect style="fill-opacity:${fillOpacity};
-                               fill:#${this.getSquareColor(ii, jj)}"
+        board += `<rect
+          class="${classes}"
           id="${this.coordsToId([ii, jj])}"
           width="10"
           height="10"
@@ -646,8 +646,8 @@ export default class ChessRules {
   }
 
   // Generally light square bottom-right; TODO: user-defined colors at least
-  getSquareColor(i, j) {
-    return ((i+j) % 2 == 0 ? "f0d9b5": "b58863");
+  getSquareColorClass(i, j) {
+    return ((i+j) % 2 == 0 ? "light-square": "dark-square");
   }
 
   setupPieces(r) {
@@ -1172,7 +1172,7 @@ export default class ChessRules {
   }
 
   // All possible moves from selected square
-  getPotentialMovesFrom(sq) {
+  getPotentialMovesFrom(sq, color) {
     if (typeof sq[0] == "string") return this.getDropMovesFrom(sq);
     if (this.options["madrasi"] && this.isImmobilized(sq)) return [];
     const piece = this.getPiece(sq[0], sq[1]);

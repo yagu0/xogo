@@ -110,7 +110,7 @@ function prepareOptions(Rules) {
     if (check.defaut) optHtml += 'checked="true"';
     optHtml += '/>';
   }
-  if (Rules.Options.styles.length >= 1) optHtml += "<p>";
+  if (Rules.Options.styles.length >= 1) optHtml += '<p class="words">';
   for (let style of Rules.Options.styles) {
     optHtml += `
       <span class="word" onClick="toggleStyle(event, '${style}')">

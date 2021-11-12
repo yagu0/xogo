@@ -73,9 +73,14 @@ button.block-btn {
 }
 
 /* Options when starting custom game */
+p.words {
+  line-height: 0.9em;
+}
 .word {
   cursor: pointer;
   padding: 3px;
+  display: inline-block;
+  margin: 2px;
 }
 .highlight-word {
   background-color: lightblue;
@@ -120,6 +125,16 @@ piece {
 #chessboard_SVG {
   width: 100%;
   height: 100%;
+}
+
+.dark-square {
+  fill: #b58863;
+}
+.light-square {
+  fill: #f0d9b5;
+}
+.in-shadow {
+  filter: brightness(50%);
 }
 
 .reserves {
