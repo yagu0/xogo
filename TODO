@@ -6,3 +6,7 @@ Checkered-Teleport ?
 // rem ref to bordContainer --> rethink CSS design...
 
 // TODO: Otage, Emergo, Pacosako : fonction "buildPiece(arg1, arg2)" returns HTML element with 2 SVG or SVG + number
+
+Bug Chrome on Android when not focused: doesn't see opponent's move.
+(https://developer.chrome.com/docs/devtools/remote-debugging/ ...not working :/)
+(And minor display bug: if opponent plays while we are watching game infos, need page reload - why?)
