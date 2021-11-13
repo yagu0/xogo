@@ -482,7 +482,7 @@ export default class ChessRules {
       for (let y=0; y<this.size.y; y++) {
         if (this.enlightened[x][y] && !newEnlightened[x][y]) {
           let elt = document.getElementById(this.coordsToId([x, y]));
-          elt.style.fillOpacity = "0.5";
+          elt.classList.add("in-shadow");
           if (this.g_pieces[x][y]) {
             this.g_pieces[x][y].remove();
             this.g_pieces[x][y] = null;
@@ -490,7 +490,7 @@ export default class ChessRules {
         }
         else if (!this.enlightened[x][y] && newEnlightened[x][y]) {
           let elt = document.getElementById(this.coordsToId([x, y]));
-          elt.style.fillOpacity = "1";
+          elt.classList.remove("in-shadow");
           if (this.board[x][y] != "") {
             const piece = this.getPiece(x, y);
             const color = this.getColor(x, y);
@@ -627,7 +627,6 @@ export default class ChessRules {
       for (let j=0; j < sizeY; j++) {
         const ii = (flipped ? this.size.x - 1 - i : i);
         const jj = (flipped ? this.size.y - 1 - j : j);
-        let fillOpacity = '1';
         let classes = this.getSquareColorClass(ii, jj);
         if (this.enlightened && !this.enlightened[ii][jj])
           classes += " in-shadow";
