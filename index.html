@@ -7,76 +7,104 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1"/>
     <link id="_common_css"
-          rel="stylesheet" href="./common.css"/>
+          rel="stylesheet" href="/common.css"/>
   </head>
 
   <body>
-    <div id="gameInfos"></div>
-    <div id="boardContainer"></div>
-    <div id="gameStopped">
-      <h1>Game over</h1>
-      <button id="rematchBtn"
-              onClick="sendRematch()">
-        Rematch
-      </button>
-      <button class="cancel-something"
-              onClick="cancelRematch()">
-        Close
-      </button>
-    </div>
-    <div id="pendingRematch">
-      <div class="loader hour-glass"></div>
-      <button class="cancel-something"
-              onClick="cancelRematch()">
-        Cancel
-      </button>
-    </div>
-    <div id="newGame">
-      <button id="seekGame"
-              class="block-btn"
-              onClick="seekGame()">
-        Play!
-      </button>
-      <div id="ng-select">
-        <select id="selectVariant"></select>
-        <span id="playCustom"
-              onClick="showNewGameForm()">
-          Customize
-        </span>
+    <main>
+      <div id="gameInfos"></div>
+      <div id="boardContainer"></div>
+      <div id="gameStopped">
+        <h1>Game over</h1>
+        <div class="btn-wrap">
+          <button id="rematchBtn"
+                onClick="sendRematch()">
+            Rematch
+          </button>
+          <button class="cancel-something"
+                onClick="cancelRematch()">
+            Close
+          </button>
+        </div>
       </div>
-      <div id="ng-name">
-        <label for="myName">Name:</label>
-        <input id="myName"
-               type="text"
-               onChange="setName()"/>
+      <div id="pendingRematch">
+        <div class="loader hour-glass"></div>
+        <div class="btn-wrap">
+          <button class="cancel-something"
+                  onClick="cancelRematch()">
+            Cancel
+          </button>
+        </div>
       </div>
-      <footer>
-        <a href="https://discord.gg/QC7Aa5WMYp">Discord</a>
-        /
-        <a href="https://github.com/yagu0/xogo">GitHub</a>
-      </footer>
-    </div>
-    <div id="pendingSeek">
-      <div class="loader hour-glass"></div>
-      <button class="cancel-something"
-              onClick="cancelSeek()">
-        Cancel
-      </button>
-    </div>
-    <div id="newGameForm">
-      <fieldset>
-        <label for="selectColor">Play as</label>
-        <select id="selectColor">
-          <option value=""></option>
-          <option value="w">Player 1</option>
-          <option value="b">Player 2</option>
-        </select>
-      </fieldset>
-      <fieldset id="gameOptions"></fieldset>
-      <button onClick="getGameLink()">Get link</button>
-      <button onClick="backToNormalSeek()">Cancel</button>
-      <div id="gameLink"></div>
-    </div>
+      <div id="newGame">
+        <button id="seekGame"
+                class="block-btn"
+                onClick="seekGame()">
+          Play!
+        </button>
+        <div id="ng-select">
+          <div class="select">
+            <select id="selectVariant"></select>
+            <span class="focus"></span>
+          </div>
+          <div class="btn-wrap">
+            <button id="playCustom"
+                  onClick="showNewGameForm()">
+              Customize
+            </button>
+          </div>
+        </div>
+        <div id="ng-name" class="form-field">
+          <div class="form-field__control">
+            <label for="myName" class="form-field__label">Name</label>
+            <input id="myName"
+                   type="text"
+                   required
+                   class="form-field__input"
+                   onChange="setName()"/>
+          </div>
+        </div>
+        <div id="footer">
+          <p>
+            <a class="left-link" href="https://discord.gg/QC7Aa5WMYp">
+              <img src="/assets/discord.svg"/>
+              Discord
+            </a>
+            <a class="right-link" href="https://github.com/yagu0/xogo">
+              GitHub
+              <img src="/assets/github.svg"/>
+            </a>
+          </p>
+        </div>
+      </div>
+      <div id="pendingSeek">
+        <div class="loader hour-glass"></div>
+        <div class="btn-wrap">
+          <button class="cancel-something"
+                  onClick="cancelSeek()">
+            Cancel
+          </button>
+        </div>
+      </div>
+      <div id="newGameForm">
+        <fieldset>
+          <div class="select">
+            <select id="selectColor">
+              <option value="">Any color</option>
+              <option value="w">Player 1</option>
+              <option value="b">Player 2</option>
+            </select>
+            <span class="focus"></span>
+          </div>
+        </fieldset>
+        <fieldset id="gameOptions"></fieldset>
+        <div class="btn-wrap">
+          <button onClick="getGameLink()">Get link</button>
+          <button onClick="backToNormalSeek()">Cancel</button>
+        </div>
+        <div id="gameLink"></div>
+      </div>
+    </main>
 
     <script src="/parameters.js"></script>
     <script src="/variants.js"></script>

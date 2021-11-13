@@ -30,6 +30,22 @@ if (!localStorage.getItem("name"))
 const sid = localStorage.getItem("sid");
 $.getElementById("myName").value = localStorage.getItem("name");
 
+// "Material" input field name
+let inputName = document.getElementById("myName");
+let formField = document.getElementById("ng-name");
+const setActive = (active) => {
+  if (active) formField.classList.add("form-field--is-active");
+  else {
+    formField.classList.remove("form-field--is-active");
+    inputName.value === "" ?
+      formField.classList.remove("form-field--is-filled") :
+       formField.classList.add("form-field--is-filled");
+  }
+};
+inputName.onblur = () => setActive(false);
+inputName.onfocus = () => setActive(true);
+inputName.focus();
+
 /////////
 // Utils
 
@@ -39,9 +55,14 @@ function setName() {
 
 // Turn a "tab" on, and "close" all others
 function toggleVisible(element) {
-  for (elt of document.querySelectorAll('body > div')) {
+  for (elt of document.querySelectorAll('main > div')) {
     if (elt.id != element) elt.style.display = "none";
     else elt.style.display = "block";
+  }
+  if (element.id == "newGame") {
+    // Workaround "superposed texts" effect
+    inputName.focus();
+    inputName.blur();
   }
 }
 
@@ -89,47 +110,64 @@ function toggleStyle(e, word) {
 let options;
 function prepareOptions(Rules) {
   options = {};
-  let optHtml = "";
-  for (let select of Rules.Options.select) {
-    optHtml += `
-      <label for="var_${select.variable}">${select.label}</label>
-      <select id="var_${select.variable}" data-numeric="1">`;
-    for (option of select.options) {
-      const defaut = option.value == select.defaut;
-      optHtml += `<option value="${option.value}"`;
-      if (defaut) optHtml += 'selected="true"';
-      optHtml += `>${option.label}</option>`;
+  let optHtml = Rules.Options.select.map(select => { return `
+      <div class="option-select">
+        <label for="var_${select.variable}">${select.label}</label>
+        <div class="select">
+          <select id="var_${select.variable}" data-numeric="1">` +
+          select.options.map(option => { return `
+            <option
+              value="${option.value}"
+              ${option.value == select.defaut ? " selected" : ""}
+            >
+              ${option.label}
+            </option>`;
+          }).join("") + `
+          </select>
+          <span class="focus"></span>
+        </div>
+      </div>`;
+  }).join("");
+  optHtml += Rules.Options.check.map(check => {
+    return `
+      <div class="option-check">
+        <label class="checkbox">
+          <input id="var_${check.variable}"
+                 type="checkbox"${check.defaut ? " checked" : ""}/>
+          <span class="spacer"></span>
+          <span>${check.label}</span>
+        </label>
+      </div>`;
+  }).join("");
+  if (Rules.Options.styles.length >= 1) {
+    optHtml += '<div class="words">';
+    let i = 0;
+    const stylesLength = Rules.Options.styles.length;
+    while (i < stylesLength) {
+      optHtml += '<div class="row">';
+      for (let j=i; j<i+4; j++) {
+        if (j == stylesLength) break;
+        const style = Rules.Options.styles[j];
+        optHtml +=
+          `<span onClick="toggleStyle(event, '${style}')">${style}</span>`;
+      }
+      optHtml += "</div>";
+      i += 4;
     }
-    optHtml += '</select>';
+    optHtml += "</div>";
   }
-  for (let check of Rules.Options.check) {
-    optHtml += `
-      <label for="var_${check.variable}">${check.label}</label>
-      <input id="var_${check.variable}"
-             type="checkbox"`;
-    if (check.defaut) optHtml += 'checked="true"';
-    optHtml += '/>';
-  }
-  if (Rules.Options.styles.length >= 1) optHtml += '<p class="words">';
-  for (let style of Rules.Options.styles) {
-    optHtml += `
-      <span class="word" onClick="toggleStyle(event, '${style}')">
-        ${style}
-      </span>`;
-  }
-  if (Rules.Options.styles.length >= 1) optHtml += "</p>";
   $.getElementById("gameOptions").innerHTML = optHtml;
 }
 
 function getGameLink() {
   const vname = $.getElementById("selectVariant").value;
   const color = $.getElementById("selectColor").value;
-  for (const select of $.querySelectorAll("#gameOptions > select")) {
+  for (const select of $.querySelectorAll("#gameOptions select")) {
     let value = select.value;
     if (select.attributes["data-numeric"]) value = parseInt(value, 10);
     options[ select.id.split("_")[1] ] = value;
   }
-  for (const check of $.querySelectorAll("#gameOptions > input"))
+  for (const check of $.querySelectorAll("#gameOptions input"))
     options[ check.id.split("_")[1] ] = check.checked;
   send("creategame", {
     vname: vname,
@@ -143,28 +181,36 @@ const fillGameInfos = (gameInfos, oppIndex) => {
   .then(res => res.text())
   .then(txt => {
     let htmlContent = `
-      <p>
-        <strong>${gameInfos.vdisp}</strong>
-        <span>vs. ${gameInfos.players[oppIndex].name}</span>
-      </p>
-      <hr>
-      <p>`;
-    htmlContent +=
-      Object.entries(gameInfos.options).map(opt => {
-        return (
-          '<span class="option">' +
-          (opt[1] === true ? opt[0] : `${opt[0]}:${opt[1]}`) +
-          '</span>'
-        );
-      })
-      .join(", ");
+      <div class="players-info">
+        <p>
+          <span class="bold">${gameInfos.vdisp}</span>
+          <span>vs. ${gameInfos.players[oppIndex].name}</span>
+        </p>
+      </div>`;
+    const options = Object.entries(gameInfos.options);
+    if (options.length > 0) {
+      htmlContent += '<div class="options-info">';
+      let i = 0;
+      while (i < options.length) {
+        htmlContent += '<div class="row">';
+        for (let j=i; j<i+4; j++) {
+          if (j == options.length) break;
+          const opt = options[j];
+          htmlContent +=
+            '<span class="option">' +
+            (opt[1] === true ? opt[0] : `${opt[0]}:${opt[1]}`) + " " +
+            '</span>';
+        }
+        htmlContent += "</div>";
+        i += 4;
+      }
+      htmlContent += "</div>";
+    }
     htmlContent += `
-      </p>
-      <hr>
-      <div class="rules">
-        ${txt}
-      </div>
-      <button onClick="toggleGameInfos()">Back to game</button>`;
+      <div class="rules">${txt}</div>
+      <div class="btn-wrap">
+        <button onClick="toggleGameInfos()">Back to game</button>
+      </div>`;
     $.getElementById("gameInfos").innerHTML = htmlContent;
   });
 };

@@ -1,29 +1,125 @@
+/* CSS reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+}
+
 body {
   margin: 0;
-  text-align: center;
+  /*text-align: center;*/
   background-color: #f8f8f8;
   font-family:  Arial, Verdana, Tahoma, sans-serif;
 }
 
-#gameInfos, #boardContainer, #gameStopped, #pendingSeek, #pendingRematch, #newGameForm {
+main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  font-size: 1.25rem;
+}
+
+main > div {
+  margin-top: 25vh;
+  min-height: 500px;
+  min-width: 320px;
+  /*max-width: 800px;*/ /*unnecessary*/
+}
+
+@media (max-height: 800px) {
+  main > div {
+    margin-top: 30px;
+  }
+}
+
+#boardContainer {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+  display: block;
+  margin: 10px 0;
+}
+
+#gameInfos,
+#boardContainer,
+#gameStopped,
+#pendingSeek,
+#pendingRematch,
+#newGameForm {
   display: none;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+#gameInfos > .players-info {
+  text-align: center;
+}
+
+#gameInfos > .options-info {
+  text-align: center;
+  color: #757575;
+  margin-bottom: 15px;
+}
+
+#gameInfos > div {
+  margin: 10px 0;
+}
+
+#gameInfos > .rules {
+  color: #732E6C;
+}
+
+#gameInfos > .rules > p,
+#gameInfos > .rules > ul,
+#gameInfos > .rules > ol {
+  margin: 10px 0;
 }
 
 #gameStopped > h1 {
   margin-bottom: 10px;
 }
 
-/* Sticky footer */
-footer {
+/* "Sticky footer" */
+#footer {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   height: 50px;
+  text-align: center;
+}
+
+a.left-link {
+  margin-right: 25px;
+}
+a.right-link {
+  margin-left: 25px;
+}
+
+#footer a > img {
+  height: 1.2em;
+  display: inline-block;
+  transform: translateY(3px);
 }
 
 button {
-  background-color: green;
+  background-color: #757575;
   border: none;
   color: white;
   padding: 10px 15px;
@@ -36,14 +132,15 @@ button {
   margin: 15px 0;
 }
 
-button:hover {
-  background-color: darkblue;
+button:hover, button.block-btn:hover {
+  background-color: #b11adc;
 }
 
 button.block-btn {
   display: block;
-  margin: 30px auto 20px auto;
-  font-size: 1.5em;
+  background-color: #01786F;
+  margin: 0 auto 20px auto;
+  font-size: 2rem;
   padding: 15px 32px;
 }
 
@@ -58,25 +155,32 @@ button.block-btn {
   left: calc(100% - 25px);
   top: 0;
 }
-
 #upLeftInfos > img, #upRightStop > img {
   width: 25px;
   cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  #upRightStop {
+    left: calc(100% - 35px);
+  }
+  #upLeftInfos > img, #upRightStop > img {
+    width: 35px;
+  }
 }
 
 #ng-select {
   margin-bottom: 20px;
 }
 
-#ng-name {
-  /* TODO */
-}
-
 /* Options when starting custom game */
-p.words {
+.words {
   line-height: 0.9em;
 }
-.word {
+.words > .row {
+  margin: 0;
+}
+.words span {
   cursor: pointer;
   padding: 3px;
   display: inline-block;
@@ -86,15 +190,41 @@ p.words {
   background-color: lightblue;
 }
 
+#gameOptions {
+  text-align: center;
+}
+
+.option-select, .option-check {
+  margin: 15px 0;
+}
+
+.btn-wrap {
+  text-align: center;
+}
+
+#gameLink {
+  width: inherit;
+  text-align: center;
+}
+
+a {
+  text-decoration: none;
+}
+
 /* Game link div + custom game "button" */
-#gameLink span, #gameLink a, #playCustom {
-  text-decoration: underline;
-  color: blue;
+#gameLink span, #gameLink a, #footer a {
+  padding-bottom: 1px;
+  border-bottom: 1px dotted darkgrey;
+  color: darkred;
+}
+
+#gameLink span {
+  display: inline-box;
   cursor: pointer;
 }
 
-#selectVariant {
-  margin-right: 15px;
+#gameLink > p {
+  margin: 10px 0;
 }
 
 /* Board container (without reserves) */
@@ -164,11 +294,181 @@ piece {
   cursor: pointer;
 }
 
+
+/* https://moderncss.dev/custom-select-styles-with-pure-css/ */
+:root {
+  --select-border: #777;
+  --select-focus: #b11adc;
+  --select-arrow: var(--select-border);
+}
+
+select {
+  appearance: none;
+  background-color: transparent;
+  border: none;
+  padding: 0 1em 0 0;
+  margin: 0;
+  width: 100%;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: inherit;
+  line-height: inherit;
+  z-index: 1;
+  outline: none;
+}
+
+.select {
+  display: grid;
+  grid-template-areas: "select";
+  align-items: center;
+  position: relative;
+  min-width: 15ch;
+  max-width: 30ch;
+  border: 1px solid var(--select-border);
+  border-radius: 0.25em;
+  padding: 0.25em 0.5em;
+  font-size: 1.25rem;
+  cursor: pointer;
+  line-height: 1.1;
+  background-color: #fff;
+  background-image: linear-gradient(to top, #f9f9f9, #fff 33%);
+  width: 100%;
+  margin: auto;
+}
+
+select, .select::after {
+  grid-area: select;
+}
+
+.select::after {
+  content: "";
+  justify-self: end;
+  width: 0.8em;
+  height: 0.5em;
+  background-color: var(--select-arrow);
+  clip-path: polygon(100% 0%, 0 0%, 50% 100%);
+}
+
+select:focus + .focus {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  border: 2px solid var(--select-focus);
+  border-radius: inherit;
+}
+
+
+/* https://auralinna.blog/post/2018/how-to-create-material-design-like-form-text-fields/ */
+.form-field {
+  display: block;
+  margin-bottom: 16px;
+}
+.form-field--is-active .form-field__control::after {
+  border-bottom: 2px solid #b11adc;
+  transform: scaleX(150);
+}
+.form-field--is-active .form-field__label {
+  color: #b11adc;
+  font-size: 0.75rem;
+  transform: translateY(-14px);
+}
+.form-field--is-filled .form-field__label {
+  font-size: 0.75rem;
+  transform: translateY(-14px);
+}
+.form-field__label {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: normal;
+  left: 0;
+  margin: 0;
+  padding: 18px 12px 0;
+  position: absolute;
+  top: 0;
+  transition: all 0.4s;
+  width: 100%;
+}
+.form-field__control {
+  background: #eee;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+.form-field__control::after {
+  border-bottom: 2px solid #b11adc;
+  bottom: 0;
+  content: "";
+  display: block;
+  left: 0;
+  margin: 0 auto;
+  position: absolute;
+  right: 0;
+  transform: scaleX(0);
+  transition: all 0.4s;
+  width: 1%;
+}
+.form-field__input {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #999;
+  color: #333;
+  display: block;
+  font-size: 1.2rem;
+  margin-top: 24px;
+  outline: 0;
+  padding: 0 12px 10px 12px;
+  width: 100%;
+}
+
+
+/* https://dev.to/kallmanation/styling-a-checkbox-with-only-css-3o3p */
+label.checkbox > input[type="checkbox"] {
+  display: none;
+}
+label.checkbox > input[type="checkbox"] + *::before {
+  content: "";
+  display: inline-block;
+  vertical-align: bottom;
+  margin-bottom: 3px;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 10%;
+  border-style: solid;
+  border-width: 0.1rem;
+  border-color: gray;
+}
+
+label.checkbox > input[type="checkbox"]:checked + *::before {
+  content: "✓";
+  font-size: 1.1rem;
+  /*padding:10px;*/
+  color: white;
+  text-align: center;
+  background: teal;
+  border-color: teal;
+}
+label.checkbox > input[type="checkbox"]:checked + * {
+  color: teal;
+}
+
+/*label.checkbox {
+  color: teal;
+}*/
+label.checkbox > span.spacer {
+  width: 10px;
+  content: " ";
+}
+
+
 /* https://theanam.github.io/css-only-loaders/ ("hour-glass") */
 :root{
   --loader-width: 70px;
   --loader-height: 70px;
-  --loader-color-primary: #141D58;
+  --loader-color-primary: #01786F;
   --loader-color-secondary: #EEE;
   --line-width: 3px;
   --animation-duration: 3s;
