@@ -253,7 +253,7 @@ const messageCenter = (msg) => {
   switch (obj.code) {
     // Start new game:
     case "gamestart": {
-      if (!$.hasFocus()) notifyMe("game");
+      if (document.hidden) notifyMe("game");
       gid = obj.gid;
       initializeGame(obj);
       break;
@@ -285,7 +285,7 @@ const messageCenter = (msg) => {
       break;
     // Receive opponent's move:
     case "newmove":
-      if (!$.hasFocus()) notifyMe("move");
+      if (document.hidden) notifyMe("move");
       vr.playReceivedMove(obj.moves, () => {
         if (vr.getCurrentScore(obj.moves[obj.moves.length-1]) != "*") {
           localStorage.removeItem("gid");
@@ -360,7 +360,7 @@ function notifyMe(code) {
   }
   if (Notification.permission === 'granted') doNotify();
   else if (Notification.permission !== 'denied') {
-    Notification.requestPermission().then((permission) => {
+    Notification.requestPermission().then(permission => {
       if (permission === 'granted') doNotify();
     });
   }

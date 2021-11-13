@@ -2090,9 +2090,9 @@ export default class ChessRules {
       else launchAnimation(); //focused user!
     };
     let boardContainer = document.getElementById("boardContainer");
-    if (!document.hasFocus()) {
-      window.onfocus = () => {
-        window.onfocus = undefined;
+    if (document.hidden) {
+      document.onvisibilitychange = () => {
+        document.onvisibilitychange = undefined;
         checkDisplayThenAnimate();
       };
     }
