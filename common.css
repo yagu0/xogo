@@ -11,11 +11,17 @@
   vertical-align: baseline;
 }
 
+html {
+  height: 100%;
+}
+
 body {
+  height: 100%;
   margin: 0;
-  /*text-align: center;*/
   background-color: #f8f8f8;
   font-family:  Arial, Verdana, Tahoma, sans-serif;
+  /* https://stackoverflow.com/a/24392249/12660887 */
+  position: relative;
 }
 
 main {
