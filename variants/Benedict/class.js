@@ -5,10 +5,10 @@ export default class BenedictRules extends ChessRules {
 
   static get Options() {
     return {
-      select: ChessRules.Options.select,
+      select: C.Options.select,
       check: [],
       styles: (
-        ChessRules.Options.styles.filter(s => {
+        C.Options.styles.filter(s => {
           return (
             ["balance", "cylinder", "dark", "doublemove", "progressive", "zen"]
             .includes(s)
@@ -38,7 +38,7 @@ export default class BenedictRules extends ChessRules {
   // follow steps from x,y until something is met.
   findAttacks([x, y]) {
     const [color, piece] = [this.getColor(x, y), this.getPiece(x, y)];
-    const oppCol = ChessRules.GetOppCol(color);
+    const oppCol = C.GetOppCol(color);
     let squares = {};
     const specs = this.pieces(color)[piece];
     const steps = specs.attack || specs.steps;
@@ -51,7 +51,7 @@ export default class BenedictRules extends ChessRules {
         j = this.computeY(j + step[1]);
       }
       if (this.onBoard(i, j) && this.getColor(i, j) == oppCol)
-        squares[ChessRules.CoordsToSquare({x: i, y: j})] = true;
+        squares[C.CoordsToSquare({x: i, y: j})] = true;
     }
     return Object.keys(squares);
   }
@@ -60,7 +60,7 @@ export default class BenedictRules extends ChessRules {
     if (moves.length == 0) return moves;
     const [x, y] = [moves[0].end.x, moves[0].end.y];
     const color = this.getColor(moves[0].start.x, moves[0].start.y);
-    const oppCol = ChessRules.GetOppCol(color);
+    const oppCol = C.GetOppCol(color);
     moves = super.postProcessPotentialMoves(moves);
     moves.forEach(m => {
       this.playOnBoard(m);
@@ -68,13 +68,13 @@ export default class BenedictRules extends ChessRules {
       if (this.options["zen"]) {
         let endSquares = {};
         super.getZenCaptures(x, y).forEach(c => {
-          endSquares[ChessRules.CoordsToSquare(c.end)] = true;
+          endSquares[C.CoordsToSquare(c.end)] = true;
         });
         attacks = Object.keys(endSquares);
       }
       else attacks = this.findAttacks([m.end.x, m.end.y])
       this.undoOnBoard(m);
-      attacks.map(ChessRules.SquareToCoords).forEach(a => {
+      attacks.map(C.SquareToCoords).forEach(a => {
         const p = this.getPiece(a.x, a.y);
         m.appear.push(new PiPo({x: a.x, y: a.y, c: color, p: p}));
         m.vanish.push(new PiPo({x: a.x, y: a.y, c: oppCol, p: p}));
@@ -86,7 +86,7 @@ export default class BenedictRules extends ChessRules {
   // Moves cannot flip our king's color, so (almost) all are valid
   filterValid(moves) {
     if (this.options["balance"] && [1, 3].includes(this.movesCount))
-      return moves.filter(m => m.vanish.every(v => v.p != ChessRules.KING));
+      return moves.filter(m => m.vanish.every(v => v.p != C.KING));
     return moves;
   }
 

@@ -95,8 +95,8 @@ function showNewGameForm() {
     $.getElementById("selectColor").selectedIndex = 0;
     toggleVisible("newGameForm");
     import(`/variants/${vname}/class.js`).then(module => {
-      const Rules = module.default;
-      prepareOptions(Rules);
+      window.V = module.default;
+      prepareOptions();
     });
   }
 }
@@ -108,9 +108,9 @@ function toggleStyle(e, word) {
 }
 
 let options;
-function prepareOptions(Rules) {
+function prepareOptions() {
   options = {};
-  let optHtml = Rules.Options.select.map(select => { return `
+  let optHtml = V.Options.select.map(select => { return `
       <div class="option-select">
         <label for="var_${select.variable}">${select.label}</label>
         <div class="select">
@@ -128,7 +128,7 @@ function prepareOptions(Rules) {
         </div>
       </div>`;
   }).join("");
-  optHtml += Rules.Options.check.map(check => {
+  optHtml += V.Options.check.map(check => {
     return `
       <div class="option-check">
         <label class="checkbox">
@@ -139,15 +139,15 @@ function prepareOptions(Rules) {
         </label>
       </div>`;
   }).join("");
-  if (Rules.Options.styles.length >= 1) {
+  if (V.Options.styles.length >= 1) {
     optHtml += '<div class="words">';
     let i = 0;
-    const stylesLength = Rules.Options.styles.length;
+    const stylesLength = V.Options.styles.length;
     while (i < stylesLength) {
       optHtml += '<div class="row">';
       for (let j=i; j<i+4; j++) {
         if (j == stylesLength) break;
-        const style = Rules.Options.styles[j];
+        const style = V.Options.styles[j];
         optHtml +=
           `<span onClick="toggleStyle(event, '${style}')">${style}</span>`;
       }
@@ -165,10 +165,11 @@ function getGameLink() {
   for (const select of $.querySelectorAll("#gameOptions select")) {
     let value = select.value;
     if (select.attributes["data-numeric"]) value = parseInt(value, 10);
-    options[ select.id.split("_")[1] ] = value;
+    if (value) options[ select.id.split("_")[1] ] = value;
   }
-  for (const check of $.querySelectorAll("#gameOptions input"))
-    options[ check.id.split("_")[1] ] = check.checked;
+  for (const check of $.querySelectorAll("#gameOptions input")) {
+    if (check.checked) options[ check.id.split("_")[1] ] = check.checked;
+  }
   send("creategame", {
     vname: vname,
     player: { sid: sid, name: localStorage.getItem("name"), color: color },
@@ -404,21 +405,31 @@ let vr, playerColor;
 function initializeGame(obj) {
   const options = obj.options || {};
   import(`/variants/${obj.vname}/class.js`).then(module => {
-    const Rules = module.default;
+    window.V = module.default;
     conditionalLoadCSS(obj.vname);
     playerColor = (sid == obj.players[0].sid ? "w" : "b");
     // Init + remove potential extra DOM elements from a previous game:
     document.getElementById("boardContainer").innerHTML = `
       <div id="upLeftInfos"
            onClick="toggleGameInfos()">
-        <img src="/assets/icon_infos.svg"/>
+        <svg version="1.1"
+             viewBox="0.5 0.5 100 100">
+          <g>
+            <path d="M50.5,0.5c-27.614,0-50,22.386-50,50c0,27.614,22.386,50,50,50s50-22.386,50-50C100.5,22.886,78.114,0.5,50.5,0.5z M60.5,85.5h-20v-40h20V85.5z M50.5,35.5c-5.523,0-10-4.477-10-10s4.477-10,10-10c5.522,0,10,4.477,10,10S56.022,35.5,50.5,35.5z"/>
+          </g>
+        </svg>
       </div>
       <div id="upRightStop"
            onClick="confirmStopGame()">
-        <img src="/assets/icon_close.svg"/>
+        <svg version="1.1"
+             viewBox="0 0 533.333 533.333">
+          <g>
+            <path d="M528.468,428.468c-0.002-0.002-0.004-0.004-0.006-0.005L366.667,266.666l161.795-161.797 c0.002-0.002,0.004-0.003,0.006-0.005c1.741-1.742,3.001-3.778,3.809-5.946c2.211-5.925,0.95-12.855-3.814-17.62l-76.431-76.43 c-4.765-4.763-11.694-6.024-17.619-3.812c-2.167,0.807-4.203,2.066-5.946,3.807c0,0.002-0.002,0.003-0.005,0.005L266.667,166.666 L104.87,4.869c-0.002-0.002-0.003-0.003-0.005-0.005c-1.743-1.74-3.778-3-5.945-3.807C92.993-1.156,86.065,0.105,81.3,4.869 L4.869,81.3c-4.764,4.765-6.024,11.694-3.813,17.619c0.808,2.167,2.067,4.205,3.808,5.946c0.002,0.001,0.003,0.003,0.005,0.005 l161.797,161.796L4.869,428.464c-0.001,0.002-0.003,0.003-0.004,0.005c-1.741,1.742-3,3.778-3.809,5.945 c-2.212,5.924-0.951,12.854,3.813,17.619L81.3,528.464c4.766,4.765,11.694,6.025,17.62,3.813c2.167-0.809,4.203-2.068,5.946-3.809 c0.001-0.002,0.003-0.003,0.005-0.005l161.796-161.797l161.795,161.797c0.003,0.001,0.005,0.003,0.007,0.004 c1.743,1.741,3.778,3.001,5.944,3.81c5.927,2.212,12.856,0.951,17.619-3.813l76.43-76.432c4.766-4.765,6.026-11.696,3.815-17.62 C531.469,432.246,530.209,430.21,528.468,428.468z"/>
+          </g>
+        </svg>
       </div>
       <div class="resizeable" id="chessboard"></div>`;
-    vr = new Rules({
+    vr = new V({
       seed: obj.seed, //may be null if FEN already exists (running game)
       fen: obj.fen,
       element: "chessboard",

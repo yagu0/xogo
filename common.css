@@ -34,9 +34,15 @@ main > div {
   /*max-width: 800px;*/ /*unnecessary*/
 }
 
-@media (max-height: 800px) {
+@media(max-height: 800px) {
   main > div {
     margin-top: 30px;
+  }
+}
+
+@media(max-width: 767px) {
+  main > div {
+    padding: 0 10px;
   }
 }
 
@@ -155,17 +161,20 @@ button.block-btn {
   left: calc(100% - 25px);
   top: 0;
 }
-#upLeftInfos > img, #upRightStop > img {
+#upLeftInfos > svg, #upRightStop > svg {
   width: 25px;
   cursor: pointer;
 }
 
-@media (max-width: 767px) {
+@media(max-width: 767px) {
   #upRightStop {
     left: calc(100% - 35px);
   }
-  #upLeftInfos > img, #upRightStop > img {
+  #upLeftInfos > svg, #upRightStop > svg {
     width: 35px;
+  }
+  #upLeftInfos > svg path, #upRightStop > svg path {
+    fill: #999;
   }
 }
 

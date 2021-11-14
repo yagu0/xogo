@@ -4,9 +4,9 @@ export default class ZenRules extends ChessRules {
 
   static get Options() {
     return {
-      select: ChessRules.Options.select,
-      check: ChessRules.Options.check,
-      styles: ChessRules.Options.styles.filter(s => s != "zen")
+      select: C.Options.select,
+      check: C.Options.check,
+      styles: C.Options.styles.filter(s => s != "zen")
     };
   }
 
