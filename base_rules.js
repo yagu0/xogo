@@ -2160,20 +2160,21 @@ export default class ChessRules {
       };
       animateRec(0);
     };
-    const checkDisplayThenAnimate = () => {
+    // Delay if user wasn't focused:
+    const checkDisplayThenAnimate = (delay) => {
       if (boardContainer.style.display == "none") {
         alert("New move! Let's go back to game...");
         document.getElementById("gameInfos").style.display = "none";
         boardContainer.style.display = "block";
         setTimeout(launchAnimation, 700);
       }
-      else launchAnimation(); //focused user!
+      else setTimeout(launchAnimation, delay || 0);
     };
     let boardContainer = document.getElementById("boardContainer");
     if (document.hidden) {
       document.onvisibilitychange = () => {
         document.onvisibilitychange = undefined;
-        checkDisplayThenAnimate();
+        checkDisplayThenAnimate(700);
       };
     }
     else checkDisplayThenAnimate();
