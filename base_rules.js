@@ -1391,6 +1391,7 @@ export default class ChessRules {
         return; //king isn't captured this way
       }
       const steps = pieces[p].attack || pieces[p].steps;
+      if (!steps) return; //cannibal king for example (TODO...)
       const range = pieces[p].range;
       steps.forEach(s => {
         // From x,y: revert step
