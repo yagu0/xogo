@@ -59,7 +59,7 @@ function toggleVisible(element) {
     if (elt.id != element) elt.style.display = "none";
     else elt.style.display = "block";
   }
-  if (element.id == "boardContainer") {
+  if (element == "boardContainer") {
     // Avoid smartphone scrolling effects (TODO?)
     document.querySelector("html").style.overflow = "hidden";
     document.body.style.overflow = "hidden";
@@ -67,7 +67,7 @@ function toggleVisible(element) {
   else {
     document.querySelector("html").style.overflow = "visible";
     document.body.style.overflow = "visible";
-    if (element.id == "newGame") {
+    if (element == "newGame") {
       // Workaround "superposed texts" effect
       inputName.focus();
       inputName.blur();
