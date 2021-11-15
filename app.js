@@ -295,6 +295,9 @@ const messageCenter = (msg) => {
       break;
     // Receive opponent's move:
     case "newmove":
+      send("gotmove", {fen: obj.fen, gid: gid});
+      if (obj.fen == lastFen) break; //got this move already
+      lastFen = obj.fen;
       if (document.hidden) notifyMe("move");
       vr.playReceivedMove(obj.moves, () => {
         if (vr.getCurrentScore(obj.moves[obj.moves.length-1]) != "*") {
@@ -303,6 +306,16 @@ const messageCenter = (msg) => {
         }
         else toggleTurnIndicator(true);
       });
+      break;
+    // The server notifies that it got our move:
+    case "gotmove":
+      if (obj.fen == lastFen) {
+        curMoves = [];
+        clearTimeout(timeout1);
+        clearTimeout(timeout2);
+        clearTimeout(timeout3);
+        callbackAfterConfirmation();
+      }
       break;
     // Opponent stopped game (draw, abort, resign...)
     case "gameover":
@@ -376,25 +389,39 @@ function notifyMe(code) {
   }
 }
 
-let curMoves = [];
-const afterPlay = (move) => { //pack into one moves array, then send
+let curMoves = [],
+    lastFen, lastMove,
+    timeout1, timeout2, timeout3;
+const callbackAfterConfirmation = () => {
+  const result = vr.getCurrentScore(lastMove);
+  if (result != "*") {
+    setTimeout( () => {
+      toggleVisible("gameStopped");
+      send("gameover", { gid: gid });
+    }, 2000);
+  }
+};
+const afterPlay = (move) => {
+  // Pack into one moves array, then send
   curMoves.push({
     appear: move.appear,
     vanish: move.vanish,
     start: move.start,
     end: move.end
   });
+  lastMove = move;
   if (vr.turn != playerColor) {
     toggleTurnIndicator(false);
-    send("newmove", { gid: gid, moves: curMoves, fen: vr.getFen() });
-    curMoves = [];
-    const result = vr.getCurrentScore(move);
-    if (result != "*") {
-      setTimeout( () => {
-        toggleVisible("gameStopped");
-        send("gameover", { gid: gid });
-      }, 2000);
-    }
+    lastFen = vr.getFen();
+    const sendMove =
+      () => send("newmove", {gid: gid, moves: curMoves, fen: lastFen});
+    // Send move until we obtain confirmation or timeout, then callback
+    sendMove();
+    timeout1 = setTimeout(sendMove, 500);
+    timeout2 = setTimeout(sendMove, 1500);
+    timeout3 = setTimeout(
+      () => alert("The move may be lost :( Please reload"),
+      3000);
   }
 };
 

@@ -6,7 +6,18 @@ const wss = new WebSocket.Server(
 let challenges = {}; //variantName --> socketId, name
 let games = {}; //gameId --> gameInfo (vname, fen, players, options)
 let sockets = {}; //socketId --> socket
+let sendmoveTimeout1 = {},
+    sendmoveTimeout2 = {},
+    sendmoveRetry = {},
+    stopRetry = {};
 const variants = require("./variants.js");
+
+const clearTrySendMove = (gid) => {
+  clearTimeout(sendmoveTimeout1[gid]);
+  clearTimeout(sendmoveTimeout2[gid]);
+  clearInterval(sendmoveRetry[gid]);
+  clearTimeout(stopRetry[gid]);
+};
 
 const send = (sid, code, data) => {
   const socket = sockets[sid];
@@ -119,7 +130,7 @@ wss.on('connection', function connection(socket, req) {
         delete challenges[obj.vname];
         break;
       // Receive rematch
-      case "rematch": {
+      case "rematch":
         if (!games[obj.gid]) send(sid, "closerematch");
         else {
           const myIndex = (games[obj.gid].players[0].sid == sid ? 0 : 1);
@@ -133,17 +144,15 @@ wss.on('connection', function connection(socket, req) {
           }
         }
         break;
-      }
-        // Rematch cancellation
-      case "norematch": {
+      // Rematch cancellation
+      case "norematch":
         if (games[obj.gid]) {
           const myIndex = (games[obj.gid].players[0].sid == sid ? 0 : 1);
           send(games[obj.gid].players[1-myIndex].sid, "closerematch");
         }
         break;
-      }
       // Create game vs. friend
-      case "creategame":
+      case "creategame": {
         let players = [
           { sid: obj.player.sid, name: obj.player.name },
           undefined
@@ -156,8 +165,9 @@ wss.on('connection', function connection(socket, req) {
         }
         launchGame(obj.vname, players, obj.options);
         break;
+      }
       // Join game vs. friend
-      case "joingame": {
+      case "joingame":
         if (!games[obj.gid]) send(sid, "jointoolate");
         else {
           // Join a game (started by some other player)
@@ -172,16 +182,27 @@ wss.on('connection', function connection(socket, req) {
             send(games[obj.gid].players[i].sid, "gamestart", gameInfo);
         }
         break;
-      }
       // Relay a move + update games object
-      case "newmove": {
-        // TODO?: "pingback" strategy to ensure that move was transmitted
+      case "newmove":
+        // If already received this move: skip
+        if (games[obj.gid].fen == obj.fen) break;
+        // Notify sender that the move is received:
+        send(sid, "gotmove", {fen: obj.fen});
         games[obj.gid].fen = obj.fen;
         const playingWhite = (games[obj.gid].players[0].sid == sid);
         const oppSid = games[obj.gid].players[playingWhite ? 1 : 0].sid;
-        send(oppSid, "newmove", { moves: obj.moves });
+        const sendMove =
+          // NOTE: sending FEN also, to check it in "gotmove" below
+          () => send(oppSid, "newmove", {moves: obj.moves, fen: obj.fen});
+        sendMove();
+        sendmoveTimeout1[obj.gid] = setTimeout(sendMove, 500);
+        sendmoveTimeout2[obj.gid] = setTimeout(sendMove, 1500);
+        sendmoveRetry[obj.gid] = setInterval(sendMove, 5000);
+        stopRetry[obj.gid] = setTimeout(clearTrySendMove, 31000);
         break;
-      }
+      case "gotmove":
+        if (games[obj.gid].fen == obj.fen) clearTrySendMove(obj.gid);
+        break;
       // Relay "game ends" message
       case "gameover": {
         const playingWhite = (games[obj.gid].players[0].sid == sid);
