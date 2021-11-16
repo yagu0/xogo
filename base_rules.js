@@ -760,7 +760,7 @@ export default class ChessRules {
   }
 
   updateReserve(color, piece, count) {
-    if (this.options["cannibal"] && C.CannibalKing[piece])
+    if (this.options["cannibal"] && C.CannibalKings[piece])
       piece = "k"; //capturing cannibal king: back to king form
     const oldCount = this.reserve[color][piece];
     this.reserve[color][piece] = count;
