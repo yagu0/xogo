@@ -1543,11 +1543,19 @@ export default class ChessRules {
   addPawnMoves([x1, y1], [x2, y2], moves, promotions) {
     let finalPieces = ["p"];
     const color = this.getColor(x1, y1);
+    const oppCol = C.GetOppCol(color);
     const lastRank = (color == "w" ? 0 : this.size.x - 1);
     if (x2 == lastRank && (!this.options["rifle"] || this.board[x2][y2] == ""))
     {
       // promotions arg: special override for Hiddenqueen variant
-      if (promotions) finalPieces = promotions;
+      if (
+        this.options["cannibal"] &&
+        this.board[x2][y2] != "" &&
+        this.getColor(x2, y2) == oppCol
+      ) {
+        finalPieces = [this.getPieceType(x2, y2)];
+      }
+      else if (promotions) finalPieces = promotions;
       else if (this.pawnSpecs.promotions)
         finalPieces = this.pawnSpecs.promotions;
     }
