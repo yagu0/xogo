@@ -876,6 +876,8 @@ export default class ChessRules {
         startPiece, curPiece = null,
         sqSize;
     const mousedown = (e) => {
+      // Disable zoom on smartphones:
+      if (e.touches && e.touches.length > 1) e.preventDefault();
       r = container.getBoundingClientRect();
       sqSize = this.getSquareWidth(r.width);
       const square = this.idToCoords(e.target.id);
@@ -943,9 +945,10 @@ export default class ChessRules {
       document.addEventListener("mouseup", mouseup);
     }
     if ('ontouchstart' in window) {
-      document.addEventListener("touchstart", mousedown);
-      document.addEventListener("touchmove", mousemove);
-      document.addEventListener("touchend", mouseup);
+      // https://stackoverflow.com/a/42509310/12660887
+      document.addEventListener("touchstart", mousedown, {passive: false});
+      document.addEventListener("touchmove", mousemove, {passive: false});
+      document.addEventListener("touchend", mouseup, {passive: false});
     }
   }
 
