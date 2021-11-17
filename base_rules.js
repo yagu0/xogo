@@ -713,7 +713,6 @@ export default class ChessRules {
       const container = document.getElementById(this.containerId);
       r = container.getBoundingClientRect();
     }
-    const epsilon = 1e-4; //fix display bug on Firefox at least
     for (let c of colors) {
       if (!this.reserve[c]) continue;
       const nbR = this.getNbReservePieces(c);
@@ -727,7 +726,8 @@ export default class ChessRules {
       rcontainer.classList.add("reserves");
       rcontainer.style.left = i0 + "px";
       rcontainer.style.top = j0 + "px";
-      rcontainer.style.width = (nbR * sqResSize) + "px";
+      // NOTE: +1 fix display bug on Firefox at least
+      rcontainer.style.width = (nbR * sqResSize + 1) + "px";
       rcontainer.style.height = sqResSize + "px";
       document.getElementById("boardContainer").appendChild(rcontainer);
       for (let p of Object.keys(this.reserve[c])) {
@@ -735,8 +735,8 @@ export default class ChessRules {
         let r_cell = document.createElement("div");
         r_cell.id = this.coordsToId([c, p]);
         r_cell.classList.add("reserve-cell");
-        r_cell.style.width = (sqResSize - epsilon) + "px";
-        r_cell.style.height = (sqResSize - epsilon) + "px";
+        r_cell.style.width = sqResSize + "px";
+        r_cell.style.height = sqResSize + "px";
         rcontainer.appendChild(r_cell);
         let piece = document.createElement("piece");
         const pieceSpec = this.pieces(c)[p];
@@ -810,7 +810,6 @@ export default class ChessRules {
   }
 
   rescaleReserve(r) {
-    const epsilon = 1e-4;
     for (let c of ['w','b']) {
       if (!this.reserve[c]) continue;
       const nbR = this.getNbReservePieces(c);
@@ -822,15 +821,15 @@ export default class ChessRules {
       let rcontainer = document.getElementById("reserves_" + c);
       rcontainer.style.left = i0 + "px";
       rcontainer.style.top = j0 + "px";
-      rcontainer.style.width = (nbR * sqResSize) + "px";
+      rcontainer.style.width = (nbR * sqResSize + 1) + "px";
       rcontainer.style.height = sqResSize + "px";
       // And then reserve cells:
       const rpieceWidth = this.getReserveSquareSize(r.width, nbR);
       Object.keys(this.reserve[c]).forEach(p => {
         if (this.reserve[c][p] == 0) return;
         let r_cell = document.getElementById(this.coordsToId([c, p]));
-        r_cell.style.width = (sqResSize - epsilon) + "px";
-        r_cell.style.height = (sqResSize - epsilon) + "px";
+        r_cell.style.width = sqResSize + "px";
+        r_cell.style.height = sqResSize + "px";
       });
     }
   }
