@@ -1,89 +1,75 @@
 const params = require("./parameters.js");
-const WebSocket = require('ws');
+const WebSocket = require("ws");
 const wss = new WebSocket.Server(
   {port: params.socket_port, path: params.socket_path});
 
 let challenges = {}; //variantName --> socketId, name
-let games = {}; //gameId --> gameInfo (vname, fen, players, options)
+let games = {}; //gameId --> gameInfo (vname, fen, players, options, time)
 let sockets = {}; //socketId --> socket
-let sendmoveTimeout1 = {},
-    sendmoveTimeout2 = {},
-    sendmoveRetry = {},
-    stopRetry = {};
 const variants = require("./variants.js");
-
-const clearTrySendMove = (gid) => {
-  clearTimeout(sendmoveTimeout1[gid]);
-  clearTimeout(sendmoveTimeout2[gid]);
-  clearInterval(sendmoveRetry[gid]);
-  clearTimeout(stopRetry[gid]);
-};
+const Crypto = require("crypto");
+const randstrSize = 8;
 
 const send = (sid, code, data) => {
   const socket = sockets[sid];
-  // If a player delete local infos and then try to resume a game,
+  // If a player deletes local infos and then tries to resume a game,
   // sockets[oppSid] will probably not exist anymore:
   if (socket) socket.send(JSON.stringify(Object.assign({ code: code }, data)));
-}
+};
 
-const Crypto = require('crypto')
-function randomString(size = 8) {
-  return Crypto.randomBytes(size).toString('hex').slice(0, size);
-}
-
-wss.on('connection', function connection(socket, req) {
+wss.on("connection", function connection(socket, req) {
   const sid = req.url.split("=")[1]; //...?sid=...
   sockets[sid] = socket;
   socket.isAlive = true;
-  socket.on('pong', () => socket.isAlive = true);
+  socket.on("pong", () => socket.isAlive = true);
 
   function launchGame(vname, players, options) {
-    const gid = randomString(8);
+    const gid =
+      Crypto.randomBytes(randstrSize).toString("hex").slice(0, randstrSize);
     games[gid] = {
       vname: vname,
       players: players.map(p => {
                  return (!p ? null : {sid: p.sid, name: p.name});
                }),
-      options: options
+      options: options,
+      time: Date.now()
     };
     if (players.every(p => p)) {
       const gameInfo = Object.assign(
         // Provide seed so that both players initialize with same FEN
         {seed: Math.floor(Math.random() * 1984), gid: gid},
         games[gid]);
-      for (let i of [0, 1]) {
-        send(players[i].sid, "gamestart",
-             Object.assign({randvar: players[i].randvar}, gameInfo));
+      for (const p of players) {
+        send(p.sid,
+             "gamestart",
+             Object.assign({randvar: p.randvar}, gameInfo));
       }
     }
     else {
       // Incomplete players array: do not start game yet
       send(sid, "gamecreated", {gid: gid});
-      // If nobody joins within a minute, delete game
+      // If nobody joins within 5 minutes, delete game
       setTimeout(
         () => {
           if (games[gid] && games[gid].players.some(p => !p))
             delete games[gid];
         },
-        60000
+        5 * 60000
       );
     }
   }
 
-  socket.on('message', (msg) => {
+  socket.on("message", (msg) => {
     const obj = JSON.parse(msg);
     switch (obj.code) {
       // Send challenge (may trigger game creation)
       case "seekgame": {
-        // Only one challenge per player:
-        if (Object.keys(challenges).some(k => challenges[k].sid == sid))
-          return;
         let opponent = undefined,
             choice = undefined;
         const vname = obj.vname,
               randvar = (obj.vname == "_random");
         if (vname == "_random") {
-          // Pick any current challenge if any
+          // Pick any current challenge if possible
           const currentChalls = Object.keys(challenges);
           if (currentChalls.length >= 1) {
             choice =
@@ -115,7 +101,7 @@ wss.on('connection', function connection(socket, req) {
           challenges[vname] = {sid: sid, name: obj.name, randvar: randvar};
         break;
       }
-      // Set FEN after game was created
+      // Set FEN after game was created (received twice)
       case "setfen":
         games[obj.gid].fen = obj.fen;
         break;
@@ -154,7 +140,7 @@ wss.on('connection', function connection(socket, req) {
       // Create game vs. friend
       case "creategame": {
         let players = [
-          { sid: obj.player.sid, name: obj.player.name },
+          {sid: obj.player.sid, name: obj.player.name},
           undefined
         ];
         if (
@@ -178,40 +164,28 @@ wss.on('connection', function connection(socket, req) {
             // Provide seed so that both players initialize with same FEN
             {seed: Math.floor(Math.random()*1984), gid: obj.gid},
             games[obj.gid]);
-          for (let i of [0, 1])
-            send(games[obj.gid].players[i].sid, "gamestart", gameInfo);
+          for (const p of games[obj.gid].players)
+            send(p.sid, "gamestart", gameInfo);
         }
         break;
       // Relay a move + update games object
       case "newmove":
-        // If already received this move: skip
-        if (games[obj.gid].fen == obj.fen) break;
-        // Notify sender that the move is received:
-        send(sid, "gotmove", {fen: obj.fen});
         games[obj.gid].fen = obj.fen;
+        games[obj.gid].time = Date.now(); //update timestamp in case of
         const playingWhite = (games[obj.gid].players[0].sid == sid);
         const oppSid = games[obj.gid].players[playingWhite ? 1 : 0].sid;
-        const sendMove =
-          // NOTE: sending FEN also, to check it in "gotmove" below
-          () => send(oppSid, "newmove", {moves: obj.moves, fen: obj.fen});
-        sendMove();
-        sendmoveTimeout1[obj.gid] = setTimeout(sendMove, 500);
-        sendmoveTimeout2[obj.gid] = setTimeout(sendMove, 1500);
-        sendmoveRetry[obj.gid] = setInterval(sendMove, 5000);
-        stopRetry[obj.gid] = setTimeout(clearTrySendMove, 31000);
-        break;
-      case "gotmove":
-        if (games[obj.gid].fen == obj.fen) clearTrySendMove(obj.gid);
+        send(oppSid, "newmove", {moves: obj.moves});
         break;
       // Relay "game ends" message
-      case "gameover": {
-        const playingWhite = (games[obj.gid].players[0].sid == sid);
-        const oppSid = games[obj.gid].players[playingWhite ? 1 : 0].sid;
-        if (obj.relay) send(oppSid, "gameover", { gid: obj.gid });
-        games[obj.gid].over = true;
-        setTimeout( () => delete games[obj.gid], 60000 );
+      case "gameover":
+        if (obj.relay) {
+          const playingWhite = (games[obj.gid].players[0].sid == sid);
+          const oppSid = games[obj.gid].players[playingWhite ? 1 : 0].sid;
+          send(oppSid, "gameover", { gid: obj.gid });
+        }
+        // 2 minutes timeout for rematch:
+        setTimeout(() => delete games[obj.gid], 2 * 60000);
         break;
-      }
     }
   });
   socket.on("close", () => {
@@ -225,11 +199,25 @@ wss.on('connection', function connection(socket, req) {
   });
 });
 
-const interval = setInterval(() => {
+const heartbeat = setInterval(() => {
   wss.clients.forEach((ws) => {
     if (ws.isAlive === false) return ws.terminate();
     ws.isAlive = false;
     ws.ping();
   });
 }, 30000);
-wss.on('close', () => clearInterval(interval));
+
+// Every 24 hours, scan games and remove if last move older than 24h
+const dayInMillisecs = 24 * 60 * 60 * 1000;
+const killOldGames = setInterval(() => {
+  const now = Date.now();
+  Object.keys(games).forEach(gid => {
+    if (now - games[gid].time >= dayInMillisecs) delete games[gid];
+  });
+}, dayInMillisecs);
+
+// TODO: useful code here?
+wss.on("close", () => {
+  clearInterval(heartbeat);
+  clearInterval(killOldGames);
+});

@@ -4,11 +4,11 @@ let $ = document; //shortcut
 // Initialisations
 
 // https://stackoverflow.com/a/27747377/12660887
-function dec2hex (dec) { return dec.toString(16).padStart(2, "0") }
 function generateId (len) {
-  var arr = new Uint8Array((len || 40) / 2)
-  window.crypto.getRandomValues(arr)
-  return Array.from(arr, dec2hex).join('')
+  const dec2hex = (dec) => dec.toString(16).padStart(2, "0");
+  let arr = new Uint8Array(len / 2); //len/2 because 2 chars per hex value
+  window.crypto.getRandomValues(arr); //fill with random integers
+  return Array.from(arr, dec2hex).join('');
 }
 
 // Populate variants dropdown list
@@ -37,25 +37,26 @@ const setActive = (active) => {
   if (active) formField.classList.add("form-field--is-active");
   else {
     formField.classList.remove("form-field--is-active");
-    inputName.value === "" ?
-      formField.classList.remove("form-field--is-filled") :
-       formField.classList.add("form-field--is-filled");
+    inputName.value == ''
+      ? formField.classList.remove("form-field--is-filled")
+      : formField.classList.add("form-field--is-filled");
   }
 };
+setActive(true);
 inputName.onblur = () => setActive(false);
 inputName.onfocus = () => setActive(true);
-inputName.focus();
 
 /////////
 // Utils
 
 function setName() {
+  // 'onChange' event on name input text field [HTML]
   localStorage.setItem("name", $.getElementById("myName").value);
 }
 
 // Turn a "tab" on, and "close" all others
 function toggleVisible(element) {
-  for (elt of document.querySelectorAll('main > div')) {
+  for (elt of document.querySelectorAll("main > div")) {
     if (elt.id != element) elt.style.display = "none";
     else elt.style.display = "block";
   }
@@ -67,32 +68,29 @@ function toggleVisible(element) {
   else {
     document.querySelector("html").style.overflow = "visible";
     document.body.style.overflow = "visible";
-    if (element == "newGame") {
-      // Workaround "superposed texts" effect
-      inputName.focus();
-      inputName.blur();
-    }
+    // Workaround "superposed texts" effect:
+    if (element == "newGame") setActive(false);
   }
 }
 
 let seek_vname;
 function seekGame() {
   seek_vname = $.getElementById("selectVariant").value;
-  send("seekgame", {vname: seek_vname, name: localStorage.getItem("name")});
-  toggleVisible("pendingSeek");
+  if (send("seekgame",
+           {vname: seek_vname, name: localStorage.getItem("name")})
+  ) {
+    toggleVisible("pendingSeek");
+  }
 }
 function cancelSeek() {
-  send("cancelseek", {vname: seek_vname});
-  toggleVisible("newGame");
+  if (send("cancelseek", {vname: seek_vname})) toggleVisible("newGame");
 }
 
 function sendRematch() {
-  send("rematch", { gid: gid });
-  toggleVisible("pendingRematch");
+  if (send("rematch", {gid: gid})) toggleVisible("pendingRematch");
 }
 function cancelRematch() {
-  send("norematch", { gid: gid });
-  toggleVisible("newGame");
+  if (send("norematch", {gid: gid})) toggleVisible("newGame");
 }
 
 // Play with a friend (or not ^^)
@@ -109,11 +107,14 @@ function showNewGameForm() {
     });
   }
 }
-function backToNormalSeek() { toggleVisible("newGame"); }
+function backToNormalSeek() {
+  toggleVisible("newGame");
+}
 
-function toggleStyle(e, word) {
+function toggleStyle(event, obj) {
+  const word = obj.innerHTML;
   options[word] = !options[word];
-  e.target.classList.toggle("highlight-word");
+  event.target.classList.toggle("highlight-word");
 }
 
 let options;
@@ -157,8 +158,7 @@ function prepareOptions() {
       for (let j=i; j<i+4; j++) {
         if (j == stylesLength) break;
         const style = V.Options.styles[j];
-        optHtml +=
-          `<span onClick="toggleStyle(event, '${style}')">${style}</span>`;
+        optHtml += `<span onClick="toggleStyle(event, this)">${style}</span>`;
       }
       optHtml += "</div>";
       i += 4;
@@ -181,12 +181,12 @@ function getGameLink() {
   }
   send("creategame", {
     vname: vname,
-    player: { sid: sid, name: localStorage.getItem("name"), color: color },
+    player: {sid: sid, name: localStorage.getItem("name"), color: color},
     options: options
   });
 }
 
-const fillGameInfos = (gameInfos, oppIndex) => {
+function fillGameInfos(gameInfos, oppIndex) {
   fetch(`/variants/${gameInfos.vname}/rules.html`)
   .then(res => res.text())
   .then(txt => {
@@ -209,7 +209,7 @@ const fillGameInfos = (gameInfos, oppIndex) => {
           htmlContent +=
             '<span class="option">' +
             (opt[1] === true ? opt[0] : `${opt[0]}:${opt[1]}`) + " " +
-            '</span>';
+            "</span>";
         }
         htmlContent += "</div>";
         i += 4;
@@ -223,27 +223,62 @@ const fillGameInfos = (gameInfos, oppIndex) => {
       </div>`;
     $.getElementById("gameInfos").innerHTML = htmlContent;
   });
-};
+}
 
 ////////////////
 // Communication
 
-let socket, gid, attempt = 0;
+let socket, gid, recoAttempt = 0;
 const autoReconnectDelay = () => {
-  return [100, 200, 500, 1000, 3000, 10000, 30000][Math.min(attempt, 6)];
+  return [100, 200, 500, 1000, 3000, 10000, 30000][Math.min(recoAttempt, 6)];
 };
 
-function copyClipboard(msg) { navigator.clipboard.writeText(msg); }
+function send(code, data, opts) {
+  opts = opts || {};
+  const trySend = () => {
+    if (socket.readyState == 1) {
+      socket.send(JSON.stringify(Object.assign({code: code}, data)));
+      if (opts.success) opts.success();
+      return true;
+    }
+    return false;
+  };
+  const firstTry = trySend();
+  if (!firstTry) {
+    if (opts.retry) {
+      // Retry for a few seconds (sending move)
+      let sendAttempt = 1;
+      const retryLoop = setInterval(
+        () => {
+          if (trySend() || ++sendAttempt >= 3) clearInterval(retryLoop);
+          if (sendAttempt >= 3 && opts.error) opts.error();
+        },
+        1000
+      );
+    }
+    else if (opt.error) opts.error();
+  }
+  return firstTry;
+}
+
+function copyClipboard(msg) {
+  navigator.clipboard.writeText(msg);
+}
 function getWhatsApp(msg) {
   return `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
 }
 
 const tryResumeGame = () => {
-  attempt = 0;
+  recoAttempt = 0;
   // If a game is found, resume it:
   if (localStorage.getItem("gid")) {
     gid = localStorage.getItem("gid");
-    send("getgame", { gid: gid });
+    send("getgame",
+         {gid: gid},
+         {
+           retry: true,
+           error: () => alert("Cannot load game: no connection")
+         });
   }
   else {
     // If URL indicates "play with a friend", start game:
@@ -251,9 +286,14 @@ const tryResumeGame = () => {
     if (hashIdx >= 0) {
       const urlParts = $.URL.split('#');
       gid = urlParts[1];
-      send("joingame", { gid: gid, name: localStorage.getItem("name") });
       localStorage.setItem("gid", gid);
-      history.replaceState(null, '', urlParts[0]);
+      history.replaceState(null, '', urlParts[0]); //hide game ID
+      send("joingame",
+           {gid: gid, name: localStorage.getItem("name")},
+           {
+             retry: true,
+             error: () => alert("Cannot load game: no connection")
+           });
     }
   }
 };
@@ -275,7 +315,7 @@ const messageCenter = (msg) => {
         <p>
           <a href="${getWhatsApp(link)}">WhatsApp</a>
           /
-          <span onClick='copyClipboard("${link}")'>ToClipboard</span>
+          <span onClick="copyClipboard('${link}')">ToClipboard</span>
         </p>
         <p>${link}</p>
       `;
@@ -295,9 +335,8 @@ const messageCenter = (msg) => {
       break;
     // Receive opponent's move:
     case "newmove":
-      send("gotmove", {fen: obj.fen, gid: gid});
-      if (obj.fen == lastFen) break; //got this move already
-      lastFen = obj.fen;
+      // Basic check: was it really opponent's turn?
+      if (vr.turn == playerColor) break;
       if (document.hidden) notifyMe("move");
       vr.playReceivedMove(obj.moves, () => {
         if (vr.getCurrentScore(obj.moves[obj.moves.length-1]) != "*") {
@@ -306,16 +345,6 @@ const messageCenter = (msg) => {
         }
         else toggleTurnIndicator(true);
       });
-      break;
-    // The server notifies that it got our move:
-    case "gotmove":
-      if (obj.fen == lastFen) {
-        curMoves = [];
-        clearTimeout(timeout1);
-        clearTimeout(timeout2);
-        clearTimeout(timeout3);
-        callbackAfterConfirmation();
-      }
       break;
     // Opponent stopped game (draw, abort, resign...)
     case "gameover":
@@ -330,7 +359,7 @@ const messageCenter = (msg) => {
 };
 
 const handleError = (err) => {
-  if (err.code === 'ECONNREFUSED') {
+  if (err.code === "ECONNREFUSED") {
     removeAllListeners();
     alert("Server refused connection. Please reload page later");
   }
@@ -344,27 +373,23 @@ const handleClose = () => {
   }, autoReconnectDelay());
 };
 
-const removeAllListeners = () => {
+function removeAllListeners() {
   socket.removeEventListener("open", tryResumeGame);
   socket.removeEventListener("message", messageCenter);
   socket.removeEventListener("error", handleError);
   socket.removeEventListener("close", handleClose);
-};
+}
 
-const connectToWSS = () => {
+function connectToWSS() {
   socket =
     new WebSocket(`${Params.socket_server}${Params.socket_path}?sid=${sid}`);
   socket.addEventListener("open", tryResumeGame);
   socket.addEventListener("message", messageCenter);
   socket.addEventListener("error", handleError);
   socket.addEventListener("close", handleClose);
-  attempt++;
-};
+  recoAttempt++;
+}
 connectToWSS();
-
-const send = (code, data) => {
-  socket.send(JSON.stringify(Object.assign({code: code}, data)));
-};
 
 ///////////
 // Playing
@@ -381,27 +406,27 @@ function notifyMe(code) {
     new Notification("New " + code, { vibrate: [200, 100, 200] });
     new Audio("/assets/new_" + code + ".mp3").play();
   }
-  if (Notification.permission === 'granted') doNotify();
-  else if (Notification.permission !== 'denied') {
+  if (Notification.permission === "granted") doNotify();
+  else if (Notification.permission !== "denied") {
     Notification.requestPermission().then(permission => {
-      if (permission === 'granted') doNotify();
+      if (permission === "granted") doNotify();
     });
   }
 }
 
 let curMoves = [],
-    lastFen, lastMove,
-    timeout1, timeout2, timeout3;
-const callbackAfterConfirmation = () => {
-  const result = vr.getCurrentScore(lastMove);
-  if (result != "*") {
-    setTimeout( () => {
-      toggleVisible("gameStopped");
-      send("gameover", { gid: gid });
-    }, 2000);
-  }
-};
+    lastFen;
 const afterPlay = (move) => {
+  const callbackAfterSend = () => {
+    curMoves = [];
+    const result = vr.getCurrentScore(move);
+    if (result != "*") {
+      setTimeout(() => {
+        toggleVisible("gameStopped");
+        send("gameover", {gid: gid});
+      }, 2000);
+    }
+  };
   // Pack into one moves array, then send
   curMoves.push({
     appear: move.appear,
@@ -409,31 +434,15 @@ const afterPlay = (move) => {
     start: move.start,
     end: move.end
   });
-  lastMove = move;
   if (vr.turn != playerColor) {
     toggleTurnIndicator(false);
-    lastFen = vr.getFen();
-    const sendMove =
-      () => send("newmove", {gid: gid, moves: curMoves, fen: lastFen});
-    // Send move until we obtain confirmation or timeout, then callback
-    sendMove();
-    timeout1 = setTimeout(sendMove, 500);
-    timeout2 = setTimeout(sendMove, 1500);
-    timeout3 = setTimeout(
-      () => alert("The move may be lost :( Please reload"),
-      3000);
-  }
-};
-
-// Avoid loading twice the same stylesheet:
-const conditionalLoadCSS = (vname) => {
-  const allIds = [].slice.call($.styleSheets).map(s => s.id);
-  const newId = vname + "_css";
-  if (!allIds.includes(newId)) {
-    $.getElementsByTagName("head")[0].insertAdjacentHTML(
-      "beforeend",
-      `<link id="${newId}" rel="stylesheet"
-             href="/variants/${vname}/style.css"/>`);
+    send("newmove",
+         {gid: gid, moves: curMoves, fen: vr.getFen()},
+         {
+           retry: true,
+           success: callbackAfterSend,
+           error: () => alert("Move not sent: reload page")
+         });
   }
 };
 
@@ -442,7 +451,15 @@ function initializeGame(obj) {
   const options = obj.options || {};
   import(`/variants/${obj.vname}/class.js`).then(module => {
     window.V = module.default;
-    conditionalLoadCSS(obj.vname);
+    // Load CSS. Avoid loading twice the same stylesheet:
+    const allIds = [].slice.call($.styleSheets).map(s => s.id);
+    const newId = obj.vname + "_css";
+    if (!allIds.includes(newId)) {
+      $.getElementsByTagName("head")[0].insertAdjacentHTML(
+        "beforeend",
+        `<link id="${newId}" rel="stylesheet"
+               href="/variants/${obj.vname}/style.css"/>`);
+    }
     playerColor = (sid == obj.players[0].sid ? "w" : "b");
     // Init + remove potential extra DOM elements from a previous game:
     document.getElementById("boardContainer").innerHTML = `
@@ -474,8 +491,8 @@ function initializeGame(obj) {
       options: options
     });
     if (!obj.fen) {
-      // Game creation
-      if (playerColor == "w") send("setfen", {gid: obj.gid, fen: vr.getFen()});
+      // Game creation: both players set FEN, in case of one is offline
+      send("setfen", {gid: obj.gid, fen: vr.getFen()});
       localStorage.setItem("gid", obj.gid);
     }
     const select = $.getElementById("selectVariant");
@@ -494,8 +511,7 @@ function initializeGame(obj) {
 }
 
 function confirmStopGame() {
-  if (confirm("Stop game?")) {
-    send("gameover", { gid: gid, relay: true });
+  if (confirm("Stop game?") && send("gameover", {gid: gid, relay: true})) {
     localStorage.removeItem("gid");
     toggleVisible("gameStopped");
   }
@@ -504,11 +520,7 @@ function confirmStopGame() {
 function toggleGameInfos() {
   if ($.getElementById("gameInfos").style.display == "none")
     toggleVisible("gameInfos");
-  else {
-    toggleVisible("boardContainer");
-    // Quickfix for the "vanished piece" bug (move played while on game infos)
-    vr.setupPieces(); //TODO: understand better
-  }
+  else toggleVisible("boardContainer");
 }
 
 $.body.addEventListener("keydown", (e) => {
