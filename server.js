@@ -10,14 +10,14 @@ const variants = require("./variants.js");
 const Crypto = require("crypto");
 const randstrSize = 8;
 
-const send = (sid, code, data) => {
+function send(sid, code, data) {
   const socket = sockets[sid];
   // If a player deletes local infos and then tries to resume a game,
   // sockets[oppSid] will probably not exist anymore:
   if (socket) socket.send(JSON.stringify(Object.assign({ code: code }, data)));
-};
+}
 
-wss.on("connection", function connection(socket, req) {
+wss.on("connection", (socket, req) => {
   const sid = req.url.split("=")[1]; //...?sid=...
   sockets[sid] = socket;
   socket.isAlive = true;
