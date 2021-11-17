@@ -1,7 +1,5 @@
 *.swp
 *~
-*.min.js
-*.min.css
 /node_modules/
 /assets/
 /assets.zip
