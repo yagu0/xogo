@@ -1,8 +1,9 @@
 Dark Racing Kings ?
 Checkered-Teleport ?
 
-// TODO: playvisual enlightened test (pas forcément mode dark...)
-
 // rem ref to bordContainer --> rethink CSS design...
 
 // TODO: Otage, Emergo, Pacosako : fonction "buildPiece(arg1, arg2)" returns HTML element with 2 SVG or SVG + number
+
+add mode diagram --> use vchess rules (only english? only french?)
+add variants : Chakart first (dark,cylinder)
