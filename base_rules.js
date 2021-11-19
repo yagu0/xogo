@@ -495,8 +495,8 @@ export default class ChessRules {
           let elt = document.getElementById(this.coordsToId([x, y]));
           elt.classList.remove("in-shadow");
           if (this.board[x][y] != "") {
-            const color = this.getColor(i, j);
-            const piece = this.getPiece(i, j);
+            const color = this.getColor(x, y);
+            const piece = this.getPiece(x, y);
             this.g_pieces[x][y] = document.createElement("piece");
             let newClasses = [
               this.pieces()[piece]["class"],
