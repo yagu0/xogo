@@ -859,7 +859,7 @@ export default class ChessRules {
         // Touch screen, dragend
         touchLocation = e.changedTouches[0];
       if (touchLocation)
-        return {x: touchLocation.pageX, y: touchLocation.pageY};
+        return {x: touchLocation.clientX, y: touchLocation.clientY};
       return [0, 0]; //Big trouble here =)
     }
 
@@ -909,6 +909,9 @@ export default class ChessRules {
         e.preventDefault();
         centerOnCursor(curPiece, e);
       }
+      else if (e.changedTouches && e.changedTouches.length >= 1)
+        // Attempt to prevent horizontal swipe...
+        e.preventDefault();
     };
 
     const mouseup = (e) => {
@@ -949,6 +952,7 @@ export default class ChessRules {
       document.addEventListener("touchmove", mousemove, {passive: false});
       document.addEventListener("touchend", mouseup, {passive: false});
     }
+    // TODO: onpointerdown/move/up ? See reveal.js /controllers/touch.js
   }
 
   showChoices(moves, r) {
