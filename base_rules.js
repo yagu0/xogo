@@ -2145,6 +2145,7 @@ export default class ChessRules {
     const maxDist = Math.sqrt((this.size.x - 1)** 2 + (this.size.y - 1) ** 2);
     const multFact = (distance - 1) / (maxDist - 1); //1 == minDist
     const duration = 0.2 + multFact * 0.3;
+    const initTransform = startPiece.style.transform;
     startPiece.style.transform =
       `translate(${arrival[0] + rs[0]}px, ${arrival[1] + rs[1]}px)`;
     startPiece.style.transitionDuration = duration + "s";
@@ -2153,6 +2154,10 @@ export default class ChessRules {
         if (clonePiece) {
           if (this.options["rifle"]) startArray[i1][j1].style.opacity = "1";
           startPiece.remove();
+        }
+        else {
+          startPiece.style.transform = initTransform;
+          startPiece.style.transitionDuration = "0s";
         }
         callback();
       },
