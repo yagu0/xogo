@@ -26,11 +26,18 @@ export default class ChessRules {
           { label: "Asymmetric random", value: 2 }
         ]
       }],
-      check: [{
-        label: "Capture king?",
-        defaut: false,
-        variable: "taking"
-      }],
+      check: [
+        {
+          label: "Capture king",
+          defaut: false,
+          variable: "taking"
+        },
+        {
+          label: "Falling pawn",
+          defaut: false,
+          variable: "pawnfall"
+        }
+      ],
       // Game modifiers (using "elementary variants"). Default: false
       styles: [
         "atomic",
@@ -1545,15 +1552,16 @@ export default class ChessRules {
     return !!enpassantMove ? [enpassantMove] : [];
   }
 
-  // Consider all potential promotions:
+  // Consider all potential promotions.
+  // NOTE: "promotions" arg = special override for Hiddenqueen variant
   addPawnMoves([x1, y1], [x2, y2], moves, promotions) {
     let finalPieces = ["p"];
     const color = this.getColor(x1, y1);
     const oppCol = C.GetOppCol(color);
     const lastRank = (color == "w" ? 0 : this.size.x - 1);
-    if (x2 == lastRank && (!this.options["rifle"] || this.board[x2][y2] == ""))
-    {
-      // promotions arg: special override for Hiddenqueen variant
+    const promotionOk =
+      x2 == lastRank && (!this.options["rifle"] || this.board[x2][y2] == "");
+    if (promotionOk && !this.options["pawnfall"]) {
       if (
         this.options["cannibal"] &&
         this.board[x2][y2] != "" &&
@@ -1566,8 +1574,15 @@ export default class ChessRules {
         finalPieces = this.pawnSpecs.promotions;
     }
     for (let piece of finalPieces) {
-      const tr = (piece != "p" ? { c: color, p: piece } : null);
-      moves.push(this.getBasicMove([x1, y1], [x2, y2], tr));
+      const tr = !this.options["pawnfall"] && piece != "p"
+        ? { c: color, p: piece }
+        : null;
+      let newMove = this.getBasicMove([x1, y1], [x2, y2], tr);
+      if (promotionOk && this.options["pawnfall"]) {
+        newMove.appear.shift();
+        newMove.pawnfall = true; //required in prePlay()
+      }
+      moves.push(newMove);
     }
   }
 
@@ -1779,7 +1794,7 @@ export default class ChessRules {
 
   // Is (king at) given position under check by "color" ?
   underCheck([x, y], color) {
-    if (this.taking || this.options["dark"]) return false;
+    if (this.options["taking"] || this.options["dark"]) return false;
     color = color || C.GetOppCol(this.getColor(x, y));
     const pieces = this.pieces(color);
     return Object.keys(pieces).some(p => {
@@ -1849,7 +1864,7 @@ export default class ChessRules {
         return res;
       });
     }
-    if (this.taking || this.options["dark"]) return moves;
+    if (this.options["taking"] || this.options["dark"]) return moves;
     const kingPos = this.searchKingPos(color);
     let filtered = {}; //avoid re-checking similar moves (promotions...)
     return moves.filter(m => {
@@ -1955,7 +1970,7 @@ export default class ChessRules {
       }
     }
     const minSize = Math.min(move.appear.length, move.vanish.length);
-    if (this.hasReserve) {
+    if (this.hasReserve && !move.pawnfall) {
       const color = this.turn;
       for (let i=minSize; i<move.appear.length; i++) {
         // Something appears = dropped on board (some exceptions, Chakart...)
@@ -2097,7 +2112,7 @@ export default class ChessRules {
       nbR++;
     }
     const rsqSize = this.getReserveSquareSize(r.width, nbR);
-    return [ridx * rsqSize, rsqSize]; //slightly inaccurate... TODO?
+    return [-ridx * rsqSize, rsqSize]; //slightly inaccurate... TODO?
   }
 
   animate(move, callback) {

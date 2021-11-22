@@ -191,6 +191,7 @@ button.block-btn {
 /* Options when starting custom game */
 .words {
   line-height: 0.9em;
+  margin-top: 15px;
 }
 .words > .row {
   margin: 0;
@@ -210,7 +211,12 @@ button.block-btn {
 }
 
 .option-select, .option-check {
-  margin: 15px 0;
+  margin: 15px 0 0 0;
+}
+
+.option-check {
+  display: inline-block;
+  margin-right: 10px;
 }
 
 .btn-wrap {

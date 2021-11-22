@@ -206,6 +206,7 @@ function fillGameInfos(gameInfos, oppIndex) {
         for (let j=i; j<i+4; j++) {
           if (j == options.length) break;
           const opt = options[j];
+          if (!opt[1]) continue;
           htmlContent +=
             '<span class="option">' +
             (opt[1] === true ? opt[0] : `${opt[0]}:${opt[1]}`) + " " +
@@ -428,12 +429,7 @@ const afterPlay = (move) => {
     }
   };
   // Pack into one moves array, then send
-  curMoves.push({
-    appear: move.appear,
-    vanish: move.vanish,
-    start: move.start,
-    end: move.end
-  });
+  curMoves.push(move);
   if (vr.turn != playerColor) {
     toggleTurnIndicator(false);
     send("newmove",
