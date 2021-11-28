@@ -8,5 +8,8 @@ Checkered-Teleport ?
 add mode diagram --> use vchess rules (only english? only french?)
 add variants : Chakart first (dark,cylinder)
 
-Recycle : pawns fall out of board on 8th rank.
-captureKing : property, == this.taking || this.options["dark"]
+bouton random rematch
+cancel en rouge
+flèche sur plateau + mode diagramme
+coté serveur : si disconnect, supprimer rematch en cours
+réfléchir aux animations par variante (reversi, Chakart, Atomic, ...)
