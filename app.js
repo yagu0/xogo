@@ -103,7 +103,7 @@ function showNewGameForm() {
     toggleVisible("newGameForm");
     import(`/variants/${vname}/class.js`).then(module => {
       window.V = module.default;
-      V.Aliases.forEach(e => window[e.key] = e.val);
+      for (const [k, v] of Object.entries(V.Aliases)) window[k] = v;
       prepareOptions();
     });
   }
@@ -448,7 +448,7 @@ function initializeGame(obj) {
   const options = obj.options || {};
   import(`/variants/${obj.vname}/class.js`).then(module => {
     window.V = module.default;
-    V.Aliases.forEach(e => window[e.key] = e.val);
+    for (const [k, v] of Object.entries(V.Aliases)) window[k] = v;
     // Load CSS. Avoid loading twice the same stylesheet:
     const allIds = [].slice.call($.styleSheets).map(s => s.id);
     const newId = obj.vname + "_css";

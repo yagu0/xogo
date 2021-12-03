@@ -8,7 +8,7 @@ import Move from "/utils/Move.js";
 export default class ChessRules {
 
   static get Aliases() {
-    return [{'C': ChessRules}];
+    return {'C': ChessRules};
   }
 
   /////////////////////////
