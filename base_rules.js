@@ -7,6 +7,10 @@ import Move from "/utils/Move.js";
 // NOTE: ChessRules is aliased as window.C, and variants as window.V
 export default class ChessRules {
 
+  static get Aliases() {
+    return [{'C': ChessRules}];
+  }
+
   /////////////////////////
   // VARIANT SPECIFICATIONS
 
@@ -380,8 +384,6 @@ export default class ChessRules {
 
   // Fen string fully describes the game state
   constructor(o) {
-    window.C = ChessRules; //easier alias
-
     this.options = o.options;
     this.playerColor = o.color;
     this.afterPlay = o.afterPlay;

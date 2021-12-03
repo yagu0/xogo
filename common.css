@@ -151,7 +151,7 @@ button:hover, button.block-btn:hover {
 button.block-btn {
   display: block;
   background-color: #01786F;
-  margin: 0 auto 20px auto;
+  margin: 0 auto 20px auto; /*TODO: margin-bottom 30px ? */
   font-size: 2rem;
   padding: 15px 32px;
 }
