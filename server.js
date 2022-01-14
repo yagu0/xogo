@@ -17,47 +17,53 @@ function send(sid, code, data) {
   if (socket) socket.send(JSON.stringify(Object.assign({ code: code }, data)));
 }
 
+function launchGame(vname, players, options) {
+  const gid =
+    Crypto.randomBytes(randstrSize).toString("hex").slice(0, randstrSize);
+  games[gid] = {
+    vname: vname,
+    players: players.map(p => {
+               return (!p ? null : {sid: p.sid, name: p.name});
+             }),
+    options: options,
+    time: Date.now()
+  };
+  if (players.every(p => p)) {
+    const gameInfo = Object.assign(
+      // Provide seed so that both players initialize with same FEN
+      {seed: Math.floor(Math.random() * 1984), gid: gid},
+      games[gid]);
+    for (const p of players) {
+      send(p.sid,
+           "gamestart",
+           Object.assign({randvar: p.randvar}, gameInfo));
+    }
+  }
+  else {
+    // Incomplete players array: do not start game yet
+    send(sid, "gamecreated", {gid: gid});
+    // If nobody joins within 5 minutes, delete game
+    setTimeout(
+      () => {
+        if (games[gid] && games[gid].players.some(p => !p))
+          delete games[gid];
+      },
+      5 * 60000
+    );
+  }
+}
+
+function getRandomVariant() {
+  // Pick a variant at random in the list
+  const index = Math.floor(Math.random() * variants.length);
+  return variants[index].name;
+}
+
 wss.on("connection", (socket, req) => {
   const sid = req.url.split("=")[1]; //...?sid=...
   sockets[sid] = socket;
   socket.isAlive = true;
   socket.on("pong", () => socket.isAlive = true);
-
-  function launchGame(vname, players, options) {
-    const gid =
-      Crypto.randomBytes(randstrSize).toString("hex").slice(0, randstrSize);
-    games[gid] = {
-      vname: vname,
-      players: players.map(p => {
-                 return (!p ? null : {sid: p.sid, name: p.name});
-               }),
-      options: options,
-      time: Date.now()
-    };
-    if (players.every(p => p)) {
-      const gameInfo = Object.assign(
-        // Provide seed so that both players initialize with same FEN
-        {seed: Math.floor(Math.random() * 1984), gid: gid},
-        games[gid]);
-      for (const p of players) {
-        send(p.sid,
-             "gamestart",
-             Object.assign({randvar: p.randvar}, gameInfo));
-      }
-    }
-    else {
-      // Incomplete players array: do not start game yet
-      send(sid, "gamecreated", {gid: gid});
-      // If nobody joins within 5 minutes, delete game
-      setTimeout(
-        () => {
-          if (games[gid] && games[gid].players.some(p => !p))
-            delete games[gid];
-        },
-        5 * 60000
-      );
-    }
-  }
 
   socket.on("message", (msg) => {
     const obj = JSON.parse(msg);
@@ -83,11 +89,7 @@ wss.on("connection", (socket, req) => {
         }
         if (opponent) {
           delete challenges[choice];
-          if (choice == "_random") {
-            // Pick a variant at random in the list
-            const index = Math.floor(Math.random() * variants.length);
-            choice = variants[index].name;
-          }
+          if (choice == "_random") choice = getRandomVariant();
           // Launch game
           let players = [
             {sid: sid, name: obj.name, randvar: randvar},
@@ -120,11 +122,14 @@ wss.on("connection", (socket, req) => {
         if (!games[obj.gid]) send(sid, "closerematch");
         else {
           const myIndex = (games[obj.gid].players[0].sid == sid ? 0 : 1);
-          if (!games[obj.gid].rematch) games[obj.gid].rematch = [false, false];
-          games[obj.gid].rematch[myIndex] = true;
+          if (!games[obj.gid].rematch) games[obj.gid].rematch = [0, 0];
+          games[obj.gid].rematch[myIndex] = !obj.random ? 1 : 2;
           if (games[obj.gid].rematch[1-myIndex]) {
             // Launch new game, colors reversed
-            launchGame(games[obj.gid].vname,
+            let vname = games[obj.gid].vname;
+            if (games[obj.gid].rematch.every(r => r == 2))
+              vname = getRandomVariant();
+            launchGame(vname,
                        games[obj.gid].players.reverse(),
                        games[obj.gid].options);
           }

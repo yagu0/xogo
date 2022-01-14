@@ -86,8 +86,9 @@ function cancelSeek() {
   if (send("cancelseek", {vname: seek_vname})) toggleVisible("newGame");
 }
 
-function sendRematch() {
-  if (send("rematch", {gid: gid})) toggleVisible("pendingRematch");
+function sendRematch(random) {
+  if (send("rematch", {gid: gid, random: !!random}))
+    toggleVisible("pendingRematch");
 }
 function cancelRematch() {
   if (send("norematch", {gid: gid})) toggleVisible("newGame");

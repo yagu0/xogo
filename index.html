@@ -16,16 +16,21 @@
       <div id="boardContainer"></div>
       <div id="gameStopped">
         <h1>Game over</h1>
+        <h4>Rematch</h4>
         <div class="btn-wrap">
           <button id="rematchBtn"
                   onClick="sendRematch()">
-            Rematch
+            Same
           </button>
-          <button class="cancel-something"
-                  onClick="cancelRematch()">
-            Close
+          <button id="rematchBtn"
+                  onClick="sendRematch('random')">
+            Random
           </button>
         </div>
+        <button class="cancel-something"
+                onClick="cancelRematch()">
+          Close
+        </button>
       </div>
       <div id="pendingRematch">
         <div class="loader hour-glass"></div>
