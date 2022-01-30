@@ -5,7 +5,7 @@ Checkered-Teleport ?
 
 // TODO: Otage, Emergo, Pacosako : fonction "buildPiece(arg1, arg2)" returns HTML element with 2 SVG or SVG + number
 
-add mode diagram --> use vchess rules (only english? only french?)
+add mode diagram --> use vchess rules (only english)
 add variants : Chakart first (dark,cylinder)
 
 bouton random rematch : OK, now better style + show rules if random (or not?)
