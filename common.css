@@ -66,6 +66,15 @@ h1 {
   margin: 10px 0;
 }
 
+h4 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  display: block;
+  margin: 10px 0;
+  color: darkgreen;
+}
+
 #gameInfos,
 #boardContainer,
 #gameStopped,
@@ -154,6 +163,13 @@ button.block-btn {
   margin: 0 auto 30px auto; /*TODO: margin-bottom 20px ? */
   font-size: 2rem;
   padding: 15px 32px;
+}
+
+button.cancel-something {
+  background-color: darkred;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 #upLeftInfos {
