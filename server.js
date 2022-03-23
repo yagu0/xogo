@@ -22,9 +22,7 @@ function launchGame(vname, players, options) {
     Crypto.randomBytes(randstrSize).toString("hex").slice(0, randstrSize);
   games[gid] = {
     vname: vname,
-    players: players.map(p => {
-               return (!p ? null : {sid: p.sid, name: p.name});
-             }),
+    players: players,
     options: options,
     time: Date.now()
   };
@@ -127,8 +125,10 @@ wss.on("connection", (socket, req) => {
           if (games[obj.gid].rematch[1-myIndex]) {
             // Launch new game, colors reversed
             let vname = games[obj.gid].vname;
-            if (games[obj.gid].rematch.every(r => r == 2))
-              vname = getRandomVariant();
+            const allrand = games[obj.gid].rematch.every(r => r == 2);
+            if (allrand) vname = getRandomVariant();
+            games[obj.gid].players.forEach(p =>
+              p.randvar = allrand ? true : false);
             launchGame(vname,
                        games[obj.gid].players.reverse(),
                        games[obj.gid].options);
