@@ -398,7 +398,8 @@ connectToWSS();
 // Playing
 
 function toggleTurnIndicator(myTurn) {
-  let indicator = $.getElementById("chessboard");
+  let indicator =
+    $.getElementById("boardContainer").querySelector(".chessboard");
   if (myTurn) indicator.style.outline = "thick solid green";
   else indicator.style.outline = "thick solid lightgrey";
 }
@@ -480,11 +481,11 @@ function initializeGame(obj) {
           </g>
         </svg>
       </div>
-      <div class="resizeable" id="chessboard"></div>`;
+      <div class="resizeable chessboard"></div>`;
     vr = new V({
       seed: obj.seed, //may be null if FEN already exists (running game)
       fen: obj.fen,
-      element: "chessboard",
+      element: "boardContainer",
       color: playerColor,
       afterPlay: afterPlay,
       options: options

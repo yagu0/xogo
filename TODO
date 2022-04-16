@@ -1,15 +1,6 @@
+add variants : Chakart first (dark,cylinder)
 Dark Racing Kings ?
 Checkered-Teleport ?
 
-// rem ref to boardContainer --> rethink CSS design...
-
-// TODO: Otage, Emergo, Pacosako : fonction "buildPiece(arg1, arg2)" returns HTML element with 2 SVG or SVG + number
-
-add mode diagram --> use vchess rules (only english)
-add variants : Chakart first (dark,cylinder)
-
-bouton random rematch : OK, now better style + show rules if random (or not?)
-cancel en rouge
-flèche sur plateau + mode diagramme
-coté serveur : si disconnect, supprimer rematch en cours
+Otage, Emergo, Pacosako : fonction "buildPiece(arg1, arg2)" returns HTML element with 2 SVG or SVG + number
 réfléchir aux animations par variante (reversi, Chakart, Atomic, ...)

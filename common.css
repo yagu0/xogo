@@ -265,7 +265,7 @@ a {
 }
 
 /* Board container (without reserves) */
-#chessboard {
+.chessboard {
   position: absolute;
   cursor: pointer;
 }
@@ -289,7 +289,7 @@ piece {
 }
 
 /* Drawing of the board */
-#chessboard_SVG {
+.chessboard_SVG {
   width: 100%;
   height: 100%;
 }

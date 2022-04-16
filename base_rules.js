@@ -487,8 +487,9 @@ export default class ChessRules {
 
   // Apply diff this.enlightened --> newEnlightened on board
   graphUpdateEnlightened(newEnlightened) {
-    let container = document.getElementById(this.containerId);
-    const r = container.getBoundingClientRect();
+    let chessboard =
+      document.getElementById(this.containerId).querySelector(".chessboard");
+    const r = chessboard.getBoundingClientRect();
     const pieceWidth = this.getPieceWidth(r.width);
     for (let x=0; x<this.size.x; x++) {
       for (let y=0; y<this.size.y; y++) {
@@ -517,7 +518,7 @@ export default class ChessRules {
             const [ip, jp] = this.getPixelPosition(x, y, r);
             this.g_pieces[x][y].style.transform =
               `translate(${ip}px,${jp}px)`;
-            container.appendChild(this.g_pieces[x][y]);
+            chessboard.appendChild(this.g_pieces[x][y]);
           }
         }
       }
@@ -575,17 +576,18 @@ export default class ChessRules {
     window.onresize = () => this.re_drawBoardElements();
     this.re_drawBoardElements();
     this.initMouseEvents();
-    const container = document.getElementById(this.containerId);
-    new ResizeObserver(this.rescale).observe(container);
+    const chessboard =
+      document.getElementById(this.containerId).querySelector(".chessboard");
+    new ResizeObserver(this.rescale).observe(chessboard);
   }
 
   re_drawBoardElements() {
     const board = this.getSvgChessboard();
     const oppCol = C.GetOppCol(this.playerColor);
-    let container = document.getElementById(this.containerId);
-    container.innerHTML = "";
-    container.insertAdjacentHTML('beforeend', board);
-    let cb = container.querySelector("#" + this.containerId + "_SVG");
+    let chessboard =
+      document.getElementById(this.containerId).querySelector(".chessboard");
+    chessboard.innerHTML = "";
+    chessboard.insertAdjacentHTML('beforeend', board);
     const aspectRatio = this.size.y / this.size.x;
     // Compare window ratio width / height to aspectRatio:
     const windowRatio = window.innerWidth / window.innerHeight;
@@ -608,13 +610,13 @@ export default class ChessRules {
         cbWidth = cbHeight * aspectRatio;
       }
     }
-    container.style.width = cbWidth + "px";
-    container.style.height = cbHeight + "px";
+    chessboard.style.width = cbWidth + "px";
+    chessboard.style.height = cbHeight + "px";
     // Center chessboard:
     const spaceLeft = (window.innerWidth - cbWidth) / 2,
           spaceTop = (window.innerHeight - cbHeight) / 2;
-    container.style.left = spaceLeft + "px";
-    container.style.top = spaceTop + "px";
+    chessboard.style.left = spaceLeft + "px";
+    chessboard.style.top = spaceTop + "px";
     // Give sizes instead of recomputing them,
     // because chessboard might not be drawn yet.
     this.setupPieces({
@@ -633,7 +635,7 @@ export default class ChessRules {
       <svg
         viewBox="0 0 80 80"
         version="1.1"
-        id="${this.containerId}_SVG">
+        class="chessboard_SVG">
       <g>`;
     for (let i=0; i < sizeX; i++) {
       for (let j=0; j < sizeY; j++) {
@@ -674,8 +676,9 @@ export default class ChessRules {
       }
     }
     else this.g_pieces = ArrayFun.init(this.size.x, this.size.y, null);
-    let container = document.getElementById(this.containerId);
-    if (!r) r = container.getBoundingClientRect();
+    let chessboard =
+      document.getElementById(this.containerId).querySelector(".chessboard");
+    if (!r) r = chessboard.getBoundingClientRect();
     const pieceWidth = this.getPieceWidth(r.width);
     for (let i=0; i < this.size.x; i++) {
       for (let j=0; j < this.size.y; j++) {
@@ -692,7 +695,7 @@ export default class ChessRules {
           this.g_pieces[i][j].style.height = pieceWidth + "px";
           const [ip, jp] = this.getPixelPosition(i, j, r);
           this.g_pieces[i][j].style.transform = `translate(${ip}px,${jp}px)`;
-          container.appendChild(this.g_pieces[i][j]);
+          chessboard.appendChild(this.g_pieces[i][j]);
         }
       }
     }
@@ -718,10 +721,9 @@ export default class ChessRules {
       }
     }
     else this.r_pieces = { 'w': {}, 'b': {} };
-    if (!r) {
-      const container = document.getElementById(this.containerId);
-      r = container.getBoundingClientRect();
-    }
+    let chessboard =
+      document.getElementById(this.containerId).querySelector(".chessboard");
+    if (!r) r = chessboard.getBoundingClientRect();
     for (let c of colors) {
       if (!this.reserve[c]) continue;
       const nbR = this.getNbReservePieces(c);
@@ -738,7 +740,7 @@ export default class ChessRules {
       // NOTE: +1 fix display bug on Firefox at least
       rcontainer.style.width = (nbR * sqResSize + 1) + "px";
       rcontainer.style.height = sqResSize + "px";
-      document.getElementById("boardContainer").appendChild(rcontainer);
+      chessboard.appendChild(rcontainer);
       for (let p of Object.keys(this.reserve[c])) {
         if (this.reserve[c][p] == 0) continue;
         let r_cell = document.createElement("div");
@@ -783,25 +785,26 @@ export default class ChessRules {
 
   // After resize event: no need to destroy/recreate pieces
   rescale() {
-    let container = document.getElementById(this.containerId);
+    const container = document.getElementById(this.containerId);
     if (!container) return; //useful at initial loading
-    const r = container.getBoundingClientRect();
+    let chessboard = container.querySelector(".chessboard");
+    const r = chessboard.getBoundingClientRect();
     const newRatio = r.width / r.height;
     const aspectRatio = this.size.y / this.size.x;
     let newWidth = r.width,
         newHeight = r.height;
     if (newRatio > aspectRatio) {
       newWidth = r.height * aspectRatio;
-      container.style.width = newWidth + "px";
+      chessboard.style.width = newWidth + "px";
     }
     else if (newRatio < aspectRatio) {
       newHeight = r.width / aspectRatio;
-      container.style.height = newHeight + "px";
+      chessboard.style.height = newHeight + "px";
     }
     const newX = (window.innerWidth - newWidth) / 2;
-    container.style.left = newX + "px";
+    chessboard.style.left = newX + "px";
     const newY = (window.innerHeight - newHeight) / 2;
-    container.style.top = newY + "px";
+    chessboard.style.top = newY + "px";
     const newR = { x: newX, y: newY, width: newWidth, height: newHeight };
     const pieceWidth = this.getPieceWidth(newWidth);
     for (let i=0; i < this.size.x; i++) {
@@ -843,7 +846,7 @@ export default class ChessRules {
     }
   }
 
-  // Return the absolute pixel coordinates given current position.
+  // Return the absolute pixel coordinates (on board) given current position.
   // Our coordinate system differs from CSS one (x <--> y).
   // We return here the CSS coordinates (more useful).
   getPixelPosition(i, j, r) {
@@ -856,10 +859,13 @@ export default class ChessRules {
   }
 
   initMouseEvents() {
-    let container = document.getElementById(this.containerId);
+    let chessboard =
+      document.getElementById(this.containerId).querySelector(".chessboard");
 
     const getOffset = e => {
-      if (e.clientX) return {x: e.clientX, y: e.clientY}; //Mouse
+      if (e.clientX)
+        // Mouse
+        return {x: e.clientX, y: e.clientY};
       let touchLocation = null;
       if (e.targetTouches && e.targetTouches.length >= 1)
         // Touch screen, dragstart
@@ -869,14 +875,14 @@ export default class ChessRules {
         touchLocation = e.changedTouches[0];
       if (touchLocation)
         return {x: touchLocation.clientX, y: touchLocation.clientY};
-      return [0, 0]; //Big trouble here =)
+      return [0, 0]; //shouldn't reach here =)
     }
 
     const centerOnCursor = (piece, e) => {
       const centerShift = sqSize / 2;
       const offset = getOffset(e);
-      piece.style.left = (offset.x - centerShift) + "px";
-      piece.style.top = (offset.y - centerShift) + "px";
+      piece.style.left = (offset.x - r.x - centerShift) + "px";
+      piece.style.top = (offset.y - r.y - centerShift) + "px";
     }
 
     let start = null,
@@ -886,7 +892,7 @@ export default class ChessRules {
     const mousedown = (e) => {
       // Disable zoom on smartphones:
       if (e.touches && e.touches.length > 1) e.preventDefault();
-      r = container.getBoundingClientRect();
+      r = chessboard.getBoundingClientRect();
       sqSize = this.getSquareWidth(r.width);
       const square = this.idToCoords(e.target.id);
       if (square) {
@@ -905,9 +911,9 @@ export default class ChessRules {
             curPiece.style.width = sqSize + "px";
             curPiece.style.height = sqSize + "px";
             centerOnCursor(curPiece, e);
-            document.getElementById("boardContainer").appendChild(curPiece);
+            chessboard.appendChild(curPiece);
             startPiece.style.opacity = "0.4";
-            container.style.cursor = "none";
+            chessboard.style.cursor = "none";
           }
         }
       }
@@ -924,7 +930,7 @@ export default class ChessRules {
     };
 
     const mouseup = (e) => {
-      const newR = container.getBoundingClientRect();
+      const newR = chessboard.getBoundingClientRect();
       if (newR.width != r.width || newR.height != r.height) {
         this.rescale();
         return;
@@ -933,7 +939,7 @@ export default class ChessRules {
       const [x, y] = [start.x, start.y];
       start = null;
       e.preventDefault();
-      container.style.cursor = "pointer";
+      chessboard.style.cursor = "pointer";
       startPiece.style.opacity = "1";
       const offset = getOffset(e);
       const landingElt = document.elementFromPoint(offset.x, offset.y);
@@ -966,22 +972,22 @@ export default class ChessRules {
 
   showChoices(moves, r) {
     let container = document.getElementById(this.containerId);
+    let chessboard = container.querySelector(".chessboard");
     let choices = document.createElement("div");
     choices.id = "choices";
     choices.style.width = r.width + "px";
     choices.style.height = r.height + "px";
     choices.style.left = r.x + "px";
     choices.style.top = r.y + "px";
-    container.style.opacity = "0.5";
-    let boardContainer = document.getElementById("boardContainer");
-    boardContainer.appendChild(choices);
+    chessboard.style.opacity = "0.5";
+    container.appendChild(choices);
     const squareWidth = this.getSquareWidth(r.width);
     const firstUpLeft = (r.width - (moves.length * squareWidth)) / 2;
     const firstUpTop = (r.height - squareWidth) / 2;
     const color = moves[0].appear[0].c;
     const callback = (m) => {
-      container.style.opacity = "1";
-      boardContainer.removeChild(choices);
+      chessboard.style.opacity = "1";
+      container.removeChild(choices);
       this.playPlusVisual(m, r);
     }
     for (let i=0; i < moves.length; i++) {
@@ -2082,8 +2088,9 @@ export default class ChessRules {
         this.g_pieces[v.x][v.y] = null;
       }
     });
-    let container = document.getElementById(this.containerId);
-    if (!r) r = container.getBoundingClientRect();
+    let chessboard =
+      document.getElementById(this.containerId).querySelector(".chessboard");
+    if (!r) r = chessboard.getBoundingClientRect();
     const pieceWidth = this.getPieceWidth(r.width);
     move.appear.forEach(a => {
       if (this.enlightened && !this.enlightened[a.x][a.y]) return;
@@ -2094,7 +2101,7 @@ export default class ChessRules {
       this.g_pieces[a.x][a.y].style.height = pieceWidth + "px";
       const [ip, jp] = this.getPixelPosition(a.x, a.y, r);
       this.g_pieces[a.x][a.y].style.transform = `translate(${ip}px,${jp}px)`;
-      container.appendChild(this.g_pieces[a.x][a.y]);
+      chessboard.appendChild(this.g_pieces[a.x][a.y]);
     });
   }
 
@@ -2126,7 +2133,8 @@ export default class ChessRules {
     const dropMove = (typeof i1 == "string");
     const startArray = (dropMove ? this.r_pieces : this.g_pieces);
     let startPiece = startArray[i1][j1];
-    let container = document.getElementById(this.containerId);
+    let chessboard =
+      document.getElementById(this.containerId).querySelector(".chessboard");
     const clonePiece = (
       !dropMove &&
       this.options["rifle"] ||
@@ -2142,7 +2150,7 @@ export default class ChessRules {
         startPiece.classList.add(pieces[this.captured.p]["class"]);
         // Color: OK
       }
-      container.appendChild(startPiece);
+      chessboard.appendChild(startPiece);
     }
     const [i2, j2] = [move.end.x, move.end.y];
     let startCoords;
@@ -2153,7 +2161,7 @@ export default class ChessRules {
       ];
     }
     else startCoords = [i1, j1];
-    const r = container.getBoundingClientRect();
+    const r = chessboard.getBoundingClientRect();
     const arrival = this.getPixelPosition(i2, j2, r); //TODO: arrival on drop?
     let rs = [0, 0];
     if (dropMove) rs = this.getReserveShift(i1, j1, r);
@@ -2184,8 +2192,7 @@ export default class ChessRules {
 
   playReceivedMove(moves, callback) {
     const launchAnimation = () => {
-      const r =
-        document.getElementById(this.containerId).getBoundingClientRect();
+      const r = container.querySelector(".chessboard").getBoundingClientRect();
       const animateRec = i => {
         this.animate(moves[i], () => {
           this.playVisual(moves[i], r);
@@ -2198,15 +2205,15 @@ export default class ChessRules {
     };
     // Delay if user wasn't focused:
     const checkDisplayThenAnimate = (delay) => {
-      if (boardContainer.style.display == "none") {
+      if (container.style.display == "none") {
         alert("New move! Let's go back to game...");
         document.getElementById("gameInfos").style.display = "none";
-        boardContainer.style.display = "block";
+        container.style.display = "block";
         setTimeout(launchAnimation, 700);
       }
       else setTimeout(launchAnimation, delay || 0);
     };
-    let boardContainer = document.getElementById("boardContainer");
+    let container = document.getElementById(this.containerId);
     if (document.hidden) {
       document.onvisibilitychange = () => {
         document.onvisibilitychange = undefined;

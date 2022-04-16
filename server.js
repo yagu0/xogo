@@ -201,6 +201,13 @@ wss.on("connection", (socket, req) => {
         break; //only one challenge per player
       }
     }
+    for (let g of Object.values(games)) {
+      const myIndex = g.players.findIndex(p => p.sid == sid);
+      if (myIndex >= 0) {
+        if (g.rematch && g.rematch[myIndex] > 0) g.rematch[myIndex] = 0;
+        break; //only one game per player
+      }
+    }
   });
 });
 
