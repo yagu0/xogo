@@ -25,9 +25,9 @@ export default class ChessRules {
         variable: "randomness",
         defaut: 0,
         options: [
-          { label: "Deterministic", value: 0 },
-          { label: "Symmetric random", value: 1 },
-          { label: "Asymmetric random", value: 2 }
+          {label: "Deterministic", value: 0},
+          {label: "Symmetric random", value: 1},
+          {label: "Asymmetric random", value: 2}
         ]
       }],
       check: [
@@ -65,8 +65,8 @@ export default class ChessRules {
   // Pawns specifications
   get pawnSpecs() {
     return {
-      directions: { 'w': -1, 'b': 1 },
-      initShift: { w: 1, b: 1 },
+      directions: {w: -1, b: 1},
+      initShift: {w: 1, b: 1},
       twoSquares: true,
       threeSquares: false,
       canCapture: true,
@@ -103,7 +103,8 @@ export default class ChessRules {
 
   // Some variants use click infos:
   doClick([x, y]) {
-    if (typeof x != "number") return null; //click on reserves
+    if (typeof x != "number")
+      return null; //click on reserves
     if (
       this.options["teleport"] && this.subTurnTeleport == 2 &&
       this.board[x][y] == ""
@@ -170,7 +171,8 @@ export default class ChessRules {
   }
 
   idToCoords(targetId) {
-    if (!targetId) return null; //outside page, maybe...
+    if (!targetId)
+      return null; //outside page, maybe...
     const idParts = targetId.split('|'); //prefix|sq-2-3 (start at 0 => 3,4)
     if (
       idParts.length < 2 ||
@@ -271,11 +273,16 @@ export default class ChessRules {
     }
     // Add turn + flags + enpassant (+ reserve)
     let parts = [];
-    if (this.hasFlags) parts.push(`"flags":"${flags}"`);
-    if (this.hasEnpassant) parts.push('"enpassant":"-"');
-    if (this.hasReserve) parts.push('"reserve":"000000000000"');
-    if (this.options["crazyhouse"]) parts.push('"ispawn":"-"');
-    if (parts.length >= 1) fen += " {" + parts.join(",") + "}";
+    if (this.hasFlags)
+      parts.push(`"flags":"${flags}"`);
+    if (this.hasEnpassant)
+      parts.push('"enpassant":"-"');
+    if (this.hasReserve)
+      parts.push('"reserve":"000000000000"');
+    if (this.options["crazyhouse"])
+      parts.push('"ispawn":"-"');
+    if (parts.length >= 1)
+      fen += " {" + parts.join(",") + "}";
     return fen;
   }
 
@@ -287,7 +294,8 @@ export default class ChessRules {
       turn: fenParts[1],
       movesCount: fenParts[2]
     };
-    if (fenParts.length > 3) res = Object.assign(res, JSON.parse(fenParts[3]));
+    if (fenParts.length > 3)
+      res = Object.assign(res, JSON.parse(fenParts[3]));
     return res;
   }
 
@@ -299,13 +307,16 @@ export default class ChessRules {
       this.movesCount
     );
     let parts = [];
-    if (this.hasFlags) parts.push(`"flags":"${this.getFlagsFen()}"`);
+    if (this.hasFlags)
+      parts.push(`"flags":"${this.getFlagsFen()}"`);
     if (this.hasEnpassant)
       parts.push(`"enpassant":"${this.getEnpassantFen()}"`);
-    if (this.hasReserve) parts.push(`"reserve":"${this.getReserveFen()}"`);
+    if (this.hasReserve)
+      parts.push(`"reserve":"${this.getReserveFen()}"`);
     if (this.options["crazyhouse"])
       parts.push(`"ispawn":"${this.getIspawnFen()}"`);
-    if (parts.length >= 1) fen += " {" + parts.join(",") + "}";
+    if (parts.length >= 1)
+      fen += " {" + parts.join(",") + "}";
     return fen;
   }
 
@@ -314,9 +325,11 @@ export default class ChessRules {
     const format = (count) => {
       // if more than 9 consecutive free spaces, break the integer,
       // otherwise FEN parsing will fail.
-      if (count <= 9) return count;
+      if (count <= 9)
+        return count;
       // Most boards of size < 18:
-      if (count <= 18) return "9" + (count - 9);
+      if (count <= 18)
+        return "9" + (count - 9);
       // Except Gomoku:
       return "99" + (count - 18);
     };
@@ -324,7 +337,8 @@ export default class ChessRules {
     for (let i = 0; i < this.size.y; i++) {
       let emptyCount = 0;
       for (let j = 0; j < this.size.x; j++) {
-        if (this.board[i][j] == "") emptyCount++;
+        if (this.board[i][j] == "")
+          emptyCount++;
         else {
           if (emptyCount > 0) {
             // Add empty squares in-between
@@ -337,7 +351,8 @@ export default class ChessRules {
       if (emptyCount > 0)
         // "Flush remainder"
         position += format(emptyCount);
-      if (i < this.size.y - 1) position += "/"; //separate rows
+      if (i < this.size.y - 1)
+        position += "/"; //separate rows
     }
     return position;
   }
@@ -355,7 +370,8 @@ export default class ChessRules {
 
   // Enpassant part of the FEN string
   getEnpassantFen() {
-    if (!this.epSquare) return "-"; //no en-passant
+    if (!this.epSquare)
+      return "-"; //no en-passant
     return C.CoordsToSquare(this.epSquare);
   }
 
@@ -367,7 +383,8 @@ export default class ChessRules {
 
   getIspawnFen() {
     const coords = Object.keys(this.ispawn);
-    if (coords.length == 0) return "-";
+    if (coords.length == 0)
+      return "-";
     return coords.map(C.CoordsToSquare).join(",");
   }
 
@@ -389,7 +406,8 @@ export default class ChessRules {
     this.afterPlay = o.afterPlay;
 
     // FEN-related:
-    if (!o.fen) o.fen = this.genRandInitFen(o.seed);
+    if (!o.fen)
+      o.fen = this.genRandInitFen(o.seed);
     const fenParsed = this.parseFen(o.fen);
     this.board = this.getBoard(fenParsed.position);
     this.turn = fenParsed.turn;
@@ -411,9 +429,11 @@ export default class ChessRules {
         const character = rows[i][indexInRow];
         const num = parseInt(character, 10);
         // If num is a number, just shift j:
-        if (!isNaN(num)) j += num;
+        if (!isNaN(num))
+          j += num;
         // Else: something at position i,j
-        else board[i][j++] = this.fen2board(character);
+        else
+          board[i][j++] = this.fen2board(character);
       }
     }
     return board;
@@ -422,11 +442,14 @@ export default class ChessRules {
   // Some additional variables from FEN (variant dependant)
   setOtherVariables(fenParsed) {
     // Set flags and enpassant:
-    if (this.hasFlags) this.setFlags(fenParsed.flags);
+    if (this.hasFlags)
+      this.setFlags(fenParsed.flags);
     if (this.hasEnpassant)
       this.epSquare = this.getEpSquare(fenParsed.enpassant);
-    if (this.hasReserve) this.initReserves(fenParsed.reserve);
-    if (this.options["crazyhouse"]) this.initIspawn(fenParsed.ispawn);
+    if (this.hasReserve)
+      this.initReserves(fenParsed.reserve);
+    if (this.options["crazyhouse"])
+      this.initIspawn(fenParsed.ispawn);
     this.subTurn = 1; //may be unused
     if (this.options["teleport"]) {
       this.subTurnTeleport = 1;
@@ -463,8 +486,10 @@ export default class ChessRules {
         }
       }
     }
-    if (this.epSquare) this.enlightEnpassant(newEnlightened);
-    if (withGraphics) this.graphUpdateEnlightened(newEnlightened);
+    if (this.epSquare)
+      this.enlightEnpassant(newEnlightened);
+    if (withGraphics)
+      this.graphUpdateEnlightened(newEnlightened);
     this.enlightened = newEnlightened;
   }
 
@@ -531,8 +556,10 @@ export default class ChessRules {
     this.reserve = { w: {}, b: {} };
     const pieceName = Object.keys(this.pieces());
     for (let i of ArrayFun.range(12)) {
-      if (i < 6) this.reserve['w'][pieceName[i]] = counts[i];
-      else this.reserve['b'][pieceName[i-6]] = counts[i];
+      if (i < 6)
+        this.reserve['w'][pieceName[i]] = counts[i];
+      else
+        this.reserve['b'][pieceName[i-6]] = counts[i];
     }
   }
 
@@ -541,7 +568,8 @@ export default class ChessRules {
       this.ispawn = ispawnStr.split(",").map(C.SquareToCoords)
                     .reduce((o, key) => ({ ...o, [key]: true}), {});
     }
-    else this.ispawn = {};
+    else
+      this.ispawn = {};
   }
 
   getNbReservePieces(color) {
@@ -675,10 +703,12 @@ export default class ChessRules {
         }
       }
     }
-    else this.g_pieces = ArrayFun.init(this.size.x, this.size.y, null);
+    else
+      this.g_pieces = ArrayFun.init(this.size.x, this.size.y, null);
     let chessboard =
       document.getElementById(this.containerId).querySelector(".chessboard");
-    if (!r) r = chessboard.getBoundingClientRect();
+    if (!r)
+      r = chessboard.getBoundingClientRect();
     const pieceWidth = this.getPieceWidth(r.width);
     for (let i=0; i < this.size.x; i++) {
       for (let j=0; j < this.size.y; j++) {
@@ -699,7 +729,8 @@ export default class ChessRules {
         }
       }
     }
-    if (this.reserve) this.re_drawReserve(['w', 'b'], r);
+    if (this.reserve)
+      this.re_drawReserve(['w', 'b'], r);
   }
 
   // NOTE: assume !!this.reserve
@@ -707,7 +738,8 @@ export default class ChessRules {
     if (this.r_pieces) {
       // Remove (old) reserve pieces
       for (let c of colors) {
-        if (!this.reserve[c]) continue;
+        if (!this.reserve[c])
+          continue;
         Object.keys(this.reserve[c]).forEach(p => {
           if (this.r_pieces[c][p]) {
             this.r_pieces[c][p].remove();
@@ -717,17 +749,22 @@ export default class ChessRules {
           }
         });
         let reservesDiv = document.getElementById("reserves_" + c);
-        if (reservesDiv) reservesDiv.remove();
+        if (reservesDiv)
+          reservesDiv.remove();
       }
     }
-    else this.r_pieces = { 'w': {}, 'b': {} };
+    else
+      this.r_pieces = { 'w': {}, 'b': {} };
     let chessboard =
       document.getElementById(this.containerId).querySelector(".chessboard");
-    if (!r) r = chessboard.getBoundingClientRect();
+    if (!r)
+      r = chessboard.getBoundingClientRect();
     for (let c of colors) {
-      if (!this.reserve[c]) continue;
+      if (!this.reserve[c])
+        continue;
       const nbR = this.getNbReservePieces(c);
-      if (nbR == 0) continue;
+      if (nbR == 0)
+        continue;
       const sqResSize = this.getReserveSquareSize(r.width, nbR);
       let ridx = 0;
       const vShift = (c == this.playerColor ? r.height + 5 : -sqResSize - 5);
@@ -742,7 +779,8 @@ export default class ChessRules {
       rcontainer.style.height = sqResSize + "px";
       chessboard.appendChild(rcontainer);
       for (let p of Object.keys(this.reserve[c])) {
-        if (this.reserve[c][p] == 0) continue;
+        if (this.reserve[c][p] == 0)
+          continue;
         let r_cell = document.createElement("div");
         r_cell.id = this.coordsToId([c, p]);
         r_cell.classList.add("reserve-cell");
@@ -776,7 +814,8 @@ export default class ChessRules {
     const oldCount = this.reserve[color][piece];
     this.reserve[color][piece] = count;
     // Redrawing is much easier if count==0
-    if ([oldCount, count].includes(0)) this.re_drawReserve([color]);
+    if ([oldCount, count].includes(0))
+      this.re_drawReserve([color]);
     else {
       const numId = this.getReserveNumId(color, piece);
       document.getElementById(numId).textContent = count;
@@ -786,7 +825,8 @@ export default class ChessRules {
   // After resize event: no need to destroy/recreate pieces
   rescale() {
     const container = document.getElementById(this.containerId);
-    if (!container) return; //useful at initial loading
+    if (!container)
+      return; //useful at initial loading
     let chessboard = container.querySelector(".chessboard");
     const r = chessboard.getBoundingClientRect();
     const newRatio = r.width / r.height;
@@ -818,14 +858,17 @@ export default class ChessRules {
         }
       }
     }
-    if (this.reserve) this.rescaleReserve(newR);
+    if (this.reserve)
+      this.rescaleReserve(newR);
   }
 
   rescaleReserve(r) {
     for (let c of ['w','b']) {
-      if (!this.reserve[c]) continue;
+      if (!this.reserve[c])
+        continue;
       const nbR = this.getNbReservePieces(c);
-      if (nbR == 0) continue;
+      if (nbR == 0)
+        continue;
       // Resize container first
       const sqResSize = this.getReserveSquareSize(r.width, nbR);
       const vShift = (c == this.playerColor ? r.height + 5 : -sqResSize - 5);
@@ -838,7 +881,8 @@ export default class ChessRules {
       // And then reserve cells:
       const rpieceWidth = this.getReserveSquareSize(r.width, nbR);
       Object.keys(this.reserve[c]).forEach(p => {
-        if (this.reserve[c][p] == 0) return;
+        if (this.reserve[c][p] == 0)
+          return;
         let r_cell = document.getElementById(this.coordsToId([c, p]));
         r_cell.style.width = sqResSize + "px";
         r_cell.style.height = sqResSize + "px";
@@ -851,7 +895,8 @@ export default class ChessRules {
   // We return here the CSS coordinates (more useful).
   getPixelPosition(i, j, r) {
     const sqSize = this.getSquareWidth(r.width);
-    if (i < 0 || j < 0) return [0, 0]; //piece vanishes
+    if (i < 0 || j < 0)
+      return [0, 0]; //piece vanishes
     const flipped = (this.playerColor == 'b');
     const x = (flipped ? this.size.y - 1 - j : j) * sqSize;
     const y = (flipped ? this.size.x - 1 - i : i) * sqSize;
@@ -891,17 +936,21 @@ export default class ChessRules {
         sqSize;
     const mousedown = (e) => {
       // Disable zoom on smartphones:
-      if (e.touches && e.touches.length > 1) e.preventDefault();
+      if (e.touches && e.touches.length > 1)
+        e.preventDefault();
       r = chessboard.getBoundingClientRect();
       sqSize = this.getSquareWidth(r.width);
       const square = this.idToCoords(e.target.id);
       if (square) {
         const [i, j] = square;
         const move = this.doClick([i, j]);
-        if (move) this.playPlusVisual(move);
+        if (move)
+          this.playPlusVisual(move);
         else {
-          if (typeof i != "number") startPiece = this.r_pieces[i][j];
-          else if (this.g_pieces[i][j]) startPiece = this.g_pieces[i][j];
+          if (typeof i != "number")
+            startPiece = this.r_pieces[i][j];
+          else if (this.g_pieces[i][j])
+            startPiece = this.g_pieces[i][j];
           if (startPiece && this.canIplay(i, j)) {
             e.preventDefault();
             start = { x: i, y: j };
@@ -935,7 +984,8 @@ export default class ChessRules {
         this.rescale();
         return;
       }
-      if (!start) return;
+      if (!start)
+        return;
       const [x, y] = [start.x, start.y];
       start = null;
       e.preventDefault();
@@ -950,8 +1000,10 @@ export default class ChessRules {
         const potentialMoves = this.getPotentialMovesFrom([x, y])
           .filter(m => m.end.x == i && m.end.y == j);
         const moves = this.filterValid(potentialMoves);
-        if (moves.length >= 2) this.showChoices(moves, r);
-        else if (moves.length == 1) this.playPlusVisual(moves[0], r);
+        if (moves.length >= 2)
+          this.showChoices(moves, r);
+        else if (moves.length == 1)
+          this.playPlusVisual(moves[0], r);
       }
       curPiece.remove();
     };
@@ -1127,9 +1179,11 @@ export default class ChessRules {
 
   // For Cylinder: get Y coordinate
   computeY(y) {
-    if (!this.options["cylinder"]) return y;
+    if (!this.options["cylinder"])
+      return y;
     let res = y % this.size.y;
-    if (res < 0) res += this.size.y;
+    if (res < 0)
+      res += this.size.y;
     return res;
   }
 
@@ -1146,7 +1200,8 @@ export default class ChessRules {
             let [ii, jj] = [i + step[0], this.computeY(j + step[1])];
             let stepCounter = 1;
             while (this.onBoard(ii, jj) && this.board[ii][jj] == "") {
-              if (specs.range <= stepCounter++) continue outerLoop;
+              if (specs.range <= stepCounter++)
+                continue outerLoop;
               ii += step[0];
               jj = this.computeY(jj + step[1]);
             }
@@ -1169,7 +1224,8 @@ export default class ChessRules {
   getDropMovesFrom([c, p]) {
     // NOTE: by design, this.reserve[c][p] >= 1 on user click
     // (but not necessarily otherwise)
-    if (this.reserve[c][p] == 0) return [];
+    if (this.reserve[c][p] == 0)
+      return [];
     let moves = [];
     for (let i=0; i<this.size.x; i++) {
       for (let j=0; j<this.size.y; j++) {
@@ -1199,12 +1255,16 @@ export default class ChessRules {
 
   // All possible moves from selected square
   getPotentialMovesFrom(sq, color) {
-    if (typeof sq[0] == "string") return this.getDropMovesFrom(sq);
-    if (this.options["madrasi"] && this.isImmobilized(sq)) return [];
+    if (typeof sq[0] == "string")
+      return this.getDropMovesFrom(sq);
+    if (this.options["madrasi"] && this.isImmobilized(sq))
+      return [];
     const piece = this.getPieceType(sq[0], sq[1]);
     let moves;
-    if (piece == "p") moves = this.getPotentialPawnMoves(sq);
-    else moves = this.getPotentialMovesOf(piece, sq);
+    if (piece == "p")
+      moves = this.getPotentialPawnMoves(sq);
+    else
+      moves = this.getPotentialMovesOf(piece, sq);
     if (
       piece == "k" &&
       this.hasCastle &&
@@ -1216,7 +1276,8 @@ export default class ChessRules {
   }
 
   postProcessPotentialMoves(moves) {
-    if (moves.length == 0) return [];
+    if (moves.length == 0)
+      return [];
     const color = this.getColor(moves[0].start.x, moves[0].start.y);
     const oppCol = C.GetOppCol(color);
 
@@ -1266,7 +1327,8 @@ export default class ChessRules {
               );
             }
           }
-          if (!this.options["rifle"]) m.appear.pop(); //nothin appears
+          if (!this.options["rifle"])
+            m.appear.pop(); //nothin appears
         }
       });
     }
@@ -1342,7 +1404,8 @@ export default class ChessRules {
       let [i, j] = [x + step[0], y + step[1]];
       let stepCounter = 1;
       while (this.onBoard(i, j) && this.board[i][j] == "") {
-        if (range <= stepCounter++) continue outerLoop;
+        if (range <= stepCounter++)
+          continue outerLoop;
         i += step[0];
         j = this.computeY(j + step[1]);
       }
@@ -1374,7 +1437,8 @@ export default class ChessRules {
       ) {
         explored[i + "." + j] = true;
         moves.push(this.getBasicMove([x, y], [i, j]));
-        if (range <= stepCounter++) continue outerLoop;
+        if (range <= stepCounter++)
+          continue outerLoop;
         i += step[0];
         j = this.computeY(j + step[1]);
       }
@@ -1412,14 +1476,16 @@ export default class ChessRules {
         return; //king isn't captured this way
       }
       const steps = pieces[p].attack || pieces[p].steps;
-      if (!steps) return; //cannibal king for example (TODO...)
+      if (!steps)
+        return; //cannibal king for example (TODO...)
       const range = pieces[p].range;
       steps.forEach(s => {
         // From x,y: revert step
         let [i, j] = [x - s[0], this.computeY(y - s[1])];
         let stepCounter = 1;
         while (this.onBoard(i, j) && this.board[i][j] == "") {
-          if (range <= stepCounter++) return;
+          if (range <= stepCounter++)
+            return;
           i -= s[0];
           j = this.computeY(j - s[1]);
         }
@@ -1429,8 +1495,10 @@ export default class ChessRules {
           this.getColor(i, j) == oppCol && //condition for Recycle & Teleport
           this.canTake([i, j], [x, y])
         ) {
-          if (pieceType != "p") moves.push(this.getBasicMove([x, y], [i, j]));
-          else this.addPawnMoves([x, y], [i, j], moves);
+          if (pieceType != "p")
+            moves.push(this.getBasicMove([x, y], [i, j]));
+          else
+            this.addPawnMoves([x, y], [i, j], moves);
         }
       });
     });
@@ -1489,7 +1557,8 @@ export default class ChessRules {
         let trPiece = mv.vanish[lastIdx].p;
         if (this.isKing(this.getPiece(sx, sy)))
           trPiece = C.CannibalKingCode[trPiece];
-        if (mv.appear.length >= 1) mv.appear[0].p = trPiece;
+        if (mv.appear.length >= 1)
+          mv.appear[0].p = trPiece;
         else if (this.options["rifle"]) {
           mv.appear.unshift(
             new PiPo({
@@ -1517,7 +1586,8 @@ export default class ChessRules {
   getEpSquare(moveOrSquare) {
     if (typeof moveOrSquare === "string") {
       const square = moveOrSquare;
-      if (square == "-") return undefined;
+      if (square == "-")
+        return undefined;
       return C.SquareToCoords(square);
     }
     // Argument is a move:
@@ -1577,7 +1647,8 @@ export default class ChessRules {
       ) {
         finalPieces = [this.getPieceType(x2, y2)];
       }
-      else if (promotions) finalPieces = promotions;
+      else if (promotions)
+        finalPieces = promotions;
       else if (this.pawnSpecs.promotions)
         finalPieces = this.pawnSpecs.promotions;
     }
@@ -1713,7 +1784,8 @@ export default class ChessRules {
       castleSide < 2;
       castleSide++ //large, then small
     ) {
-      if (this.castleFlags[c][castleSide] >= this.size.y) continue;
+      if (this.castleFlags[c][castleSide] >= this.size.y)
+        continue;
       // If this code is reached, rook and king are on initial position
 
       // NOTE: in some variants this is not a rook
@@ -1747,7 +1819,8 @@ export default class ChessRules {
       // Nothing on the path to the rook?
       step = (castleSide == 0 ? -1 : 1);
       for (i = y + step; i != rookPos; i += step) {
-        if (this.board[x][i] != "") continue castlingCheck;
+        if (this.board[x][i] != "")
+          continue castlingCheck;
       }
 
       // Nothing on final squares, except maybe king and castling rook?
@@ -1802,7 +1875,8 @@ export default class ChessRules {
 
   // Is (king at) given position under check by "color" ?
   underCheck([x, y], color) {
-    if (this.options["taking"] || this.options["dark"]) return false;
+    if (this.options["taking"] || this.options["dark"])
+      return false;
     color = color || C.GetOppCol(this.getColor(x, y));
     const pieces = this.pieces(color);
     return Object.keys(pieces).some(p => {
@@ -1812,7 +1886,8 @@ export default class ChessRules {
 
   isAttackedBy([x, y], piece, color, stepSpec) {
     const steps = stepSpec.attack || stepSpec.steps;
-    if (!steps) return false; //cannibal king, for example
+    if (!steps)
+      return false; //cannibal king, for example
     const range = stepSpec.range;
     let explored = {}; //for Cylinder mode
     outerLoop: for (let step of steps) {
@@ -1825,7 +1900,8 @@ export default class ChessRules {
         !explored[rx + "." + ry]
       ) {
         explored[rx + "." + ry] = true;
-        if (range <= stepCounter++) continue outerLoop;
+        if (range <= stepCounter++)
+          continue outerLoop;
         rx -= step[0];
         ry = this.computeY(ry - step[1]);
       }
@@ -1854,7 +1930,8 @@ export default class ChessRules {
   }
 
   filterValid(moves) {
-    if (moves.length == 0) return [];
+    if (moves.length == 0)
+      return [];
     const color = this.turn;
     const oppCol = C.GetOppCol(color);
     if (this.options["balance"] && [1, 3].includes(this.movesCount)) {
@@ -1872,7 +1949,8 @@ export default class ChessRules {
         return res;
       });
     }
-    if (this.options["taking"] || this.options["dark"]) return moves;
+    if (this.options["taking"] || this.options["dark"])
+      return moves;
     const kingPos = this.searchKingPos(color);
     let filtered = {}; //avoid re-checking similar moves (promotions...)
     return moves.filter(m => {
@@ -1891,7 +1969,8 @@ export default class ChessRules {
             });
           if (newKingIdx >= 0)
             square = [m.appear[newKingIdx].x, m.appear[newKingIdx].y];
-          else res = false;
+          else
+            res = false;
         }
         res &&= !this.underCheck(square, oppCol);
         this.undoOnBoard(m);
@@ -1937,11 +2016,14 @@ export default class ChessRules {
       }
       // NOTE: not "else if" because king can capture enemy rook...
       let c = "";
-      if (psq.x == 0) c = "b";
-      else if (psq.x == this.size.x - 1) c = "w";
+      if (psq.x == 0)
+        c = "b";
+      else if (psq.x == this.size.x - 1)
+        c = "w";
       if (c != "") {
         const fidx = this.castleFlags[c].findIndex(f => f == psq.y);
-        if (fidx >= 0) this.castleFlags[c][fidx] = this.size.y;
+        if (fidx >= 0)
+          this.castleFlags[c][fidx] = this.size.y;
       }
     });
   }
@@ -1996,7 +2078,8 @@ export default class ChessRules {
 
   play(move) {
     this.prePlay(move);
-    if (this.hasEnpassant) this.epSquare = this.getEpSquare(move);
+    if (this.hasEnpassant)
+      this.epSquare = this.getEpSquare(move);
     this.playOnBoard(move);
     this.postPlay(move);
   }
@@ -2004,7 +2087,8 @@ export default class ChessRules {
   postPlay(move) {
     const color = this.turn;
     const oppCol = C.GetOppCol(color);
-    if (this.options["dark"]) this.updateEnlightened(true);
+    if (this.options["dark"])
+      this.updateEnlightened(true);
     if (this.options["teleport"]) {
       if (
         this.subTurnTeleport == 1 &&
@@ -2020,7 +2104,8 @@ export default class ChessRules {
       this.captured = null;
     }
     if (this.options["balance"]) {
-      if (![1, 3].includes(this.movesCount)) this.turn = oppCol;
+      if (![1, 3].includes(this.movesCount))
+        this.turn = oppCol;
     }
     else {
       if (
@@ -2052,14 +2137,16 @@ export default class ChessRules {
           // NOTE: in fact searching for all potential moves from i,j.
           //       I don't believe this is an issue, for now at least.
           const moves = this.getPotentialMovesFrom([i, j]);
-          if (moves.some(m => this.filterValid([m]).length >= 1)) return true;
+          if (moves.some(m => this.filterValid([m]).length >= 1))
+            return true;
         }
       }
     }
     if (this.hasReserve && this.reserve[color]) {
       for (let p of Object.keys(this.reserve[color])) {
         const moves = this.getDropMovesFrom([color, p]);
-        if (moves.some(m => this.filterValid([m]).length >= 1)) return true;
+        if (moves.some(m => this.filterValid([m]).length >= 1))
+          return true;
       }
     }
     return false;
@@ -2070,12 +2157,17 @@ export default class ChessRules {
     const color = this.turn;
     const oppCol = C.GetOppCol(color);
     const kingPos = [this.searchKingPos(color), this.searchKingPos(oppCol)];
-    if (kingPos[0][0] < 0 && kingPos[1][0] < 0) return "1/2";
-    if (kingPos[0][0] < 0) return (color == "w" ? "0-1" : "1-0");
-    if (kingPos[1][0] < 0) return (color == "w" ? "1-0" : "0-1");
-    if (this.atLeastOneMove()) return "*";
+    if (kingPos[0][0] < 0 && kingPos[1][0] < 0)
+      return "1/2";
+    if (kingPos[0][0] < 0)
+      return (color == "w" ? "0-1" : "1-0");
+    if (kingPos[1][0] < 0)
+      return (color == "w" ? "1-0" : "0-1");
+    if (this.atLeastOneMove())
+      return "*";
     // No valid move: stalemate or checkmate?
-    if (!this.underCheck(kingPos, color)) return "1/2";
+    if (!this.underCheck(kingPos, color))
+      return "1/2";
     // OK, checkmate
     return (color == "w" ? "0-1" : "1-0");
   }
@@ -2090,10 +2182,12 @@ export default class ChessRules {
     });
     let chessboard =
       document.getElementById(this.containerId).querySelector(".chessboard");
-    if (!r) r = chessboard.getBoundingClientRect();
+    if (!r)
+      r = chessboard.getBoundingClientRect();
     const pieceWidth = this.getPieceWidth(r.width);
     move.appear.forEach(a => {
-      if (this.enlightened && !this.enlightened[a.x][a.y]) return;
+      if (this.enlightened && !this.enlightened[a.x][a.y])
+        return;
       this.g_pieces[a.x][a.y] = document.createElement("piece");
       this.g_pieces[a.x][a.y].classList.add(this.pieces()[a.p]["class"]);
       this.g_pieces[a.x][a.y].classList.add(a.c == "w" ? "white" : "black");
@@ -2116,8 +2210,10 @@ export default class ChessRules {
     let nbR = 0,
         ridx = 0;
     for (let pi of Object.keys(this.reserve[c])) {
-      if (this.reserve[c][pi] == 0) continue;
-      if (pi == p) ridx = nbR;
+      if (this.reserve[c][pi] == 0)
+        continue;
+      if (pi == p)
+        ridx = nbR;
       nbR++;
     }
     const rsqSize = this.getReserveSquareSize(r.width, nbR);
@@ -2142,7 +2238,8 @@ export default class ChessRules {
     );
     if (clonePiece) {
       startPiece = startPiece.cloneNode();
-      if (this.options["rifle"]) startArray[i1][j1].style.opacity = "0";
+      if (this.options["rifle"])
+        startArray[i1][j1].style.opacity = "0";
       if (this.options["teleport"] && this.subTurnTeleport == 2) {
         const pieces = this.pieces();
         const startCode = (dropMove ? j1 : this.getPiece(i1, j1));
@@ -2160,11 +2257,13 @@ export default class ChessRules {
         this.size.y / 2 //not trying to be accurate here... (TODO?)
       ];
     }
-    else startCoords = [i1, j1];
+    else
+      startCoords = [i1, j1];
     const r = chessboard.getBoundingClientRect();
     const arrival = this.getPixelPosition(i2, j2, r); //TODO: arrival on drop?
     let rs = [0, 0];
-    if (dropMove) rs = this.getReserveShift(i1, j1, r);
+    if (dropMove)
+      rs = this.getReserveShift(i1, j1, r);
     const distance =
       Math.sqrt((startCoords[0] - i2) ** 2 + (startCoords[1] - j2) ** 2);
     const maxDist = Math.sqrt((this.size.x - 1)** 2 + (this.size.y - 1) ** 2);
@@ -2177,7 +2276,8 @@ export default class ChessRules {
     setTimeout(
       () => {
         if (clonePiece) {
-          if (this.options["rifle"]) startArray[i1][j1].style.opacity = "1";
+          if (this.options["rifle"])
+            startArray[i1][j1].style.opacity = "1";
           startPiece.remove();
         }
         else {
@@ -2197,8 +2297,10 @@ export default class ChessRules {
         this.animate(moves[i], () => {
           this.playVisual(moves[i], r);
           this.play(moves[i]);
-          if (i < moves.length - 1) setTimeout(() => animateRec(i+1), 300);
-          else callback();
+          if (i < moves.length - 1)
+            setTimeout(() => animateRec(i+1), 300);
+          else
+            callback();
         });
       };
       animateRec(0);
@@ -2211,7 +2313,8 @@ export default class ChessRules {
         container.style.display = "block";
         setTimeout(launchAnimation, 700);
       }
-      else setTimeout(launchAnimation, delay || 0);
+      else
+        setTimeout(launchAnimation, delay || 0);
     };
     let container = document.getElementById(this.containerId);
     if (document.hidden) {
@@ -2220,7 +2323,8 @@ export default class ChessRules {
         checkDisplayThenAnimate(700);
       };
     }
-    else checkDisplayThenAnimate();
+    else
+      checkDisplayThenAnimate();
   }
 
 };

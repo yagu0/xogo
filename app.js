@@ -34,7 +34,8 @@ $.getElementById("myName").value = localStorage.getItem("name");
 let inputName = document.getElementById("myName");
 let formField = document.getElementById("ng-name");
 const setActive = (active) => {
-  if (active) formField.classList.add("form-field--is-active");
+  if (active)
+    formField.classList.add("form-field--is-active");
   else {
     formField.classList.remove("form-field--is-active");
     inputName.value == ''
@@ -57,8 +58,10 @@ function setName() {
 // Turn a "tab" on, and "close" all others
 function toggleVisible(element) {
   for (elt of document.querySelectorAll("main > div")) {
-    if (elt.id != element) elt.style.display = "none";
-    else elt.style.display = "block";
+    if (elt.id != element)
+      elt.style.display = "none";
+    else
+      elt.style.display = "block";
   }
   if (element == "boardContainer") {
     // Avoid smartphone scrolling effects (TODO?)
@@ -69,7 +72,8 @@ function toggleVisible(element) {
     document.querySelector("html").style.overflow = "visible";
     document.body.style.overflow = "visible";
     // Workaround "superposed texts" effect:
-    if (element == "newGame") setActive(false);
+    if (element == "newGame")
+      setActive(false);
   }
 }
 
@@ -83,7 +87,8 @@ function seekGame() {
   }
 }
 function cancelSeek() {
-  if (send("cancelseek", {vname: seek_vname})) toggleVisible("newGame");
+  if (send("cancelseek", {vname: seek_vname}))
+    toggleVisible("newGame");
 }
 
 function sendRematch(random) {
@@ -91,20 +96,23 @@ function sendRematch(random) {
     toggleVisible("pendingRematch");
 }
 function cancelRematch() {
-  if (send("norematch", {gid: gid})) toggleVisible("newGame");
+  if (send("norematch", {gid: gid}))
+    toggleVisible("newGame");
 }
 
 // Play with a friend (or not ^^)
 function showNewGameForm() {
   const vname = $.getElementById("selectVariant").value;
-  if (vname == "_random") alert("Select a variant first");
+  if (vname == "_random")
+    alert("Select a variant first");
   else {
     $.getElementById("gameLink").innerHTML = "";
     $.getElementById("selectColor").selectedIndex = 0;
     toggleVisible("newGameForm");
     import(`/variants/${vname}/class.js`).then(module => {
       window.V = module.default;
-      for (const [k, v] of Object.entries(V.Aliases)) window[k] = v;
+      for (const [k, v] of Object.entries(V.Aliases))
+        window[k] = v;
       prepareOptions();
     });
   }
@@ -158,7 +166,8 @@ function prepareOptions() {
     while (i < stylesLength) {
       optHtml += '<div class="row">';
       for (let j=i; j<i+4; j++) {
-        if (j == stylesLength) break;
+        if (j == stylesLength)
+          break;
         const style = V.Options.styles[j];
         optHtml += `<span onClick="toggleStyle(event, this)">${style}</span>`;
       }
@@ -175,11 +184,14 @@ function getGameLink() {
   const color = $.getElementById("selectColor").value;
   for (const select of $.querySelectorAll("#gameOptions select")) {
     let value = select.value;
-    if (select.attributes["data-numeric"]) value = parseInt(value, 10);
-    if (value) options[ select.id.split("_")[1] ] = value;
+    if (select.attributes["data-numeric"])
+      value = parseInt(value, 10);
+    if (value)
+      options[ select.id.split("_")[1] ] = value;
   }
   for (const check of $.querySelectorAll("#gameOptions input")) {
-    if (check.checked) options[ check.id.split("_")[1] ] = check.checked;
+    if (check.checked)
+      options[ check.id.split("_")[1] ] = check.checked;
   }
   send("creategame", {
     vname: vname,
@@ -206,9 +218,11 @@ function fillGameInfos(gameInfos, oppIndex) {
       while (i < options.length) {
         htmlContent += '<div class="row">';
         for (let j=i; j<i+4; j++) {
-          if (j == options.length) break;
+          if (j == options.length)
+            break;
           const opt = options[j];
-          if (!opt[1]) continue;
+          if (!opt[1])
+            continue;
           htmlContent +=
             '<span class="option">' +
             (opt[1] === true ? opt[0] : `${opt[0]}:${opt[1]}`) + " " +
@@ -241,7 +255,8 @@ function send(code, data, opts) {
   const trySend = () => {
     if (socket.readyState == 1) {
       socket.send(JSON.stringify(Object.assign({code: code}, data)));
-      if (opts.success) opts.success();
+      if (opts.success)
+        opts.success();
       return true;
     }
     return false;
@@ -253,13 +268,16 @@ function send(code, data, opts) {
       let sendAttempt = 1;
       const retryLoop = setInterval(
         () => {
-          if (trySend() || ++sendAttempt >= 3) clearInterval(retryLoop);
-          if (sendAttempt >= 3 && opts.error) opts.error();
+          if (trySend() || ++sendAttempt >= 3)
+            clearInterval(retryLoop);
+          if (sendAttempt >= 3 && opts.error)
+            opts.error();
         },
         1000
       );
     }
-    else if (opt.error) opts.error();
+    else if (opts.error)
+      opts.error();
   }
   return firstTry;
 }
@@ -306,7 +324,8 @@ const messageCenter = (msg) => {
   switch (obj.code) {
     // Start new game:
     case "gamestart": {
-      if (document.hidden) notifyMe("game");
+      if (document.hidden)
+        notifyMe("game");
       gid = obj.gid;
       initializeGame(obj);
       break;
@@ -339,14 +358,17 @@ const messageCenter = (msg) => {
     // Receive opponent's move:
     case "newmove":
       // Basic check: was it really opponent's turn?
-      if (vr.turn == playerColor) break;
-      if (document.hidden) notifyMe("move");
+      if (vr.turn == playerColor)
+        break;
+      if (document.hidden)
+        notifyMe("move");
       vr.playReceivedMove(obj.moves, () => {
         if (vr.getCurrentScore(obj.moves[obj.moves.length-1]) != "*") {
           localStorage.removeItem("gid");
           setTimeout( () => toggleVisible("gameStopped"), 2000 );
         }
-        else toggleTurnIndicator(true);
+        else
+          toggleTurnIndicator(true);
       });
       break;
     // Opponent stopped game (draw, abort, resign...)
@@ -400,8 +422,10 @@ connectToWSS();
 function toggleTurnIndicator(myTurn) {
   let indicator =
     $.getElementById("boardContainer").querySelector(".chessboard");
-  if (myTurn) indicator.style.outline = "thick solid green";
-  else indicator.style.outline = "thick solid lightgrey";
+  if (myTurn)
+    indicator.style.outline = "thick solid green";
+  else
+    indicator.style.outline = "thick solid lightgrey";
 }
 
 function notifyMe(code) {
@@ -410,10 +434,12 @@ function notifyMe(code) {
     new Notification("New " + code, { vibrate: [200, 100, 200] });
     new Audio("/assets/new_" + code + ".mp3").play();
   }
-  if (Notification.permission === "granted") doNotify();
+  if (Notification.permission === "granted")
+    doNotify();
   else if (Notification.permission !== "denied") {
     Notification.requestPermission().then(permission => {
-      if (permission === "granted") doNotify();
+      if (permission === "granted")
+        doNotify();
     });
   }
 }
@@ -450,7 +476,8 @@ function initializeGame(obj) {
   const options = obj.options || {};
   import(`/variants/${obj.vname}/class.js`).then(module => {
     window.V = module.default;
-    for (const [k, v] of Object.entries(V.Aliases)) window[k] = v;
+    for (const [k, v] of Object.entries(V.Aliases))
+      window[k] = v;
     // Load CSS. Avoid loading twice the same stylesheet:
     const allIds = [].slice.call($.styleSheets).map(s => s.id);
     const newId = obj.vname + "_css";
@@ -504,8 +531,10 @@ function initializeGame(obj) {
       }
     }
     fillGameInfos(obj, playerColor == "w" ? 1 : 0);
-    if (obj.randvar) toggleVisible("gameInfos");
-    else toggleVisible("boardContainer");
+    if (obj.randvar)
+      toggleVisible("gameInfos");
+    else
+      toggleVisible("boardContainer");
     toggleTurnIndicator(vr.turn == playerColor);
   });
 }
@@ -520,12 +549,15 @@ function confirmStopGame() {
 function toggleGameInfos() {
   if ($.getElementById("gameInfos").style.display == "none")
     toggleVisible("gameInfos");
-  else toggleVisible("boardContainer");
+  else
+    toggleVisible("boardContainer");
 }
 
 $.body.addEventListener("keydown", (e) => {
-  if (!localStorage.getItem("gid")) return;
-  if (e.keyCode == 27) confirmStopGame();
+  if (!localStorage.getItem("gid"))
+    return;
+  if (e.keyCode == 27)
+    confirmStopGame();
   else if (e.keyCode == 32) {
     e.preventDefault();
     toggleGameInfos();

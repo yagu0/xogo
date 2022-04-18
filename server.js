@@ -1,7 +1,9 @@
 const params = require("./parameters.js");
 const WebSocket = require("ws");
-const wss = new WebSocket.Server(
-  {port: params.socket_port, path: params.socket_path});
+const wss = new WebSocket.Server({
+  port: params.socket_port,
+  path: params.socket_path
+});
 
 let challenges = {}; //variantName --> socketId, name
 let games = {}; //gameId --> gameInfo (vname, fen, players, options, time)
@@ -14,10 +16,11 @@ function send(sid, code, data) {
   const socket = sockets[sid];
   // If a player deletes local infos and then tries to resume a game,
   // sockets[oppSid] will probably not exist anymore:
-  if (socket) socket.send(JSON.stringify(Object.assign({ code: code }, data)));
+  if (socket)
+    socket.send(JSON.stringify(Object.assign({ code: code }, data)));
 }
 
-function launchGame(vname, players, options) {
+function initializeGame(vname, players, options) {
   const gid =
     Crypto.randomBytes(randstrSize).toString("hex").slice(0, randstrSize);
   games[gid] = {
@@ -26,28 +29,20 @@ function launchGame(vname, players, options) {
     options: options,
     time: Date.now()
   };
-  if (players.every(p => p)) {
-    const gameInfo = Object.assign(
-      // Provide seed so that both players initialize with same FEN
-      {seed: Math.floor(Math.random() * 1984), gid: gid},
-      games[gid]);
-    for (const p of players) {
-      send(p.sid,
-           "gamestart",
-           Object.assign({randvar: p.randvar}, gameInfo));
-    }
-  }
-  else {
-    // Incomplete players array: do not start game yet
-    send(sid, "gamecreated", {gid: gid});
-    // If nobody joins within 5 minutes, delete game
-    setTimeout(
-      () => {
-        if (games[gid] && games[gid].players.some(p => !p))
-          delete games[gid];
-      },
-      5 * 60000
-    );
+  return gid;
+}
+
+// Provide seed in case of, so that both players initialize with same FEN
+function launchGame(gid) {
+  const gameInfo = Object.assign(
+    {seed: Math.floor(Math.random() * 1984), gid: gid},
+    games[gid]
+  );
+  // players array is supposed to be full:
+  for (const p of games[gid].players) {
+    send(p.sid,
+         "gamestart",
+         Object.assign({randvar: p.randvar}, gameInfo));
   }
 }
 
@@ -87,14 +82,17 @@ wss.on("connection", (socket, req) => {
         }
         if (opponent) {
           delete challenges[choice];
-          if (choice == "_random") choice = getRandomVariant();
+          if (choice == "_random")
+            choice = getRandomVariant();
           // Launch game
           let players = [
             {sid: sid, name: obj.name, randvar: randvar},
             opponent
           ];
-          if (Math.random() < 0.5) players = players.reverse();
-          launchGame(choice, players, {}); //empty options => default
+          if (Math.random() < 0.5)
+            players = players.reverse();
+          // Empty options = default
+          launchGame( initializeGame(choice, players, {}) );
         }
         else
           // Place challenge and wait. 'randvar' indicate if we play anything
@@ -106,32 +104,37 @@ wss.on("connection", (socket, req) => {
         games[obj.gid].fen = obj.fen;
         break;
       // Send back game informations
-      case "getgame": {
-        if (!games[obj.gid]) send(sid, "nogame");
-        else send(sid, "gameinfo", games[obj.gid]);
+      case "getgame":
+        if (!games[obj.gid])
+          send(sid, "nogame");
+        else
+          send(sid, "gameinfo", games[obj.gid]);
         break;
-      }
       // Cancel challenge
       case "cancelseek":
         delete challenges[obj.vname];
         break;
       // Receive rematch
       case "rematch":
-        if (!games[obj.gid]) send(sid, "closerematch");
+        if (!games[obj.gid])
+          send(sid, "closerematch");
         else {
           const myIndex = (games[obj.gid].players[0].sid == sid ? 0 : 1);
-          if (!games[obj.gid].rematch) games[obj.gid].rematch = [0, 0];
+          if (!games[obj.gid].rematch)
+            games[obj.gid].rematch = [0, 0];
           games[obj.gid].rematch[myIndex] = !obj.random ? 1 : 2;
           if (games[obj.gid].rematch[1-myIndex]) {
             // Launch new game, colors reversed
             let vname = games[obj.gid].vname;
             const allrand = games[obj.gid].rematch.every(r => r == 2);
-            if (allrand) vname = getRandomVariant();
+            if (allrand)
+              vname = getRandomVariant();
             games[obj.gid].players.forEach(p =>
               p.randvar = allrand ? true : false);
-            launchGame(vname,
-                       games[obj.gid].players.reverse(),
-                       games[obj.gid].options);
+            const gid = initializeGame(vname,
+                           games[obj.gid].players.reverse(),
+                           games[obj.gid].options);
+            launchGame(gid);
           }
         }
         break;
@@ -154,23 +157,32 @@ wss.on("connection", (socket, req) => {
         ) {
           players = players.reverse();
         }
-        launchGame(obj.vname, players, obj.options);
+        // Incomplete players array: do not start game yet
+        const gid = initializeGame(obj.vname, players, obj.options);
+        send(sid, "gamecreated", {gid: gid});
+        // If nobody joins within 3 minutes, delete game
+        setTimeout(
+          () => {
+            if (games[gid] && games[gid].players.some(p => !p))
+              delete games[gid];
+          },
+          3 * 60000
+        );
         break;
       }
       // Join game vs. friend
       case "joingame":
-        if (!games[obj.gid]) send(sid, "jointoolate");
+        if (!games[obj.gid])
+          send(sid, "jointoolate");
         else {
-          // Join a game (started by some other player)
           const emptySlot = games[obj.gid].players.findIndex(p => !p);
-          if (emptySlot < 0) send(sid, "jointoolate");
-          games[obj.gid].players[emptySlot] = {sid: sid, name: obj.name};
-          const gameInfo = Object.assign(
-            // Provide seed so that both players initialize with same FEN
-            {seed: Math.floor(Math.random()*1984), gid: obj.gid},
-            games[obj.gid]);
-          for (const p of games[obj.gid].players)
-            send(p.sid, "gamestart", gameInfo);
+          if (emptySlot < 0)
+            send(sid, "jointoolate");
+          else {
+            // Join a game (started by some other player)
+            games[obj.gid].players[emptySlot] = {sid: sid, name: obj.name};
+            launchGame(obj.gid);
+          }
         }
         break;
       // Relay a move + update games object
@@ -202,7 +214,7 @@ wss.on("connection", (socket, req) => {
       }
     }
     for (let g of Object.values(games)) {
-      const myIndex = g.players.findIndex(p => p.sid == sid);
+      const myIndex = g.players.findIndex(p => p && p.sid == sid);
       if (myIndex >= 0) {
         if (g.rematch && g.rematch[myIndex] > 0) g.rematch[myIndex] = 0;
         break; //only one game per player
@@ -213,7 +225,8 @@ wss.on("connection", (socket, req) => {
 
 const heartbeat = setInterval(() => {
   wss.clients.forEach((ws) => {
-    if (ws.isAlive === false) return ws.terminate();
+    if (ws.isAlive === false)
+      return ws.terminate();
     ws.isAlive = false;
     ws.ping();
   });
@@ -224,7 +237,8 @@ const dayInMillisecs = 24 * 60 * 60 * 1000;
 const killOldGames = setInterval(() => {
   const now = Date.now();
   Object.keys(games).forEach(gid => {
-    if (now - games[gid].time >= dayInMillisecs) delete games[gid];
+    if (now - games[gid].time >= dayInMillisecs)
+      delete games[gid];
   });
 }, dayInMillisecs);
 
