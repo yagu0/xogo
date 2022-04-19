@@ -385,7 +385,7 @@ export default class ChessRules {
     const coords = Object.keys(this.ispawn);
     if (coords.length == 0)
       return "-";
-    return coords.map(C.CoordsToSquare).join(",");
+    return coords.join(",");
   }
 
   // Set flags from fen (castle: white a,h then black a,h)
@@ -755,10 +755,9 @@ export default class ChessRules {
     }
     else
       this.r_pieces = { 'w': {}, 'b': {} };
-    let chessboard =
-      document.getElementById(this.containerId).querySelector(".chessboard");
+    let container = document.getElementById(this.containerId);
     if (!r)
-      r = chessboard.getBoundingClientRect();
+      r = container.querySelector(".chessboard").getBoundingClientRect();
     for (let c of colors) {
       if (!this.reserve[c])
         continue;
@@ -777,7 +776,7 @@ export default class ChessRules {
       // NOTE: +1 fix display bug on Firefox at least
       rcontainer.style.width = (nbR * sqResSize + 1) + "px";
       rcontainer.style.height = sqResSize + "px";
-      chessboard.appendChild(rcontainer);
+      container.appendChild(rcontainer);
       for (let p of Object.keys(this.reserve[c])) {
         if (this.reserve[c][p] == 0)
           continue;
@@ -993,7 +992,7 @@ export default class ChessRules {
       startPiece.style.opacity = "1";
       const offset = getOffset(e);
       const landingElt = document.elementFromPoint(offset.x, offset.y);
-      const sq = this.idToCoords(landingElt.id);
+      const sq = landingElt ? this.idToCoords(landingElt.id) : undefined;
       if (sq) {
         const [i, j] = sq;
         // NOTE: clearly suboptimal, but much easier, and not a big deal.
@@ -2047,15 +2046,23 @@ export default class ChessRules {
         this.options["crazyhouse"] &&
         (!this.options["rifle"] || !move.capture)
       ) {
+        const destSquare = C.CoordsToSquare(move.end);
         if (this.ispawn[initSquare]) {
           delete this.ispawn[initSquare];
-          this.ispawn[C.CoordsToSquare(move.end)] = true;
+          this.ispawn[destSquare] = true;
         }
         else if (
           move.vanish[0].p == "p" &&
           move.appear[0].p != "p"
         ) {
-          this.ispawn[C.CoordsToSquare(move.end)] = true;
+          this.ispawn[destSquare] = true;
+        }
+        else if (
+          this.ispawn[destSquare] &&
+          this.getColor(move.end.x, move.end.y) != move.vanish[0].c
+        ) {
+          move.vanish[1].p = "p";
+          delete this.ispawn[destSquare];
         }
       }
     }
