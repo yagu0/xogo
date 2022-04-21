@@ -17,7 +17,7 @@ function send(sid, code, data) {
   // If a player deletes local infos and then tries to resume a game,
   // sockets[oppSid] will probably not exist anymore:
   if (socket)
-    socket.send(JSON.stringify(Object.assign({ code: code }, data)));
+    socket.send(JSON.stringify(Object.assign({code: code}, data)));
 }
 
 function initializeGame(vname, players, options) {

@@ -1,18 +1,18 @@
 import ChessRules from "/base_rules.js";
 
-export default class ZenRules extends ChessRules {
+export default class CylinderRules extends ChessRules {
 
   static get Options() {
     return {
       select: C.Options.select,
       check: C.Options.check,
-      styles: C.Options.styles.filter(s => s != "zen")
+      styles: C.Options.styles.filter(s => s != "cylinder")
     };
   }
 
   constructor(o) {
     super(o);
-    this.options.zen = true;
+    this.options.cylinder = true;
   }
 
 };
