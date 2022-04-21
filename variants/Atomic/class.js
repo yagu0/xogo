@@ -25,22 +25,7 @@ export default class AtomicRules extends ChessRules {
 
   constructor(o) {
     super(o);
-    this.options.atomic = true;
-  }
-
-  genRandInitFen(seed) {
-    return super.genRandInitFen(seed).slice(0, -1) + ',"rempawn":' + (this.options.rempawn ? "1" : "0") + "}";
-  }
-
-  // TODO: capture king option doesn't make sense
-
-  setOtherVariables(fenParsed) {
-    super.setOtherVariables(fenParsed);
-    this.options["rempawn"] = (fenParsed.rempawn == 1);
-  }
-
-  getFen() {
-    return super.getFen().slice(0, -1) + ',"rempawn":' + (this.options["rempawn"] ? "1" : "0") + "}";
+    this.options["atomic"] = true;
   }
 
   canIplay(x, y) {

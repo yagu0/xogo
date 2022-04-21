@@ -52,6 +52,11 @@ main > div {
   }
 }
 
+.author {
+  color: darkblue;
+  font-style: italic;
+}
+
 #boardContainer {
   margin: 0;
   padding: 0;

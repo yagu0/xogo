@@ -18,7 +18,7 @@ const variants = [
 //  { name: 'Bario', desc: 'A quantum story' },
   {name: "Balanced", desc: "balanced chess"},
 //  { name: 'Baroque', desc: 'Exotic captures' },*/
-//  { name: "Benedict", desc: "Change colors" },
+  { name: "Benedict", desc: "Change colors" },
 //  { name: 'Berolina', desc: 'Pawns move diagonally' },
 //  { name: 'Bicolour', desc: 'Harassed kings' },
 //  { name: 'Bishopawns', desc: 'Bishop versus pawns', disp: 'Bishop-Pawns' },

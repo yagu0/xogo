@@ -2124,7 +2124,13 @@ export default class ChessRules {
         (this.options["progressive"] && this.subTurn <= this.movesCount)
       ) {
         const oppKingPos = this.searchKingPos(oppCol);
-        if (oppKingPos[0] >= 0 && !this.underCheck(oppKingPos, color)) {
+        if (
+          oppKingPos[0] >= 0 &&
+          (
+            this.options["taking"] ||
+            !this.underCheck(oppKingPos, color)
+          )
+        ) {
           this.subTurn++;
           return;
         }
