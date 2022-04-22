@@ -2189,7 +2189,9 @@ export default class ChessRules {
   playVisual(move, r) {
     move.vanish.forEach(v => {
       if (!this.enlightened || this.enlightened[v.x][v.y]) {
-        this.g_pieces[v.x][v.y].remove();
+        // TODO: next "if" shouldn't be required
+        if (this.g_pieces[v.x][v.y])
+          this.g_pieces[v.x][v.y].remove();
         this.g_pieces[v.x][v.y] = null;
       }
     });
@@ -2242,6 +2244,11 @@ export default class ChessRules {
     const dropMove = (typeof i1 == "string");
     const startArray = (dropMove ? this.r_pieces : this.g_pieces);
     let startPiece = startArray[i1][j1];
+    // TODO: next "if" shouldn't be required
+    if (!startPiece) {
+      callback();
+      return;
+    }
     let chessboard =
       document.getElementById(this.containerId).querySelector(".chessboard");
     const clonePiece = (
