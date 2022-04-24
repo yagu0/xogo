@@ -7,14 +7,14 @@ export default class BenedictRules extends ChessRules {
     return {
       select: C.Options.select,
       check: [],
-      styles: (
-        C.Options.styles.filter(s => {
-          return (
-            ["balance", "cylinder", "dark", "doublemove", "progressive", "zen"]
-            .includes(s)
-          );
-        })
-      )
+      styles: [
+        "balance",
+        "cylinder",
+        "dark",
+        "doublemove",
+        "progressive",
+        "zen"
+      ]
     };
   }
 

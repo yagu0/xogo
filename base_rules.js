@@ -1102,7 +1102,8 @@ export default class ChessRules {
 
   // Is (x,y) on the chessboard?
   onBoard(x, y) {
-    return x >= 0 && x < this.size.x && y >= 0 && y < this.size.y;
+    return (x >= 0 && x < this.size.x &&
+            y >= 0 && y < this.size.y);
   }
 
   // Used in interface: 'side' arg == player color
@@ -1363,23 +1364,24 @@ export default class ChessRules {
     return moves;
   }
 
+  // NOTE: using special symbols to not interfere with variants' pieces codes
   static get CannibalKings() {
     return {
-      "s": "p",
-      "u": "r",
-      "o": "n",
-      "c": "b",
-      "t": "q"
+      "!": "p",
+      "#": "r",
+      "$": "n",
+      "%": "b",
+      "*": "q"
     };
   }
 
   static get CannibalKingCode() {
     return {
-      "p": "s",
-      "r": "u",
-      "n": "o",
-      "b": "c",
-      "q": "t",
+      "p": "!",
+      "r": "#",
+      "n": "$",
+      "b": "%",
+      "q": "*",
       "k": "k"
     };
   }
