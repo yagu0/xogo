@@ -11,8 +11,8 @@ export default class CrazyhouseRules extends ChessRules {
   }
 
   constructor(o) {
+    o.options["crazyhouse"] = true;
     super(o);
-    this.options.crazyhouse = true;
   }
 
 };

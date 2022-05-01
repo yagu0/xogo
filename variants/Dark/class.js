@@ -11,8 +11,8 @@ export default class DarkRules extends ChessRules {
   }
 
   constructor(o) {
+    o.options["dark"] = true;
     super(o);
-    this.options.dark = true;
   }
 
 };

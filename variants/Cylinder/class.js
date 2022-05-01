@@ -11,8 +11,8 @@ export default class CylinderRules extends ChessRules {
   }
 
   constructor(o) {
+    o.options["cylinder"] = true;
     super(o);
-    this.options.cylinder = true;
   }
 
 };

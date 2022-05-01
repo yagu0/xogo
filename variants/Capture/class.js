@@ -11,8 +11,8 @@ export default class CaptureRules extends ChessRules {
   }
 
   constructor(o) {
+    o.options["capture"] = true;
     super(o);
-    this.options.capture = true;
   }
 
 };

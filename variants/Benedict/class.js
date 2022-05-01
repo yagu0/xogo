@@ -22,14 +22,6 @@ export default class BenedictRules extends ChessRules {
     return false;
   }
 
-  get pawnSpecs() {
-    return Object.assign(
-      {},
-      super.pawnSpecs,
-      { canCapture: false }
-    );
-  }
-
   canTake() {
     return false;
   }
@@ -40,18 +32,20 @@ export default class BenedictRules extends ChessRules {
     const [color, piece] = [this.getColor(x, y), this.getPiece(x, y)];
     const oppCol = C.GetOppCol(color);
     let squares = {};
-    const specs = this.pieces(color)[piece];
-    const steps = specs.attack || specs.steps;
-    outerLoop: for (let step of steps) {
-      let [i, j] = [x + step[0], this.computeY(y + step[1])];
-      let nbSteps = 1;
-      while (this.onBoard(i, j) && this.board[i][j] == "") {
-        if (specs.range <= nbSteps++) continue outerLoop;
-        i += step[0];
-        j = this.computeY(j + step[1]);
+    const specs = this.pieces(color, x, y)[piece];
+    const attacks = specs.attack || specs.moves;
+    for (let a of attacks) {
+      outerLoop: for (let step of a.steps) {
+        let [i, j] = [x + step[0], this.computeY(y + step[1])];
+        let nbSteps = 1;
+        while (this.onBoard(i, j) && this.board[i][j] == "") {
+          if (a.range <= nbSteps++) continue outerLoop;
+          i += step[0];
+          j = this.computeY(j + step[1]);
+        }
+        if (this.onBoard(i, j) && this.getColor(i, j) == oppCol)
+          squares[C.CoordsToSquare({x: i, y: j})] = true;
       }
-      if (this.onBoard(i, j) && this.getColor(i, j) == oppCol)
-        squares[C.CoordsToSquare({x: i, y: j})] = true;
     }
     return Object.keys(squares);
   }

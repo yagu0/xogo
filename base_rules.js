@@ -19,7 +19,6 @@ export default class ChessRules {
   // Users can generally select a randomness level from 0 to 2.
   static get Options() {
     return {
-      // NOTE: some options are required for FEN generation, some aren't.
       select: [{
         label: "Randomness",
         variable: "randomness",
@@ -62,18 +61,8 @@ export default class ChessRules {
     };
   }
 
-  // Pawns specifications
-  get pawnSpecs() {
-    return {
-      directions: {w: -1, b: 1},
-      initShift: {w: 1, b: 1},
-      twoSquares: true,
-      threeSquares: false,
-      canCapture: true,
-      captureBackward: false,
-      bidirectional: false,
-      promotions: ['r', 'n', 'b', 'q']
-    };
+  get pawnPromotions() {
+    return ['q', 'r', 'n', 'b'];
   }
 
   // Some variants don't have flags:
@@ -399,13 +388,12 @@ export default class ChessRules {
   //////////////////
   // INITIALIZATION
 
-  // Fen string fully describes the game state
   constructor(o) {
     this.options = o.options;
     this.playerColor = o.color;
     this.afterPlay = o.afterPlay;
 
-    // FEN-related:
+    // Fen string fully describes the game state
     if (!o.fen)
       o.fen = this.genRandInitFen(o.seed);
     const fenParsed = this.parseFen(o.fen);
@@ -456,46 +444,35 @@ export default class ChessRules {
       this.captured = null;
     }
     if (this.options["dark"]) {
-      this.enlightened = ArrayFun.init(this.size.x, this.size.y);
       // Setup enlightened: squares reachable by player side
-      this.updateEnlightened(false);
+      this.enlightened = ArrayFun.init(this.size.x, this.size.y, false);
+      this.updateEnlightened();
     }
   }
 
-  updateEnlightened(withGraphics) {
-    let newEnlightened = ArrayFun.init(this.size.x, this.size.y, false);
-    const pawnShift = { w: -1, b: 1 };
+  updateEnlightened() {
+    this.oldEnlightened = this.enlightened;
+    this.enlightened = ArrayFun.init(this.size.x, this.size.y, false);
     // Add pieces positions + all squares reachable by moves (includes Zen):
-    // (watch out special pawns case)
     for (let x=0; x<this.size.x; x++) {
       for (let y=0; y<this.size.y; y++) {
         if (this.board[x][y] != "" && this.getColor(x, y) == this.playerColor)
         {
-          newEnlightened[x][y] = true;
-          if (this.getPiece(x, y) == "p") {
-            // Attacking squares wouldn't be highlighted if no captures:
-            this.pieces(this.playerColor)["p"].attack.forEach(step => {
-              const [i, j] = [x + step[0], this.computeY(y + step[1])];
-              if (this.onBoard(i, j) && this.board[i][j] == "")
-                newEnlightened[i][j] = true;
-            });
-          }
+          this.enlightened[x][y] = true;
           this.getPotentialMovesFrom([x, y]).forEach(m => {
-            newEnlightened[m.end.x][m.end.y] = true;
+            this.enlightened[m.end.x][m.end.y] = true;
           });
         }
       }
     }
     if (this.epSquare)
-      this.enlightEnpassant(newEnlightened);
-    if (withGraphics)
-      this.graphUpdateEnlightened(newEnlightened);
-    this.enlightened = newEnlightened;
+      this.enlightEnpassant();
   }
 
-  // Include en-passant capturing square if any:
-  enlightEnpassant(newEnlightened) {
-    const steps = this.pieces(this.playerColor)["p"].attack;
+  // Include square of the en-passant capturing square:
+  enlightEnpassant() {
+    // NOTE: shortcut, pawn has only one attack type, doesn't depend on square
+    const steps = this.pieces(this.playerColor)["p"].attack[0].steps;
     for (let step of steps) {
       const x = this.epSquare.x - step[0],
             y = this.computeY(this.epSquare.y - step[1]);
@@ -504,62 +481,47 @@ export default class ChessRules {
         this.getColor(x, y) == this.playerColor &&
         this.getPieceType(x, y) == "p"
       ) {
-        newEnlightened[x][this.epSquare.y] = true;
+        this.enlightened[x][this.epSquare.y] = true;
         break;
       }
     }
   }
 
-  // Apply diff this.enlightened --> newEnlightened on board
-  graphUpdateEnlightened(newEnlightened) {
+  // Apply diff this.enlightened --> oldEnlightened on board
+  graphUpdateEnlightened() {
     let chessboard =
       document.getElementById(this.containerId).querySelector(".chessboard");
     const r = chessboard.getBoundingClientRect();
     const pieceWidth = this.getPieceWidth(r.width);
     for (let x=0; x<this.size.x; x++) {
       for (let y=0; y<this.size.y; y++) {
-        if (this.enlightened[x][y] && !newEnlightened[x][y]) {
+        if (!this.enlightened[x][y] && this.oldEnlightened[x][y]) {
           let elt = document.getElementById(this.coordsToId([x, y]));
           elt.classList.add("in-shadow");
-          if (this.g_pieces[x][y]) {
-            this.g_pieces[x][y].remove();
-            this.g_pieces[x][y] = null;
-          }
+          if (this.g_pieces[x][y])
+            this.g_pieces[x][y].classList.add("hidden");
         }
-        else if (!this.enlightened[x][y] && newEnlightened[x][y]) {
+        else if (this.enlightened[x][y] && !this.oldEnlightened[x][y]) {
           let elt = document.getElementById(this.coordsToId([x, y]));
           elt.classList.remove("in-shadow");
-          if (this.board[x][y] != "") {
-            const color = this.getColor(x, y);
-            const piece = this.getPiece(x, y);
-            this.g_pieces[x][y] = document.createElement("piece");
-            let newClasses = [
-              this.pieces()[piece]["class"],
-              color == "w" ? "white" : "black"
-            ];
-            newClasses.forEach(cl => this.g_pieces[x][y].classList.add(cl));
-            this.g_pieces[x][y].style.width = pieceWidth + "px";
-            this.g_pieces[x][y].style.height = pieceWidth + "px";
-            const [ip, jp] = this.getPixelPosition(x, y, r);
-            this.g_pieces[x][y].style.transform =
-              `translate(${ip}px,${jp}px)`;
-            chessboard.appendChild(this.g_pieces[x][y]);
-          }
+          if (this.g_pieces[x][y])
+            this.g_pieces[x][y].classList.remove("hidden");
         }
       }
     }
   }
 
-  // ordering p,r,n,b,q,k (most general + count in base 30 if needed)
+  // ordering as in pieces() p,r,n,b,q,k (+ count in base 30 if needed)
   initReserves(reserveStr) {
     const counts = reserveStr.split("").map(c => parseInt(c, 30));
     this.reserve = { w: {}, b: {} };
-    const pieceName = Object.keys(this.pieces());
-    for (let i of ArrayFun.range(12)) {
-      if (i < 6)
+    const pieceName = ['p', 'r', 'n', 'b', 'q', 'k'];
+    const L = pieceName.length;
+    for (let i of ArrayFun.range(2 * L)) {
+      if (i < L)
         this.reserve['w'][pieceName[i]] = counts[i];
       else
-        this.reserve['b'][pieceName[i-6]] = counts[i];
+        this.reserve['b'][pieceName[i-L]] = counts[i];
     }
   }
 
@@ -712,10 +674,7 @@ export default class ChessRules {
     const pieceWidth = this.getPieceWidth(r.width);
     for (let i=0; i < this.size.x; i++) {
       for (let j=0; j < this.size.y; j++) {
-        if (
-          this.board[i][j] != "" &&
-          (!this.options["dark"] || this.enlightened[i][j])
-        ) {
+        if (this.board[i][j] != "") {
           const color = this.getColor(i, j);
           const piece = this.getPiece(i, j);
           this.g_pieces[i][j] = document.createElement("piece");
@@ -725,6 +684,8 @@ export default class ChessRules {
           this.g_pieces[i][j].style.height = pieceWidth + "px";
           const [ip, jp] = this.getPixelPosition(i, j, r);
           this.g_pieces[i][j].style.transform = `translate(${ip}px,${jp}px)`;
+          if (this.enlightened && !this.enlightened[i][j])
+            this.g_pieces[i][j].classList.add("hidden");
           chessboard.appendChild(this.g_pieces[i][j]);
         }
       }
@@ -787,7 +748,7 @@ export default class ChessRules {
         r_cell.style.height = sqResSize + "px";
         rcontainer.appendChild(r_cell);
         let piece = document.createElement("piece");
-        const pieceSpec = this.pieces(c)[p];
+        const pieceSpec = this.pieces()[p];
         piece.classList.add(pieceSpec["class"]);
         piece.classList.add(c == 'w' ? "white" : "black");
         piece.style.width = "100%";
@@ -848,7 +809,7 @@ export default class ChessRules {
     const pieceWidth = this.getPieceWidth(newWidth);
     for (let i=0; i < this.size.x; i++) {
       for (let j=0; j < this.size.y; j++) {
-        if (this.board[i][j] != "") {
+        if (this.g_pieces[i][j]) {
           // NOTE: could also use CSS transform "scale"
           this.g_pieces[i][j].style.width = pieceWidth + "px";
           this.g_pieces[i][j].style.height = pieceWidth + "px";
@@ -1051,7 +1012,7 @@ export default class ChessRules {
       choice.style.backgroundColor = "lightyellow";
       choice.onclick = () => callback(moves[i]);
       const piece = document.createElement("piece");
-      const pieceSpec = this.pieces(color)[moves[i].appear[0].p];
+      const pieceSpec = this.pieces()[moves[i].appear[0].p];
       piece.classList.add(pieceSpec["class"]);
       piece.classList.add(color == 'w' ? "white" : "black");
       piece.style.width = "100%";
@@ -1065,7 +1026,7 @@ export default class ChessRules {
   // BASIC UTILS
 
   get size() {
-    return { "x": 8, "y": 8 };
+    return {"x": 8, "y": 8};
   }
 
   // Color of thing on square (i,j). 'undefined' if square is empty
@@ -1089,15 +1050,9 @@ export default class ChessRules {
     return (color == "w" ? "b" : "w");
   }
 
-  // Can thing on square1 take thing on square2
+  // Can thing on square1 capture (no return) thing on square2?
   canTake([x1, y1], [x2, y2]) {
-    return (
-      (this.getColor(x1, y1) !== this.getColor(x2, y2)) ||
-      (
-        (this.options["recycle"] || this.options["teleport"]) &&
-        this.getPieceType(x2, y2) != "k"
-      )
-    );
+    return (this.getColor(x1, y1) !== this.getColor(x2, y2));
   }
 
   // Is (x,y) on the chessboard?
@@ -1106,7 +1061,7 @@ export default class ChessRules {
             y >= 0 && y < this.size.y);
   }
 
-  // Used in interface: 'side' arg == player color
+  // Used in interface
   canIplay(x, y) {
     return (
       this.playerColor == this.turn &&
@@ -1120,57 +1075,83 @@ export default class ChessRules {
   ////////////////////////
   // PIECES SPECIFICATIONS
 
-  pieces(color) {
+  pieces(color, x, y) {
     const pawnShift = (color == "w" ? -1 : 1);
+    const initRank = ((color == 'w' && x == 6) || (color == 'b' && x == 1));
     return {
       'p': {
         "class": "pawn",
-        steps: [[pawnShift, 0]],
-        range: 1,
-        attack: [[pawnShift, 1], [pawnShift, -1]]
+        moves: [
+          {
+            steps: [[pawnShift, 0]],
+            range: (initRank ? 2 : 1)
+          }
+        ],
+        attack: [
+          {
+            steps: [[pawnShift, 1], [pawnShift, -1]],
+            range: 1
+          }
+        ]
       },
       // rook
       'r': {
         "class": "rook",
-        steps: [[0, 1], [0, -1], [1, 0], [-1, 0]]
+        moves: [
+          {steps: [[0, 1], [0, -1], [1, 0], [-1, 0]]}
+        ]
       },
       // knight
       'n': {
         "class": "knight",
-        steps: [
-          [1, 2], [1, -2], [-1, 2], [-1, -2],
-          [2, 1], [-2, 1], [2, -1], [-2, -1]
-        ],
-        range: 1
+        moves: [
+          {
+            steps: [
+              [1, 2], [1, -2], [-1, 2], [-1, -2],
+              [2, 1], [-2, 1], [2, -1], [-2, -1]
+            ],
+            range: 1
+          }
+        ]
       },
       // bishop
       'b': {
         "class": "bishop",
-        steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]]
+        moves: [
+          {steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]]}
+        ]
       },
       // queen
       'q': {
         "class": "queen",
-        steps: [
-          [0, 1], [0, -1], [1, 0], [-1, 0],
-          [1, 1], [1, -1], [-1, 1], [-1, -1]
+        moves: [
+          {
+            steps: [
+              [0, 1], [0, -1], [1, 0], [-1, 0],
+              [1, 1], [1, -1], [-1, 1], [-1, -1]
+            ]
+          }
         ]
       },
       // king
       'k': {
         "class": "king",
-        steps: [
-          [0, 1], [0, -1], [1, 0], [-1, 0],
-          [1, 1], [1, -1], [-1, 1], [-1, -1]
-        ],
-        range: 1
+        moves: [
+          {
+            steps: [
+              [0, 1], [0, -1], [1, 0], [-1, 0],
+              [1, 1], [1, -1], [-1, 1], [-1, -1]
+            ],
+            range: 1
+          }
+        ]
       },
       // Cannibal kings:
-      's': { "class": "king-pawn" },
-      'u': { "class": "king-rook" },
-      'o': { "class": "king-knight" },
-      'c': { "class": "king-bishop" },
-      't': { "class": "king-queen" }
+      '!': {"class": "king-pawn", moveas: "p"},
+      '#': {"class": "king-rook", moveas: "r"},
+      '$': {"class": "king-knight", moveas: "n"},
+      '%': {"class": "king-bishop", moveas: "b"},
+      '*': {"class": "king-queen", moveas: "q"}
     };
   }
 
@@ -1194,25 +1175,28 @@ export default class ChessRules {
     for (let i = 0; i < this.size.x; i++) {
       for (let j = 0; j < this.size.y; j++) {
         if (this.board[i][j] != "" && this.getColor(i, j) == color) {
-          const specs = this.pieces(color)[this.getPieceType(i, j)];
-          const steps = specs.attack || specs.steps;
-          outerLoop: for (let step of steps) {
-            let [ii, jj] = [i + step[0], this.computeY(j + step[1])];
-            let stepCounter = 1;
-            while (this.onBoard(ii, jj) && this.board[ii][jj] == "") {
-              if (specs.range <= stepCounter++)
-                continue outerLoop;
-              ii += step[0];
-              jj = this.computeY(jj + step[1]);
-            }
-            if (
-              this.onBoard(ii, jj) &&
-              this.getColor(ii, jj) == oppCol &&
-              this.filterValid(
-                [this.getBasicMove([i, j], [ii, jj])]
-              ).length >= 1
-            ) {
-              return true;
+          const allSpecs = this.pieces(color, i, j)
+          let specs = allSpecs[this.getPieceType(i, j)];
+          const attacks = specs.attack || specs.moves;
+          for (let a of attacks) {
+            outerLoop: for (let step of a.steps) {
+              let [ii, jj] = [i + step[0], this.computeY(j + step[1])];
+              let stepCounter = 1;
+              while (this.onBoard(ii, jj) && this.board[ii][jj] == "") {
+                if (a.range <= stepCounter++)
+                  continue outerLoop;
+                ii += step[0];
+                jj = this.computeY(jj + step[1]);
+              }
+              if (
+                this.onBoard(ii, jj) &&
+                this.getColor(ii, jj) == oppCol &&
+                this.filterValid(
+                  [this.getBasicMove([i, j], [ii, jj])]
+                ).length >= 1
+              ) {
+                return true;
+              }
             }
           }
         }
@@ -1229,10 +1213,9 @@ export default class ChessRules {
     let moves = [];
     for (let i=0; i<this.size.x; i++) {
       for (let j=0; j<this.size.y; j++) {
-        // TODO: rather simplify this "if" and add post-condition: more general
         if (
           this.board[i][j] == "" &&
-          (!this.options["dark"] || this.enlightened[i][j]) &&
+          (!this.enlightened || this.enlightened[i][j]) &&
           (
             p != "p" ||
             (c == 'w' && i < this.size.x - 1) ||
@@ -1260,11 +1243,14 @@ export default class ChessRules {
     if (this.options["madrasi"] && this.isImmobilized(sq))
       return [];
     const piece = this.getPieceType(sq[0], sq[1]);
-    let moves;
-    if (piece == "p")
-      moves = this.getPotentialPawnMoves(sq);
-    else
-      moves = this.getPotentialMovesOf(piece, sq);
+    let moves = this.getPotentialMovesOf(piece, sq);
+    if (
+      piece == "p" &&
+      this.hasEnpassant &&
+      this.epSquare
+    ) {
+      Array.prototype.push.apply(moves, this.getEnpassantCaptures(sq));
+    }
     if (
       piece == "k" &&
       this.hasCastle &&
@@ -1334,6 +1320,57 @@ export default class ChessRules {
     }
 
     if (
+      moves.length > 0 &&
+      this.getPieceType(moves[0].start.x, moves[0].start.y) == "p"
+    ) {
+      let moreMoves = [];
+      const lastRank = (color == "w" ? 0 : this.size.x - 1);
+      const initPiece = this.getPiece(moves[0].start.x, moves[0].start.y);
+      moves.forEach(m => {
+        let finalPieces = ["p"];
+        const [x1, y1] = [m.start.x, m.start.y];
+        const [x2, y2] = [m.end.x, m.end.y];
+        const promotionOk = (
+          x2 == lastRank &&
+          (!this.options["rifle"] || this.board[x2][y2] == "")
+        );
+        if (!promotionOk)
+          return; //nothing to do
+        if (!this.options["pawnfall"]) {
+          if (
+            this.options["cannibal"] &&
+            this.board[x2][y2] != "" &&
+            this.getColor(x2, y2) == oppCol
+          ) {
+            finalPieces = [this.getPieceType(x2, y2)];
+          }
+          else
+            finalPieces = this.pawnPromotions;
+        }
+        m.appear[0].p = finalPieces[0];
+        if (initPiece == "!") //cannibal king-pawn
+          m.appear[0].p = C.CannibalKingCode[finalPieces[0]];
+        for (let i=1; i<finalPieces.length; i++) {
+          const piece = finalPieces[i];
+          let tr = null;
+          if (!this.options["pawnfall"]) {
+            tr = {
+              c: color,
+              p: (initPiece != "!" ? piece : C.CannibalKingCode[piece])
+            };
+          }
+          let newMove = this.getBasicMove([x1, y1], [x2, y2], tr);
+          if (this.options["pawnfall"]) {
+            newMove.appear.shift();
+            newMove.pawnfall = true; //required in prePlay()
+          }
+          moreMoves.push(newMove);
+        }
+      });
+      Array.prototype.push.apply(moves, moreMoves);
+    }
+
+    if (
       this.options["cannibal"] &&
       this.options["rifle"] &&
       this.pawnSpecs.promotions
@@ -1350,8 +1387,8 @@ export default class ChessRules {
           m.appear[0].y == m.start.y
         ) {
           const promotionPiece0 = this.pawnSpecs.promotions[0];
-          m.appear[0].p = this.pawnSpecs.promotions[0];
-          for (let i=1; i<this.pawnSpecs.promotions.length; i++) {
+          m.appear[0].p = this.pawnPromotions[0];
+          for (let i=1; i<this.pawnPromotions.length; i++) {
             let newMv = JSON.parse(JSON.stringify(m));
             newMv.appear[0].p = this.pawnSpecs.promotions[i];
             newMoves.push(newMv);
@@ -1398,24 +1435,26 @@ export default class ChessRules {
   isImmobilized([x, y]) {
     const color = this.getColor(x, y);
     const oppCol = C.GetOppCol(color);
-    const piece = this.getPieceType(x, y);
-    const stepSpec = this.pieces(color)[piece];
-    let [steps, range] = [stepSpec.attack || stepSpec.steps, stepSpec.range];
-    outerLoop: for (let step of steps) {
-      let [i, j] = [x + step[0], y + step[1]];
-      let stepCounter = 1;
-      while (this.onBoard(i, j) && this.board[i][j] == "") {
-        if (range <= stepCounter++)
-          continue outerLoop;
-        i += step[0];
-        j = this.computeY(j + step[1]);
-      }
-      if (
-        this.onBoard(i, j) &&
-        this.getColor(i, j) == oppCol &&
-        this.getPieceType(i, j) == piece
-      ) {
-        return true;
+    const piece = this.getPieceType(x, y); //ok not cannibal king
+    const stepSpec = this.pieces(color, x, y);
+    const attacks = stepSpec.attack || stepSpec.moves;
+    for (let a of attacks) {
+      outerLoop: for (let step of a.steps) {
+        let [i, j] = [x + step[0], y + step[1]];
+        let stepCounter = 1;
+        while (this.onBoard(i, j) && this.board[i][j] == "") {
+          if (a.range <= stepCounter++)
+            continue outerLoop;
+          i += step[0];
+          j = this.computeY(j + step[1]);
+        }
+        if (
+          this.onBoard(i, j) &&
+          this.getColor(i, j) == oppCol &&
+          this.getPieceType(i, j) == piece
+        ) {
+          return true;
+        }
       }
     }
     return false;
@@ -1424,85 +1463,108 @@ export default class ChessRules {
   // Generic method to find possible moves of "sliding or jumping" pieces
   getPotentialMovesOf(piece, [x, y]) {
     const color = this.getColor(x, y);
-    const stepSpec = this.pieces(color)[piece];
-    let [steps, range] = [stepSpec.steps, stepSpec.range];
+    const stepSpec = this.pieces(color, x, y)[piece];
     let moves = [];
     let explored = {}; //for Cylinder mode
-    outerLoop: for (let step of steps) {
-      let [i, j] = [x + step[0], this.computeY(y + step[1])];
-      let stepCounter = 1;
-      while (
-        this.onBoard(i, j) &&
-        this.board[i][j] == "" &&
-        !explored[i + "." + j]
-      ) {
-        explored[i + "." + j] = true;
-        moves.push(this.getBasicMove([x, y], [i, j]));
-        if (range <= stepCounter++)
-          continue outerLoop;
-        i += step[0];
-        j = this.computeY(j + step[1]);
+
+    const findAddMoves = (type, stepArray) => {
+      for (let s of stepArray) {
+        outerLoop: for (let step of s.steps) {
+          let [i, j] = [x + step[0], this.computeY(y + step[1])];
+          let stepCounter = 1;
+          while (this.onBoard(i, j) && this.board[i][j] == "") {
+            if (type != "attack" && !explored[i + "." + j]) {
+              explored[i + "." + j] = true;
+              moves.push(this.getBasicMove([x, y], [i, j]));
+            }
+            if (s.range <= stepCounter++)
+              continue outerLoop;
+            i += step[0];
+            j = this.computeY(j + step[1]);
+          }
+          if (!this.onBoard(i, j))
+            continue;
+          const pieceIJ = this.getPieceType(i, j);
+          if (
+            type != "moveonly" &&
+            !explored[i + "." + j] &&
+            (
+              !this.options["zen"] ||
+              pieceIJ == "k"
+            ) &&
+            (
+              this.canTake([x, y], [i, j]) ||
+              (
+                (this.options["recycle"] || this.options["teleport"]) &&
+                pieceIJ != "k"
+              )
+            )
+          ) {
+            explored[i + "." + j] = true;
+            moves.push(this.getBasicMove([x, y], [i, j]));
+          }
+        }
       }
-      if (
-        this.onBoard(i, j) &&
-        (
-          !this.options["zen"] ||
-          this.getPieceType(i, j) == "k" ||
-          this.getColor(i, j) == color //OK for Recycle and Teleport
-        ) &&
-        this.canTake([x, y], [i, j]) &&
-        !explored[i + "." + j]
-      ) {
-        explored[i + "." + j] = true;
-        moves.push(this.getBasicMove([x, y], [i, j]));
-      }
-    }
+    };
+
+    const specialAttack = !!stepSpec.attack;
+    if (specialAttack)
+      findAddMoves("attack", stepSpec.attack);
+    findAddMoves(specialAttack ? "moveonly" : "all", stepSpec.moves);
     if (this.options["zen"])
-      Array.prototype.push.apply(moves, this.getZenCaptures(x, y));
+      Array.prototype.push.apply(moves, this.findCapturesOn([x, y], true));
     return moves;
   }
 
-  getZenCaptures(x, y) {
+  findCapturesOn([x, y], zen) {
     let moves = [];
     // Find reverse captures (opponent takes)
     const color = this.getColor(x, y);
     const pieceType = this.getPieceType(x, y);
     const oppCol = C.GetOppCol(color);
-    const pieces = this.pieces(oppCol);
-    Object.keys(pieces).forEach(p => {
-      if (
-        p == "k" ||
-        (this.options["cannibal"] && C.CannibalKings[p])
-      ) {
-        return; //king isn't captured this way
+    for (let i=0; i<this.size.x; i++) {
+      for (let j=0; j<this.size.y; j++) {
+        if (this.board[i][j] != "" && this.canTake([i, j], [x, y])) {
+          const piece = this.getPieceType(i, j);
+          if (zen && C.CannibalKingCode[piece])
+            continue; //king not captured in this way
+          const stepSpec = this.pieces(oppCol, i, j)[piece];
+          const attacks = stepSpec.attack || stepSpec.moves;
+          for (let a of attacks) {
+            for (let s of a.steps) {
+              // Quick check: if step isn't compatible, don't even try
+              const rx = (x - i) / s[0],
+                    ry = (y - j) / s[1];
+              if (
+                (!Number.isFinite(rx) && !Number.isNaN(rx)) ||
+                (!Number.isFinite(ry) && !Number.isNaN(ry))
+              ) {
+                continue;
+              }
+              let distance = (Number.isNaN(rx) ? ry : rx);
+              // TODO: 1e-7 here is totally arbitrary
+              if (Math.abs(distance - Math.round(distance)) > 1e-7)
+                continue;
+              distance = Math.round(distance); //in case of (numerical...)
+              if (a.range < distance)
+                continue;
+              // Finally verify that nothing stand in-between
+              let [ii, jj] = [i + s[0], this.computeY(j + s[1])];
+              let stepCounter = 1;
+              while (this.onBoard(ii, jj) && this.board[ii][jj] == "") {
+                ii += s[0];
+                jj = this.computeY(jj + s[1]);
+              }
+              if (ii == x && jj == y) {
+                moves.push(this.getBasicMove([x, y], [i, j]));
+                if (!zen)
+                  return moves; //test for underCheck
+              }
+            }
+          }
+        }
       }
-      const steps = pieces[p].attack || pieces[p].steps;
-      if (!steps)
-        return; //cannibal king for example (TODO...)
-      const range = pieces[p].range;
-      steps.forEach(s => {
-        // From x,y: revert step
-        let [i, j] = [x - s[0], this.computeY(y - s[1])];
-        let stepCounter = 1;
-        while (this.onBoard(i, j) && this.board[i][j] == "") {
-          if (range <= stepCounter++)
-            return;
-          i -= s[0];
-          j = this.computeY(j - s[1]);
-        }
-        if (
-          this.onBoard(i, j) &&
-          this.getPieceType(i, j) == p &&
-          this.getColor(i, j) == oppCol && //condition for Recycle & Teleport
-          this.canTake([i, j], [x, y])
-        ) {
-          if (pieceType != "p")
-            moves.push(this.getBasicMove([x, y], [i, j]));
-          else
-            this.addPawnMoves([x, y], [i, j], moves);
-        }
-      });
-    });
+    }
     return moves;
   }
 
@@ -1611,8 +1673,9 @@ export default class ChessRules {
   }
 
   // Special case of en-passant captures: treated separately
-  getEnpassantCaptures([x, y], shiftX) {
+  getEnpassantCaptures([x, y]) {
     const color = this.getColor(x, y);
+    const shiftX = (color == 'w' ? -1 : 1);
     const oppCol = C.GetOppCol(color);
     let enpassantMove = null;
     if (
@@ -1629,144 +1692,6 @@ export default class ChessRules {
       enpassantMove.vanish[lastIdx].x = x;
     }
     return !!enpassantMove ? [enpassantMove] : [];
-  }
-
-  // Consider all potential promotions.
-  // NOTE: "promotions" arg = special override for Hiddenqueen variant
-  addPawnMoves([x1, y1], [x2, y2], moves, promotions) {
-    let finalPieces = ["p"];
-    const color = this.getColor(x1, y1);
-    const oppCol = C.GetOppCol(color);
-    const lastRank = (color == "w" ? 0 : this.size.x - 1);
-    const promotionOk =
-      x2 == lastRank && (!this.options["rifle"] || this.board[x2][y2] == "");
-    if (promotionOk && !this.options["pawnfall"]) {
-      if (
-        this.options["cannibal"] &&
-        this.board[x2][y2] != "" &&
-        this.getColor(x2, y2) == oppCol
-      ) {
-        finalPieces = [this.getPieceType(x2, y2)];
-      }
-      else if (promotions)
-        finalPieces = promotions;
-      else if (this.pawnSpecs.promotions)
-        finalPieces = this.pawnSpecs.promotions;
-    }
-    for (let piece of finalPieces) {
-      const tr = !this.options["pawnfall"] && piece != "p"
-        ? { c: color, p: piece }
-        : null;
-      let newMove = this.getBasicMove([x1, y1], [x2, y2], tr);
-      if (promotionOk && this.options["pawnfall"]) {
-        newMove.appear.shift();
-        newMove.pawnfall = true; //required in prePlay()
-      }
-      moves.push(newMove);
-    }
-  }
-
-  // What are the pawn moves from square x,y ?
-  getPotentialPawnMoves([x, y], promotions) {
-    const color = this.getColor(x, y); //this.turn doesn't work for Dark mode
-    const [sizeX, sizeY] = [this.size.x, this.size.y];
-    const pawnShiftX = this.pawnSpecs.directions[color];
-    const firstRank = (color == "w" ? sizeX - 1 : 0);
-    const forward = (color == 'w' ? -1 : 1);
-
-    // Pawn movements in shiftX direction:
-    const getPawnMoves = (shiftX) => {
-      let moves = [];
-      // NOTE: next condition is generally true (no pawn on last rank)
-      if (x + shiftX >= 0 && x + shiftX < sizeX) {
-        if (this.board[x + shiftX][y] == "") {
-          // One square forward (or backward)
-          this.addPawnMoves([x, y], [x + shiftX, y], moves, promotions);
-          // Next condition because pawns on 1st rank can generally jump
-          if (
-            this.pawnSpecs.twoSquares &&
-            (
-              (
-                color == 'w' &&
-                x >= this.size.x - 1 - this.pawnSpecs.initShift['w']
-              )
-              ||
-              (color == 'b' && x <= this.pawnSpecs.initShift['b'])
-            )
-          ) {
-            if (
-              shiftX == forward &&
-              this.board[x + 2 * shiftX][y] == ""
-            ) {
-              // Two squares jump
-              moves.push(this.getBasicMove([x, y], [x + 2 * shiftX, y]));
-              if (
-                this.pawnSpecs.threeSquares &&
-                this.board[x + 3 * shiftX, y] == ""
-              ) {
-                // Three squares jump
-                moves.push(this.getBasicMove([x, y], [x + 3 * shiftX, y]));
-              }
-            }
-          }
-        }
-        // Captures
-        if (this.pawnSpecs.canCapture) {
-          for (let shiftY of [-1, 1]) {
-            const yCoord = this.computeY(y + shiftY);
-            if (yCoord >= 0 && yCoord < sizeY) {
-              if (
-                this.board[x + shiftX][yCoord] != "" &&
-                this.canTake([x, y], [x + shiftX, yCoord]) &&
-                (
-                  !this.options["zen"] ||
-                  this.getPieceType(x + shiftX, yCoord) == "k"
-                )
-              ) {
-                this.addPawnMoves(
-                  [x, y], [x + shiftX, yCoord],
-                  moves, promotions
-                );
-              }
-              if (
-                this.pawnSpecs.captureBackward && shiftX == forward &&
-                x - shiftX >= 0 && x - shiftX < this.size.x &&
-                this.board[x - shiftX][yCoord] != "" &&
-                this.canTake([x, y], [x - shiftX, yCoord]) &&
-                (
-                  !this.options["zen"] ||
-                  this.getPieceType(x + shiftX, yCoord) == "k"
-                )
-              ) {
-                this.addPawnMoves(
-                  [x, y], [x - shiftX, yCoord],
-                  moves, promotions
-                );
-              }
-            }
-          }
-        }
-      }
-      return moves;
-    }
-
-    let pMoves = getPawnMoves(pawnShiftX);
-    if (this.pawnSpecs.bidirectional)
-      pMoves = pMoves.concat(getPawnMoves(-pawnShiftX));
-
-    if (this.hasEnpassant) {
-      // NOTE: backward en-passant captures are not considered
-      // because no rules define them (for now).
-      Array.prototype.push.apply(
-        pMoves,
-        this.getEnpassantCaptures([x, y], pawnShiftX)
-      );
-    }
-
-    if (this.options["zen"])
-      Array.prototype.push.apply(pMoves, this.getZenCaptures(x, y));
-
-    return pMoves;
   }
 
   // "castleInCheck" arg to let some variants castle under check
@@ -1862,8 +1787,8 @@ export default class ChessRules {
           ],
           end:
             Math.abs(y - rookPos) <= 2
-              ? { x: x, y: rookPos }
-              : { x: x, y: y + 2 * (castleSide == 0 ? -1 : 1) }
+              ? {x: x, y: rookPos}
+              : {x: x, y: y + 2 * (castleSide == 0 ? -1 : 1)}
         })
       );
     }
@@ -1878,45 +1803,7 @@ export default class ChessRules {
   underCheck([x, y], color) {
     if (this.options["taking"] || this.options["dark"])
       return false;
-    color = color || C.GetOppCol(this.getColor(x, y));
-    const pieces = this.pieces(color);
-    return Object.keys(pieces).some(p => {
-      return this.isAttackedBy([x, y], p, color, pieces[p]);
-    });
-  }
-
-  isAttackedBy([x, y], piece, color, stepSpec) {
-    const steps = stepSpec.attack || stepSpec.steps;
-    if (!steps)
-      return false; //cannibal king, for example
-    const range = stepSpec.range;
-    let explored = {}; //for Cylinder mode
-    outerLoop: for (let step of steps) {
-      let rx = x - step[0],
-          ry = this.computeY(y - step[1]);
-      let stepCounter = 1;
-      while (
-        this.onBoard(rx, ry) &&
-        this.board[rx][ry] == "" &&
-        !explored[rx + "." + ry]
-      ) {
-        explored[rx + "." + ry] = true;
-        if (range <= stepCounter++)
-          continue outerLoop;
-        rx -= step[0];
-        ry = this.computeY(ry - step[1]);
-      }
-      if (
-        this.onBoard(rx, ry) &&
-        this.board[rx][ry] != "" &&
-        this.getPieceType(rx, ry) == piece &&
-        this.getColor(rx, ry) == color &&
-        (!this.options["madrasi"] || !this.isImmobilized([rx, ry]))
-      ) {
-        return true;
-      }
-    }
-    return false;
+    return (this.findCapturesOn([x, y]).length >= 1);
   }
 
   // Stop at first king found (TODO: multi-kings)
@@ -2097,7 +1984,7 @@ export default class ChessRules {
     const color = this.turn;
     const oppCol = C.GetOppCol(color);
     if (this.options["dark"])
-      this.updateEnlightened(true);
+      this.updateEnlightened();
     if (this.options["teleport"]) {
       if (
         this.subTurnTeleport == 1 &&
@@ -2181,7 +2068,7 @@ export default class ChessRules {
     if (this.atLeastOneMove())
       return "*";
     // No valid move: stalemate or checkmate?
-    if (!this.underCheck(kingPos, color))
+    if (!this.underCheck(kingPos[0], color))
       return "1/2";
     // OK, checkmate
     return (color == "w" ? "0-1" : "1-0");
@@ -2190,12 +2077,10 @@ export default class ChessRules {
   // NOTE: quite suboptimal for eg. Benedict (not a big deal I think)
   playVisual(move, r) {
     move.vanish.forEach(v => {
-      if (!this.enlightened || this.enlightened[v.x][v.y]) {
-        // TODO: next "if" shouldn't be required
-        if (this.g_pieces[v.x][v.y])
-          this.g_pieces[v.x][v.y].remove();
-        this.g_pieces[v.x][v.y] = null;
-      }
+      // TODO: next "if" shouldn't be required
+      if (this.g_pieces[v.x][v.y])
+        this.g_pieces[v.x][v.y].remove();
+      this.g_pieces[v.x][v.y] = null;
     });
     let chessboard =
       document.getElementById(this.containerId).querySelector(".chessboard");
@@ -2203,8 +2088,6 @@ export default class ChessRules {
       r = chessboard.getBoundingClientRect();
     const pieceWidth = this.getPieceWidth(r.width);
     move.appear.forEach(a => {
-      if (this.enlightened && !this.enlightened[a.x][a.y])
-        return;
       this.g_pieces[a.x][a.y] = document.createElement("piece");
       this.g_pieces[a.x][a.y].classList.add(this.pieces()[a.p]["class"]);
       this.g_pieces[a.x][a.y].classList.add(a.c == "w" ? "white" : "black");
@@ -2212,13 +2095,17 @@ export default class ChessRules {
       this.g_pieces[a.x][a.y].style.height = pieceWidth + "px";
       const [ip, jp] = this.getPixelPosition(a.x, a.y, r);
       this.g_pieces[a.x][a.y].style.transform = `translate(${ip}px,${jp}px)`;
+      if (this.enlightened && !this.enlightened[a.x][a.y])
+        this.g_pieces[a.x][a.y].classList.add("hidden");
       chessboard.appendChild(this.g_pieces[a.x][a.y]);
     });
+    if (this.options["dark"])
+      this.graphUpdateEnlightened();
   }
 
   playPlusVisual(move, r) {
-    this.playVisual(move, r);
     this.play(move);
+    this.playVisual(move, r);
     this.afterPlay(move); //user method
   }
 

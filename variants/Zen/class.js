@@ -11,8 +11,8 @@ export default class ZenRules extends ChessRules {
   }
 
   constructor(o) {
+    o.options["zen"] = true;
     super(o);
-    this.options.zen = true;
   }
 
 };

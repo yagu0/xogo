@@ -14,7 +14,7 @@ export default class AbsorptionRules extends ChessRules {
         "doublemove",
         "progressive",
         "recycle",
-        "rifle", //TODO? absorb powers from afar?
+        "rifle",
         "teleport",
         "zen"
       ]
@@ -22,22 +22,25 @@ export default class AbsorptionRules extends ChessRules {
   }
 
   pieces(color) {
-    const fusions = {{
+    let fusions = {
       // amazon
       'a': {
         "class": "amazon",
-        steps: [
-          [0, 1], [0, -1], [1, 0], [-1, 0],
-          [1, 1], [1, -1], [-1, 1], [-1, -1]
+        moves: [
+          {
+            steps: [
+              [0, 1], [0, -1], [1, 0], [-1, 0],
+              [1, 1], [1, -1], [-1, 1], [-1, -1]
+            ]
+          },
+          {
+            steps: [
+              [1, 2], [1, -2], [-1, 2], [-1, -2],
+              [2, 1], [-2, 1], [2, -1], [-2, -1]
+            ],
+            range: 1
+          }
         ]
-
-//TODO: steps object avec range + steps... "moving"?
-
-        steps: [
-          [1, 2], [1, -2], [-1, 2], [-1, -2],
-          [2, 1], [-2, 1], [2, -1], [-2, -1]
-        ],
-        steps: [[0, 1], [0, -1], [1, 0], [-1, 0]]
       },
       // empress
       'e': {
@@ -51,18 +54,9 @@ export default class AbsorptionRules extends ChessRules {
       'b': {
         "class": "bishop",
         steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]]
-      },
-      // queen
-      'q': {
-        "class": "queen",
-      },
-
-    },
-    return (
-      Object.assign(
-        super.pieces(color)
-      )
-    );
+      }
+    };
+    return Object.assign(fusions, super.pieces(color));
   }
 
   static get MergeComposed() {

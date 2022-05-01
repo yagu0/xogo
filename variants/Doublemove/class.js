@@ -11,8 +11,8 @@ export default class DoublemoveRules extends ChessRules {
   }
 
   constructor(o) {
+    o.options["doublemove"] = true;
     super(o);
-    this.options.doublemove = true;
   }
 
 };

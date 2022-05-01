@@ -11,8 +11,8 @@ export default class CannibalRules extends ChessRules {
   }
 
   constructor(o) {
+    o.options["cannibal"] = true;
     super(o);
-    this.options.cannibal = true;
   }
 
 };

@@ -11,8 +11,8 @@ export default class BalancedRules extends ChessRules {
   }
 
   constructor(o) {
+    o.options["balance"] = true;
     super(o);
-    this.options.balance = true;
   }
 
 };

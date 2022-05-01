@@ -293,6 +293,10 @@ piece {
   pointer-events: none;
 }
 
+piece.hidden {
+  display: none;
+}
+
 /* Drawing of the board */
 .chessboard_SVG {
   width: 100%;

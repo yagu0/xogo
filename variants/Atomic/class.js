@@ -24,8 +24,8 @@ export default class AtomicRules extends ChessRules {
   }
 
   constructor(o) {
+    o.options["atomic"] = true;
     super(o);
-    this.options["atomic"] = true;
   }
 
   canIplay(x, y) {
