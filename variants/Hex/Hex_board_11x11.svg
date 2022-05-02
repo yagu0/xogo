@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="470"
+xmlns:xlink="http://www.w3.org/1999/xlink" height="296">
+<path fill="#07F" d="m14,20-7,12 147,254h293l14-24-147-254"/>
+<path fill="red" d="m21,8-7,12 193,120 107-132z
+m133,278 107-118 193,106-7,12"/>
+<g id="n"><g id="m"><g id="k"><g id="j"><g id="i">
+<path id="h" fill="#DDD" stroke="#000" stroke-width="1"
+d="m26,28v15l13,7.5 13-7.5v-15l-13-7.5z"/> 
+<use xlink:href="#h" transform="translate(26,0)"/></g>
+<use xlink:href="#i" transform="translate(52,0)"/></g>
+<use xlink:href="#j" transform="translate(104,0)"/>
+<use xlink:href="#j" transform="translate(182,0)"/></g>
+<use xlink:href="#k" transform="translate(13,22.5)"/></g>
+<use xlink:href="#m" transform="translate(26,45)"/></g>
+<use xlink:href="#n" transform="translate(52,90)"/>
+<use xlink:href="#n" transform="translate(91,157.5)"/>
+<text fill="#FF3" font-size="10" text-anchor="middle"
+font-family="Arial Bold" x="30" y="20">A<tspan x="56">B</tspan><tspan x="82">C</tspan><tspan x="108">D</tspan><tspan x="134">E</tspan><tspan x="160">F</tspan><tspan x="186">G</tspan><tspan x="212">H</tspan><tspan x="238">I</tspan><tspan x="264">J</tspan><tspan x="290">K</tspan><tspan x="178" y="281">A</tspan><tspan x="204">B</tspan><tspan x="230">C</tspan><tspan x="256">D</tspan><tspan x="282">E</tspan><tspan x="308">F</tspan><tspan x="334">G</tspan><tspan x="360">H</tspan><tspan x="386">I</tspan><tspan x="412">J</tspan><tspan x="438">K</tspan><tspan x="19" y="38">1</tspan><tspan x="320">1</tspan><tspan x="32" y="61">2</tspan><tspan x="333">2</tspan><tspan x="45" y="83">3</tspan><tspan x="346">3</tspan><tspan x="58" y="106">4</tspan><tspan x="359">4</tspan><tspan x="71" y="128">5</tspan><tspan x="372">5</tspan><tspan x="84" y="151">6</tspan><tspan x="385">6</tspan><tspan x="97" y="173">7</tspan><tspan x="398">7</tspan><tspan x="110" y="196">8</tspan><tspan x="411">8</tspan><tspan x="123" y="218">9</tspan><tspan x="424">9</tspan><tspan x="136" y="241">10</tspan><tspan x="437">10</tspan><tspan x="149" y="263">11</tspan><tspan x="450">11</tspan></text>
+</svg>
+<!--Source: https://fr.m.wikipedia.org/wiki/Fichier:Hex_board_11x11.svg-->
