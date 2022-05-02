@@ -63,9 +63,9 @@ wss.on("connection", (socket, req) => {
     switch (obj.code) {
       // Send challenge (may trigger game creation)
       case "seekgame": {
-        let opponent = undefined,
-            choice = undefined;
-        const vname = obj.vname,
+        let oppIndex = undefined, //variant name
+            choice = undefined; //variant finally played
+        const vname = obj.vname, //variant requested
               randvar = (obj.vname == "_random");
         if (vname == "_random") {
           // Pick any current challenge if possible
@@ -73,22 +73,28 @@ wss.on("connection", (socket, req) => {
           if (currentChalls.length >= 1) {
             choice =
               currentChalls[Math.floor(Math.random() * currentChalls.length)];
-            opponent = challenges[choice];
+            oppIndex = choice;
           }
         }
         else if (challenges[vname]) {
-          opponent = challenges[vname];
+          // Anyone wanting to play the same variant ?
           choice = vname;
+          oppIndex = vname;
         }
-        if (opponent) {
-          delete challenges[choice];
+        else if (challenges["_random"]) {
+          // Anyone accepting any variant (including vname) ?
+          choice = vname;
+          oppIndex = "_random";
+        }
+        if (oppIndex) {
           if (choice == "_random")
             choice = getRandomVariant();
           // Launch game
           let players = [
             {sid: sid, name: obj.name, randvar: randvar},
-            opponent
+            Object.assign({}, challenges[oppIndex])
           ];
+          delete challenges[oppIndex];
           if (Math.random() < 0.5)
             players = players.reverse();
           // Empty options = default

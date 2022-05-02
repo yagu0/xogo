@@ -880,7 +880,7 @@ export default class ChessRules {
         touchLocation = e.changedTouches[0];
       if (touchLocation)
         return {x: touchLocation.clientX, y: touchLocation.clientY};
-      return [0, 0]; //shouldn't reach here =)
+      return {x: 0, y: 0}; //shouldn't reach here =)
     }
 
     const centerOnCursor = (piece, e) => {
@@ -1240,7 +1240,7 @@ export default class ChessRules {
   getPotentialMovesFrom(sq, color) {
     if (typeof sq[0] == "string")
       return this.getDropMovesFrom(sq);
-    if (this.options["madrasi"] && this.isImmobilized(sq))
+    if (this.isImmobilized(sq))
       return [];
     const piece = this.getPieceType(sq[0], sq[1]);
     let moves = this.getPotentialMovesOf(piece, sq);
@@ -1267,138 +1267,151 @@ export default class ChessRules {
     const color = this.getColor(moves[0].start.x, moves[0].start.y);
     const oppCol = C.GetOppCol(color);
 
-    if (this.options["capture"] && this.atLeastOneCapture()) {
-      // Filter out non-capturing moves (not using m.vanish because of
-      // self captures of Recycle and Teleport).
-      moves = moves.filter(m => {
-        return (
-          this.board[m.end.x][m.end.y] != "" &&
-          this.getColor(m.end.x, m.end.y) == oppCol
-        );
-      });
-    }
+    if (this.options["capture"] && this.atLeastOneCapture())
+      moves = this.capturePostProcess(moves, oppCol);
 
-    if (this.options["atomic"]) {
-      moves.forEach(m => {
-        if (
-          this.board[m.end.x][m.end.y] != "" &&
-          this.getColor(m.end.x, m.end.y) == oppCol
-        ) {
-          // Explosion!
-          let steps = [
-            [-1, -1],
-            [-1, 0],
-            [-1, 1],
-            [0, -1],
-            [0, 1],
-            [1, -1],
-            [1, 0],
-            [1, 1]
-          ];
-          for (let step of steps) {
-            let x = m.end.x + step[0];
-            let y = this.computeY(m.end.y + step[1]);
-            if (
-              this.onBoard(x, y) &&
-              this.board[x][y] != "" &&
-              this.getPieceType(x, y) != "p"
-            ) {
-              m.vanish.push(
-                new PiPo({
-                  p: this.getPiece(x, y),
-                  c: this.getColor(x, y),
-                  x: x,
-                  y: y
-                })
-              );
-            }
-          }
-          if (!this.options["rifle"])
-            m.appear.pop(); //nothin appears
-        }
-      });
-    }
+    if (this.options["atomic"])
+      this.atomicPostProcess(moves, oppCol);
 
     if (
       moves.length > 0 &&
       this.getPieceType(moves[0].start.x, moves[0].start.y) == "p"
     ) {
-      let moreMoves = [];
-      const lastRank = (color == "w" ? 0 : this.size.x - 1);
-      const initPiece = this.getPiece(moves[0].start.x, moves[0].start.y);
-      moves.forEach(m => {
-        let finalPieces = ["p"];
-        const [x1, y1] = [m.start.x, m.start.y];
-        const [x2, y2] = [m.end.x, m.end.y];
-        const promotionOk = (
-          x2 == lastRank &&
-          (!this.options["rifle"] || this.board[x2][y2] == "")
-        );
-        if (!promotionOk)
-          return; //nothing to do
-        if (!this.options["pawnfall"]) {
-          if (
-            this.options["cannibal"] &&
-            this.board[x2][y2] != "" &&
-            this.getColor(x2, y2) == oppCol
-          ) {
-            finalPieces = [this.getPieceType(x2, y2)];
-          }
-          else
-            finalPieces = this.pawnPromotions;
-        }
-        m.appear[0].p = finalPieces[0];
-        if (initPiece == "!") //cannibal king-pawn
-          m.appear[0].p = C.CannibalKingCode[finalPieces[0]];
-        for (let i=1; i<finalPieces.length; i++) {
-          const piece = finalPieces[i];
-          let tr = null;
-          if (!this.options["pawnfall"]) {
-            tr = {
-              c: color,
-              p: (initPiece != "!" ? piece : C.CannibalKingCode[piece])
-            };
-          }
-          let newMove = this.getBasicMove([x1, y1], [x2, y2], tr);
-          if (this.options["pawnfall"]) {
-            newMove.appear.shift();
-            newMove.pawnfall = true; //required in prePlay()
-          }
-          moreMoves.push(newMove);
-        }
-      });
-      Array.prototype.push.apply(moves, moreMoves);
+      this.pawnPostProcess(moves, color, oppCol);
     }
 
     if (
       this.options["cannibal"] &&
-      this.options["rifle"] &&
-      this.pawnSpecs.promotions
+      this.options["rifle"]
     ) {
       // In this case a rifle-capture from last rank may promote a pawn
-      const lastRank = (color == "w" ? 0 : this.size.x - 1);
-      let newMoves = [];
-      moves.forEach(m => {
-        if (
-          m.start.x == lastRank &&
-          m.appear.length >= 1 &&
-          m.appear[0].p == "p" &&
-          m.appear[0].x == m.start.x &&
-          m.appear[0].y == m.start.y
-        ) {
-          const promotionPiece0 = this.pawnSpecs.promotions[0];
-          m.appear[0].p = this.pawnPromotions[0];
-          for (let i=1; i<this.pawnPromotions.length; i++) {
-            let newMv = JSON.parse(JSON.stringify(m));
-            newMv.appear[0].p = this.pawnSpecs.promotions[i];
-            newMoves.push(newMv);
-          }
-        }
-      });
-      Array.prototype.push.apply(moves, newMoves);
+      this.riflePromotePostProcess(moves);
     }
 
     return moves;
+  }
+
+  capturePostProcess(moves, oppCol) {
+    // Filter out non-capturing moves (not using m.vanish because of
+    // self captures of Recycle and Teleport).
+    return moves.filter(m => {
+      return (
+        this.board[m.end.x][m.end.y] != "" &&
+        this.getColor(m.end.x, m.end.y) == oppCol
+      );
+    });
+  }
+
+  atomicPostProcess(moves, oppCol) {
+    moves.forEach(m => {
+      if (
+        this.board[m.end.x][m.end.y] != "" &&
+        this.getColor(m.end.x, m.end.y) == oppCol
+      ) {
+        // Explosion!
+        let steps = [
+          [-1, -1],
+          [-1, 0],
+          [-1, 1],
+          [0, -1],
+          [0, 1],
+          [1, -1],
+          [1, 0],
+          [1, 1]
+        ];
+        for (let step of steps) {
+          let x = m.end.x + step[0];
+          let y = this.computeY(m.end.y + step[1]);
+          if (
+            this.onBoard(x, y) &&
+            this.board[x][y] != "" &&
+            this.getPieceType(x, y) != "p"
+          ) {
+            m.vanish.push(
+              new PiPo({
+                p: this.getPiece(x, y),
+                c: this.getColor(x, y),
+                x: x,
+                y: y
+              })
+            );
+          }
+        }
+        if (!this.options["rifle"])
+          m.appear.pop(); //nothin appears
+      }
+    });
+  }
+
+  pawnPostProcess(moves, color, oppCol) {
+    let moreMoves = [];
+    const lastRank = (color == "w" ? 0 : this.size.x - 1);
+    const initPiece = this.getPiece(moves[0].start.x, moves[0].start.y);
+    moves.forEach(m => {
+      let finalPieces = ["p"];
+      const [x1, y1] = [m.start.x, m.start.y];
+      const [x2, y2] = [m.end.x, m.end.y];
+      const promotionOk = (
+        x2 == lastRank &&
+        (!this.options["rifle"] || this.board[x2][y2] == "")
+      );
+      if (!promotionOk)
+        return; //nothing to do
+      if (!this.options["pawnfall"]) {
+        if (
+          this.options["cannibal"] &&
+          this.board[x2][y2] != "" &&
+          this.getColor(x2, y2) == oppCol
+        ) {
+          finalPieces = [this.getPieceType(x2, y2)];
+        }
+        else
+          finalPieces = this.pawnPromotions;
+      }
+      m.appear[0].p = finalPieces[0];
+      if (initPiece == "!") //cannibal king-pawn
+        m.appear[0].p = C.CannibalKingCode[finalPieces[0]];
+      for (let i=1; i<finalPieces.length; i++) {
+        const piece = finalPieces[i];
+        let tr = null;
+        if (!this.options["pawnfall"]) {
+          tr = {
+            c: color,
+            p: (initPiece != "!" ? piece : C.CannibalKingCode[piece])
+          };
+        }
+        let newMove = this.getBasicMove([x1, y1], [x2, y2], tr);
+        if (this.options["pawnfall"]) {
+          newMove.appear.shift();
+          newMove.pawnfall = true; //required in prePlay()
+        }
+        moreMoves.push(newMove);
+      }
+    });
+    Array.prototype.push.apply(moves, moreMoves);
+  }
+
+  riflePromotePostProcess(moves) {
+    const lastRank = (color == "w" ? 0 : this.size.x - 1);
+    let newMoves = [];
+    moves.forEach(m => {
+      if (
+        m.start.x == lastRank &&
+        m.appear.length >= 1 &&
+        m.appear[0].p == "p" &&
+        m.appear[0].x == m.start.x &&
+        m.appear[0].y == m.start.y
+      ) {
+        const promotionPiece0 = this.pawnSpecs.promotions[0];
+        m.appear[0].p = this.pawnPromotions[0];
+        for (let i=1; i<this.pawnPromotions.length; i++) {
+          let newMv = JSON.parse(JSON.stringify(m));
+          newMv.appear[0].p = this.pawnSpecs.promotions[i];
+          newMoves.push(newMv);
+        }
+      }
+    });
+    Array.prototype.push.apply(moves, newMoves);
   }
 
   // NOTE: using special symbols to not interfere with variants' pieces codes
@@ -1433,10 +1446,12 @@ export default class ChessRules {
   // For Madrasi:
   // (redefined in Baroque etc, where Madrasi condition doesn't make sense)
   isImmobilized([x, y]) {
+    if (!this.options["madrasi"])
+      return false;
     const color = this.getColor(x, y);
     const oppCol = C.GetOppCol(color);
     const piece = this.getPieceType(x, y); //ok not cannibal king
-    const stepSpec = this.pieces(color, x, y);
+    const stepSpec = this.pieces(color, x, y)[piece];
     const attacks = stepSpec.attack || stepSpec.moves;
     for (let a of attacks) {
       outerLoop: for (let step of a.steps) {
@@ -1524,7 +1539,11 @@ export default class ChessRules {
     const oppCol = C.GetOppCol(color);
     for (let i=0; i<this.size.x; i++) {
       for (let j=0; j<this.size.y; j++) {
-        if (this.board[i][j] != "" && this.canTake([i, j], [x, y])) {
+        if (
+          this.board[i][j] != "" &&
+          this.canTake([i, j], [x, y]) &&
+          !this.isImmobilized([i, j])
+        ) {
           const piece = this.getPieceType(i, j);
           if (zen && C.CannibalKingCode[piece])
             continue; //king not captured in this way
@@ -1533,20 +1552,7 @@ export default class ChessRules {
           for (let a of attacks) {
             for (let s of a.steps) {
               // Quick check: if step isn't compatible, don't even try
-              const rx = (x - i) / s[0],
-                    ry = (y - j) / s[1];
-              if (
-                (!Number.isFinite(rx) && !Number.isNaN(rx)) ||
-                (!Number.isFinite(ry) && !Number.isNaN(ry))
-              ) {
-                continue;
-              }
-              let distance = (Number.isNaN(rx) ? ry : rx);
-              // TODO: 1e-7 here is totally arbitrary
-              if (Math.abs(distance - Math.round(distance)) > 1e-7)
-                continue;
-              distance = Math.round(distance); //in case of (numerical...)
-              if (a.range < distance)
+              if (!C.CompatibleStep([i, j], [x, y], s, a.range))
                 continue;
               // Finally verify that nothing stand in-between
               let [ii, jj] = [i + s[0], this.computeY(j + s[1])];
@@ -1566,6 +1572,25 @@ export default class ChessRules {
       }
     }
     return moves;
+  }
+
+  static CompatibleStep([x1, y1], [x2, y2], step, range) {
+    const rx = (x2 - x1) / step[0],
+          ry = (y2 - y1) / step[1];
+    if (
+      (!Number.isFinite(rx) && !Number.isNaN(rx)) ||
+      (!Number.isFinite(ry) && !Number.isNaN(ry))
+    ) {
+      return false;
+    }
+    let distance = (Number.isNaN(rx) ? ry : rx);
+    // TODO: 1e-7 here is totally arbitrary
+    if (Math.abs(distance - Math.round(distance)) > 1e-7)
+      return false;
+    distance = Math.round(distance); //in case of (numerical...)
+    if (range < distance)
+      return false;
+    return true;
   }
 
   // Build a regular move from its initial and destination squares.
@@ -2204,8 +2229,8 @@ export default class ChessRules {
       const r = container.querySelector(".chessboard").getBoundingClientRect();
       const animateRec = i => {
         this.animate(moves[i], () => {
-          this.playVisual(moves[i], r);
           this.play(moves[i]);
+          this.playVisual(moves[i], r);
           if (i < moves.length - 1)
             setTimeout(() => animateRec(i+1), 300);
           else

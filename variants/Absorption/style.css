@@ -1,2 +1,25 @@
-@import "../../base_pieces.css"
-@import "pieces.css"
+@import url("/base_pieces.css");
+
+piece.black.amazon {
+  background-image: url('/pieces/black_amazon.svg');
+}
+
+piece.black.empress {
+  background-image: url('/pieces/black_empress.svg');
+}
+
+piece.black.princess {
+  background-image: url('/pieces/black_princess.svg');
+}
+
+piece.white.amazon {
+  background-image: url('/pieces/white_amazon.svg');
+}
+
+piece.white.empress {
+  background-image: url('/pieces/white_empress.svg');
+}
+
+piece.white.princess {
+  background-image: url('/pieces/white_princess.svg');
+}
