@@ -1238,6 +1238,8 @@ export default class ChessRules {
 
   // All possible moves from selected square
   getPotentialMovesFrom(sq, color) {
+    if (this.subTurnTeleport == 2)
+      return [];
     if (typeof sq[0] == "string")
       return this.getDropMovesFrom(sq);
     if (this.isImmobilized(sq))
