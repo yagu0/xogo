@@ -7,7 +7,7 @@ const variants = [
 //  { name: 'Allmate', desc: 'Mate any piece' },
 //  { name: 'Ambiguous', desc: "Play opponent's pieces" },
 //  { name: 'Antiking1', desc: 'Keep antiking in check', disp: 'Anti-King' },
-//  { name: 'Antimatter', desc: 'Dangerous collisions', disp: 'Antimatter' },
+//  { name: 'Antimatter', desc: 'Dangerous collisions' },
 //  { name: 'Apocalypse', desc: 'The end of the world' },
 //  { name: 'Arena', desc: 'Middle battle' },
 //  { name: 'Atarigo', desc: 'First capture wins', disp: 'Atari-Go' },
@@ -49,7 +49,7 @@ const variants = [
 //  { name: 'Doublearmy', desc: '64 pieces on the board', disp: 'Double Army' },
   { name: 'Doublemove', desc: 'Double moves' },
 //  { name: 'Dynamo', desc: 'Push and pull' },
-//  { name: 'Eightpieces', desc: 'Each piece is unique', disp: '8-Pieces' },
+//  { name: 'Eightpieces', desc: 'Each piece is unique', disp: '8 Pieces' },
 //  { name: 'Emergo', desc: 'Stacking Checkers variant' },
 //  { name: 'Empire', desc: 'Empire versus Kingdom' },
 //  { name: 'Enpassant', desc: 'Capture en passant', disp: 'En-passant' },
@@ -135,7 +135,7 @@ const variants = [
 //  { name: 'Sittuyin', desc: 'Burmese Chess' },
 //  { name: 'Spartan', desc: 'Spartan versus Persians' },
 //  { name: 'Squatter', desc: 'Squat last rank' },
-//  { name: 'Stealthbomb', desc: 'Beware the bomb', disp: 'Stealth Bomb' },
+//  { name: 'Stealthbomb', desc: 'Beware the bomb' },
 //  { name: 'Suicide', desc: 'Lose all pieces' },
 //  { name: 'Suction', desc: 'Attract opposite king' },
 //  { name: 'Swap', desc: 'Dangerous captures' },
@@ -154,7 +154,7 @@ const variants = [
 //  { name: 'Wormhole', desc: 'Squares disappear' },
 //  { name: 'Xiangqi', desc: 'Chinese Chess' },
 //  { name: 'Yote', desc: 'African Draughts' },
-  { name: "Zen", disp: "Zen Chess", desc: "Reverse captures" }
+  { name: "Zen", desc: "Reverse captures" }
 ];
 
 // Next line for usage on server (Node.js)
