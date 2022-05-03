@@ -1,5 +1,9 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="400px" height="400px" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <polygon style="fill:none;stroke:#000000;stroke-width:2.5px" points="148,183.138438763306 52,183.138438763306 4,100 52,16.8615612366939 148,16.8615612366939 196,100"/>
+<svg width="173.2px" height="400.0px" viewBox="-86.6 -100.0 173.2 400.0">
+  <defs>
+    <g id="hexa">
+      <polygon style="fill:none;stroke:#000000;stroke-width:1px" points="0,-100.0 86.6,-50.0 86.6,50.0 0,100.0 -86.6,50.0 -86.6,-50.0"/>
+    </g>
+  </defs>
+  <use href="#hexa" x="0" y="0"/>
+  <use href="#hexa" x="0" y="200"/>
 </svg>

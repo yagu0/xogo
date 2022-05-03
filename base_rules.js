@@ -619,16 +619,14 @@ export default class ChessRules {
 
   // Get SVG board (background, no pieces)
   getSvgChessboard() {
-    const [sizeX, sizeY] = [this.size.x, this.size.y];
     const flipped = (this.playerColor == 'b');
     let board = `
       <svg
         viewBox="0 0 80 80"
-        version="1.1"
         class="chessboard_SVG">
       <g>`;
-    for (let i=0; i < sizeX; i++) {
-      for (let j=0; j < sizeY; j++) {
+    for (let i=0; i < this.size.x; i++) {
+      for (let j=0; j < this.size.y; j++) {
         const ii = (flipped ? this.size.x - 1 - i : i);
         const jj = (flipped ? this.size.y - 1 - j : j);
         let classes = this.getSquareColorClass(ii, jj);
@@ -1026,7 +1024,7 @@ export default class ChessRules {
   // BASIC UTILS
 
   get size() {
-    return {"x": 8, "y": 8};
+    return {x: 8, y: 8};
   }
 
   // Color of thing on square (i,j). 'undefined' if square is empty
