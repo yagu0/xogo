@@ -91,24 +91,25 @@ export default class ChessRules {
   }
 
   // Some variants use click infos:
-  doClick([x, y]) {
-    if (typeof x != "number")
+  doClick(coords) {
+    if (typeof coords.x != "number")
       return null; //click on reserves
     if (
       this.options["teleport"] && this.subTurnTeleport == 2 &&
-      this.board[x][y] == ""
+      this.board[coords.x][coords.y] == ""
     ) {
       return new Move({
         start: {x: this.captured.x, y: this.captured.y},
         appear: [
           new PiPo({
-            x: x,
-            y: y,
+            x: coords.x,
+            y: coords.y,
             c: this.captured.c, //this.turn,
             p: this.captured.p
           })
         ],
-        vanish: []
+        vanish: [],
+        drag: {c: this.captured.c, p: this.captured.p}
       });
     }
     return null;
@@ -117,46 +118,25 @@ export default class ChessRules {
   ////////////////////
   // COORDINATES UTILS
 
-  // 3 --> d (column number to letter)
-  static CoordToColumn(colnum) {
-    return String.fromCharCode(97 + colnum);
-  }
-
-  // d --> 3 (column letter to number)
-  static ColumnToCoord(columnStr) {
-    return columnStr.charCodeAt(0) - 97;
-  }
-
-  // 7 (numeric) --> 1 (str) [from black viewpoint].
-  static CoordToRow(rownum) {
-    return rownum;
-  }
-
-  // NOTE: wrong row index (1 should be 7 ...etc). But OK for the usage.
-  static RowToCoord(rownumStr) {
-    // NOTE: 30 is way more than enough (allow up to 29 rows on one character)
-    return parseInt(rownumStr, 30);
-  }
-
-  // a2 --> {x:2,y:0} (this is in fact a6)
+  // a3 --> {x:10, y:3}
   static SquareToCoords(sq) {
-    return {
-      x: C.RowToCoord(sq[1]),
-      // NOTE: column is always one char => max 26 columns
-      y: C.ColumnToCoord(sq[0])
-    };
+    return ArrayFun.toObject(["x", "y"],
+                             [0, 1].map(i => parseInt(sq[i], 36)));
   }
 
-  // {x:0,y:4} --> e0 (should be e8)
-  static CoordsToSquare(coords) {
-    return C.CoordToColumn(coords.y) + C.CoordToRow(coords.x);
+  // {x:1, y:12} --> 1c
+  static CoordsToSquare(cd) {
+    return Object.values(cd).map(c => c.toString(36)).join("");
   }
 
-  coordsToId([x, y]) {
-    if (typeof x == "number")
-      return `${this.containerId}|sq-${x.toString(30)}-${y.toString(30)}`;
+  coordsToId(cd) {
+    if (typeof cd.x == "number") {
+      return (
+        `${this.containerId}|sq-${cd.x.toString(36)}-${cd.y.toString(36)}`
+      );
+    }
     // Reserve :
-    return `${this.containerId}|rsq-${x}-${y}`;
+    return `${this.containerId}|rsq-${cd.x}-${cd.y}`;
   }
 
   idToCoords(targetId) {
@@ -172,9 +152,9 @@ export default class ChessRules {
     }
     const squares = idParts[1].split('-');
     if (squares[0] == "sq")
-      return [ parseInt(squares[1], 30), parseInt(squares[2], 30) ];
-    // squares[0] == "rsq" : reserve, 'c' + 'p' (letters)
-    return [squares[1], squares[2]];
+      return {x: parseInt(squares[1], 36), y: parseInt(squares[2], 36)};
+    // squares[0] == "rsq" : reserve, 'c' + 'p' (letters color & piece)
+    return {x: squares[1], y: squares[2]};
   }
 
   /////////////
@@ -291,7 +271,7 @@ export default class ChessRules {
   // Return current fen (game state)
   getFen() {
     let fen = (
-      this.getBaseFen() + " " +
+      this.getPosition() + " " +
       this.getTurnFen() + " " +
       this.movesCount
     );
@@ -310,7 +290,7 @@ export default class ChessRules {
   }
 
   // Position part of the FEN string
-  getBaseFen() {
+  getPosition() {
     const format = (count) => {
       // if more than 9 consecutive free spaces, break the integer,
       // otherwise FEN parsing will fail.
@@ -353,7 +333,7 @@ export default class ChessRules {
   // Flags part of the FEN string
   getFlagsFen() {
     return ["w", "b"].map(c => {
-      return this.castleFlags[c].map(x => x.toString(30)).join("");
+      return this.castleFlags[c].map(x => x.toString(36)).join("");
     }).join("");
   }
 
@@ -371,17 +351,17 @@ export default class ChessRules {
   }
 
   getIspawnFen() {
-    const coords = Object.keys(this.ispawn);
-    if (coords.length == 0)
+    const squares = Object.keys(this.ispawn);
+    if (squares.length == 0)
       return "-";
-    return coords.join(",");
+    return squares.join(",");
   }
 
   // Set flags from fen (castle: white a,h then black a,h)
   setFlags(fenflags) {
     this.castleFlags = {
-      w: [0, 1].map(i => parseInt(fenflags.charAt(i), 30)),
-      b: [2, 3].map(i => parseInt(fenflags.charAt(i), 30))
+      w: [0, 1].map(i => parseInt(fenflags.charAt(i), 36)),
+      b: [2, 3].map(i => parseInt(fenflags.charAt(i), 36))
     };
   }
 
@@ -391,7 +371,7 @@ export default class ChessRules {
   constructor(o) {
     this.options = o.options;
     this.playerColor = o.color;
-    this.afterPlay = o.afterPlay;
+    this.afterPlay = o.afterPlay; //trigger some actions after playing a move
 
     // Fen string fully describes the game state
     if (!o.fen)
@@ -487,30 +467,6 @@ export default class ChessRules {
     }
   }
 
-  // Apply diff this.enlightened --> oldEnlightened on board
-  graphUpdateEnlightened() {
-    let chessboard =
-      document.getElementById(this.containerId).querySelector(".chessboard");
-    const r = chessboard.getBoundingClientRect();
-    const pieceWidth = this.getPieceWidth(r.width);
-    for (let x=0; x<this.size.x; x++) {
-      for (let y=0; y<this.size.y; y++) {
-        if (!this.enlightened[x][y] && this.oldEnlightened[x][y]) {
-          let elt = document.getElementById(this.coordsToId([x, y]));
-          elt.classList.add("in-shadow");
-          if (this.g_pieces[x][y])
-            this.g_pieces[x][y].classList.add("hidden");
-        }
-        else if (this.enlightened[x][y] && !this.oldEnlightened[x][y]) {
-          let elt = document.getElementById(this.coordsToId([x, y]));
-          elt.classList.remove("in-shadow");
-          if (this.g_pieces[x][y])
-            this.g_pieces[x][y].classList.remove("hidden");
-        }
-      }
-    }
-  }
-
   // ordering as in pieces() p,r,n,b,q,k (+ count in base 30 if needed)
   initReserves(reserveStr) {
     const counts = reserveStr.split("").map(c => parseInt(c, 30));
@@ -526,10 +482,8 @@ export default class ChessRules {
   }
 
   initIspawn(ispawnStr) {
-    if (ispawnStr != "-") {
-      this.ispawn = ispawnStr.split(",").map(C.SquareToCoords)
-                    .reduce((o, key) => ({ ...o, [key]: true}), {});
-    }
+    if (ispawnStr != "-")
+      this.ispawn = ArrayFun.toObject(ispawnStr.split(","), true);
     else
       this.ispawn = {};
   }
@@ -541,6 +495,14 @@ export default class ChessRules {
     );
   }
 
+  getRankInReserve(c, p) {
+    const pieces = Object.keys(this.pieces());
+    const lastIndex = pieces.findIndex(pp => pp == p)
+    let toTest = pieces.slice(0, lastIndex);
+    return toTest.reduce(
+      (oldV,newV) => oldV + (this.reserve[c][newV] > 0 ? 1 : 0), 0);
+  }
+
   //////////////
   // VISUAL PART
 
@@ -548,12 +510,8 @@ export default class ChessRules {
     return (rwidth / this.size.y);
   }
 
-  getSquareWidth(rwidth) {
-    return this.getPieceWidth(rwidth);
-  }
-
   getReserveSquareSize(rwidth, nbR) {
-    const sqSize = this.getSquareWidth(rwidth);
+    const sqSize = this.getPieceWidth(rwidth);
     return Math.min(sqSize, rwidth / nbR);
   }
 
@@ -578,26 +536,26 @@ export default class ChessRules {
       document.getElementById(this.containerId).querySelector(".chessboard");
     chessboard.innerHTML = "";
     chessboard.insertAdjacentHTML('beforeend', board);
-    const aspectRatio = this.size.y / this.size.x;
     // Compare window ratio width / height to aspectRatio:
     const windowRatio = window.innerWidth / window.innerHeight;
     let cbWidth, cbHeight;
-    if (windowRatio <= aspectRatio) {
+    if (windowRatio <= this.size.ratio) {
       // Limiting dimension is width:
       cbWidth = Math.min(window.innerWidth, 767);
-      cbHeight = cbWidth / aspectRatio;
+      cbHeight = cbWidth / this.size.ratio;
     }
     else {
       // Limiting dimension is height:
       cbHeight = Math.min(window.innerHeight, 767);
-      cbWidth = cbHeight * aspectRatio;
+      cbWidth = cbHeight * this.size.ratio;
     }
     if (this.reserve) {
       const sqSize = cbWidth / this.size.y;
       // NOTE: allocate space for reserves (up/down) even if they are empty
+      // Cannot use getReserveSquareSize() here, but sqSize is an upper bound.
       if ((window.innerHeight - cbHeight) / 2 < sqSize + 5) {
         cbHeight = window.innerHeight - 2 * (sqSize + 5);
-        cbWidth = cbHeight * aspectRatio;
+        cbWidth = cbHeight * this.size.ratio;
       }
     }
     chessboard.style.width = cbWidth + "px";
@@ -635,7 +593,7 @@ export default class ChessRules {
         // NOTE: x / y reversed because coordinates system is reversed.
         board += `<rect
           class="${classes}"
-          id="${this.coordsToId([ii, jj])}"
+          id="${this.coordsToId({x: ii, y: jj})}"
           width="10"
           height="10"
           x="${10*j}"
@@ -647,8 +605,8 @@ export default class ChessRules {
   }
 
   // Generally light square bottom-right
-  getSquareColorClass(i, j) {
-    return ((i+j) % 2 == 0 ? "light-square": "dark-square");
+  getSquareColorClass(x, y) {
+    return ((x+y) % 2 == 0 ? "light-square": "dark-square");
   }
 
   setupPieces(r) {
@@ -677,7 +635,7 @@ export default class ChessRules {
           const piece = this.getPiece(i, j);
           this.g_pieces[i][j] = document.createElement("piece");
           this.g_pieces[i][j].classList.add(this.pieces()[piece]["class"]);
-          this.g_pieces[i][j].classList.add(color == "w" ? "white" : "black");
+          this.g_pieces[i][j].classList.add(C.GetColorClass(color));
           this.g_pieces[i][j].style.width = pieceWidth + "px";
           this.g_pieces[i][j].style.height = pieceWidth + "px";
           const [ip, jp] = this.getPixelPosition(i, j, r);
@@ -714,9 +672,10 @@ export default class ChessRules {
     }
     else
       this.r_pieces = { 'w': {}, 'b': {} };
-    let container = document.getElementById(this.containerId);
+    let chessboard = 
+      document.getElementById(this.containerId).querySelector(".chessboard");
     if (!r)
-      r = container.querySelector(".chessboard").getBoundingClientRect();
+      r = chessboard.getBoundingClientRect();
     for (let c of colors) {
       if (!this.reserve[c])
         continue;
@@ -735,12 +694,12 @@ export default class ChessRules {
       // NOTE: +1 fix display bug on Firefox at least
       rcontainer.style.width = (nbR * sqResSize + 1) + "px";
       rcontainer.style.height = sqResSize + "px";
-      container.appendChild(rcontainer);
+      chessboard.appendChild(rcontainer);
       for (let p of Object.keys(this.reserve[c])) {
         if (this.reserve[c][p] == 0)
           continue;
         let r_cell = document.createElement("div");
-        r_cell.id = this.coordsToId([c, p]);
+        r_cell.id = this.coordsToId({x: c, y: p});
         r_cell.classList.add("reserve-cell");
         r_cell.style.width = sqResSize + "px";
         r_cell.style.height = sqResSize + "px";
@@ -748,7 +707,7 @@ export default class ChessRules {
         let piece = document.createElement("piece");
         const pieceSpec = this.pieces()[p];
         piece.classList.add(pieceSpec["class"]);
-        piece.classList.add(c == 'w' ? "white" : "black");
+        piece.classList.add(C.GetColorClass(c));
         piece.style.width = "100%";
         piece.style.height = "100%";
         this.r_pieces[c][p] = piece;
@@ -780,6 +739,30 @@ export default class ChessRules {
     }
   }
 
+  // Apply diff this.enlightened --> oldEnlightened on board
+  graphUpdateEnlightened() {
+    let chessboard =
+      document.getElementById(this.containerId).querySelector(".chessboard");
+    const r = chessboard.getBoundingClientRect();
+    const pieceWidth = this.getPieceWidth(r.width);
+    for (let x=0; x<this.size.x; x++) {
+      for (let y=0; y<this.size.y; y++) {
+        if (!this.enlightened[x][y] && this.oldEnlightened[x][y]) {
+          let elt = document.getElementById(this.coordsToId(x, y));
+          elt.classList.add("in-shadow");
+          if (this.g_pieces[x][y])
+            this.g_pieces[x][y].classList.add("hidden");
+        }
+        else if (this.enlightened[x][y] && !this.oldEnlightened[x][y]) {
+          let elt = document.getElementById(this.coordsToId(x, y));
+          elt.classList.remove("in-shadow");
+          if (this.g_pieces[x][y])
+            this.g_pieces[x][y].classList.remove("hidden");
+        }
+      }
+    }
+  }
+
   // After resize event: no need to destroy/recreate pieces
   rescale() {
     const container = document.getElementById(this.containerId);
@@ -788,15 +771,14 @@ export default class ChessRules {
     let chessboard = container.querySelector(".chessboard");
     const r = chessboard.getBoundingClientRect();
     const newRatio = r.width / r.height;
-    const aspectRatio = this.size.y / this.size.x;
     let newWidth = r.width,
         newHeight = r.height;
-    if (newRatio > aspectRatio) {
-      newWidth = r.height * aspectRatio;
+    if (newRatio > this.size.ratio) {
+      newWidth = r.height * this.size.ratio;
       chessboard.style.width = newWidth + "px";
     }
-    else if (newRatio < aspectRatio) {
-      newHeight = r.width / aspectRatio;
+    else if (newRatio < this.size.ratio) {
+      newHeight = r.width / this.size.ratio;
       chessboard.style.height = newHeight + "px";
     }
     const newX = (window.innerWidth - newWidth) / 2;
@@ -841,7 +823,7 @@ export default class ChessRules {
       Object.keys(this.reserve[c]).forEach(p => {
         if (this.reserve[c][p] == 0)
           return;
-        let r_cell = document.getElementById(this.coordsToId([c, p]));
+        let r_cell = document.getElementById(this.coordsToId({x: c, y: p}));
         r_cell.style.width = sqResSize + "px";
         r_cell.style.height = sqResSize + "px";
       });
@@ -852,12 +834,22 @@ export default class ChessRules {
   // Our coordinate system differs from CSS one (x <--> y).
   // We return here the CSS coordinates (more useful).
   getPixelPosition(i, j, r) {
-    const sqSize = this.getSquareWidth(r.width);
     if (i < 0 || j < 0)
       return [0, 0]; //piece vanishes
-    const flipped = (this.playerColor == 'b');
-    const x = (flipped ? this.size.y - 1 - j : j) * sqSize;
-    const y = (flipped ? this.size.x - 1 - i : i) * sqSize;
+    let x, y;
+    if (typeof i == "string") {
+      // Reserves: need to know the rank of piece
+      const nbR = this.getNbReservePieces(i);
+      const rsqSize = this.getReserveSquareSize(r.width, nbR);
+      x = this.getRankInReserve(i, j) * rsqSize;
+      y = (this.playerColor == i ? y = r.height + 5 : - 5 - rsqSize);
+    }
+    else {
+      const sqSize = r.width / this.size.y;
+      const flipped = (this.playerColor == 'b');
+      x = (flipped ? this.size.y - 1 - j : j) * sqSize;
+      y = (flipped ? this.size.x - 1 - i : i) * sqSize;
+    }
     return [x, y];
   }
 
@@ -882,7 +874,7 @@ export default class ChessRules {
     }
 
     const centerOnCursor = (piece, e) => {
-      const centerShift = sqSize / 2;
+      const centerShift = this.getPieceWidth(r.width) / 2;
       const offset = getOffset(e);
       piece.style.left = (offset.x - r.x - centerShift) + "px";
       piece.style.top = (offset.y - r.y - centerShift) + "px";
@@ -891,32 +883,32 @@ export default class ChessRules {
     let start = null,
         r = null,
         startPiece, curPiece = null,
-        sqSize;
+        pieceWidth;
     const mousedown = (e) => {
       // Disable zoom on smartphones:
       if (e.touches && e.touches.length > 1)
         e.preventDefault();
       r = chessboard.getBoundingClientRect();
-      sqSize = this.getSquareWidth(r.width);
-      const square = this.idToCoords(e.target.id);
-      if (square) {
-        const [i, j] = square;
-        const move = this.doClick([i, j]);
+      pieceWidth = this.getPieceWidth(r.width);
+      const cd = this.idToCoords(e.target.id);
+      if (cd) {
+        const move = this.doClick(cd);
         if (move)
           this.playPlusVisual(move);
         else {
-          if (typeof i != "number")
-            startPiece = this.r_pieces[i][j];
-          else if (this.g_pieces[i][j])
-            startPiece = this.g_pieces[i][j];
-          if (startPiece && this.canIplay(i, j)) {
+          const [x, y] = Object.values(cd);
+          if (typeof x != "number")
+            startPiece = this.r_pieces[x][y];
+          else
+            startPiece = this.g_pieces[x][y];
+          if (startPiece && this.canIplay(x, y)) {
             e.preventDefault();
-            start = { x: i, y: j };
+            start = cd;
             curPiece = startPiece.cloneNode();
             curPiece.style.transform = "none";
             curPiece.style.zIndex = 5;
-            curPiece.style.width = sqSize + "px";
-            curPiece.style.height = sqSize + "px";
+            curPiece.style.width = pieceWidth + "px";
+            curPiece.style.height = pieceWidth + "px";
             centerOnCursor(curPiece, e);
             chessboard.appendChild(curPiece);
             startPiece.style.opacity = "0.4";
@@ -951,12 +943,12 @@ export default class ChessRules {
       startPiece.style.opacity = "1";
       const offset = getOffset(e);
       const landingElt = document.elementFromPoint(offset.x, offset.y);
-      const sq = landingElt ? this.idToCoords(landingElt.id) : undefined;
-      if (sq) {
-        const [i, j] = sq;
+      const cd =
+        (landingElt ? this.idToCoords(landingElt.id) : undefined);
+      if (cd) {
         // NOTE: clearly suboptimal, but much easier, and not a big deal.
         const potentialMoves = this.getPotentialMovesFrom([x, y])
-          .filter(m => m.end.x == i && m.end.y == j);
+          .filter(m => m.end.x == cd.x && m.end.y == cd.y);
         const moves = this.filterValid(potentialMoves);
         if (moves.length >= 2)
           this.showChoices(moves, r);
@@ -991,7 +983,7 @@ export default class ChessRules {
     choices.style.top = r.y + "px";
     chessboard.style.opacity = "0.5";
     container.appendChild(choices);
-    const squareWidth = this.getSquareWidth(r.width);
+    const squareWidth = r.width / this.size.y;
     const firstUpLeft = (r.width - (moves.length * squareWidth)) / 2;
     const firstUpTop = (r.height - squareWidth) / 2;
     const color = moves[0].appear[0].c;
@@ -1012,7 +1004,7 @@ export default class ChessRules {
       const piece = document.createElement("piece");
       const pieceSpec = this.pieces()[moves[i].appear[0].p];
       piece.classList.add(pieceSpec["class"]);
-      piece.classList.add(color == 'w' ? "white" : "black");
+      piece.classList.add(C.GetColorClass(color));
       piece.style.width = "100%";
       piece.style.height = "100%";
       choice.appendChild(piece);
@@ -1024,22 +1016,34 @@ export default class ChessRules {
   // BASIC UTILS
 
   get size() {
-    return {x: 8, y: 8};
+    return {
+      x: 8,
+      y: 8,
+      ratio: 1 //for rectangular board = y / x
+    };
   }
 
   // Color of thing on square (i,j). 'undefined' if square is empty
   getColor(i, j) {
+    if (typeof i == "string")
+      return i; //reserves
     return this.board[i][j].charAt(0);
+  }
+
+  static GetColorClass(c) {
+    return (c == 'w' ? "white" : "black");
   }
 
   // Assume square i,j isn't empty
   getPiece(i, j) {
+    if (typeof j == "string")
+      return j; //reserves
     return this.board[i][j].charAt(1);
   }
 
   // Piece type on square (i,j)
   getPieceType(i, j) {
-    const p = this.board[i][j].charAt(1);
+    const p = (typeof i == "string" ? j : this.board[i][j].charAt(1));
     return C.CannibalKings[p] || p; //a cannibal king move as...
   }
 
@@ -1059,7 +1063,7 @@ export default class ChessRules {
             y >= 0 && y < this.size.y);
   }
 
-  // Used in interface
+  // Am I allowed to move thing at square x,y ?
   canIplay(x, y) {
     return (
       this.playerColor == this.turn &&
@@ -1484,6 +1488,7 @@ export default class ChessRules {
 
     const findAddMoves = (type, stepArray) => {
       for (let s of stepArray) {
+        // TODO: if jump in y (computeY, Cylinder), move.segments
         outerLoop: for (let step of s.steps) {
           let [i, j] = [x + step[0], this.computeY(y + step[1])];
           let stepCounter = 1;
@@ -1602,8 +1607,8 @@ export default class ChessRules {
     let mv = new Move({
       appear: [],
       vanish: [],
-      start: {x:sx, y:sy},
-      end: {x:ex, y:ey}
+      start: {x: sx, y: sy},
+      end: {x: ex, y: ey}
     });
     if (
       !this.options["rifle"] ||
@@ -2134,94 +2139,75 @@ export default class ChessRules {
     this.afterPlay(move); //user method
   }
 
-  // Assumes reserve on top (usage case otherwise? TODO?)
-  getReserveShift(c, p, r) {
-    let nbR = 0,
-        ridx = 0;
-    for (let pi of Object.keys(this.reserve[c])) {
-      if (this.reserve[c][pi] == 0)
-        continue;
-      if (pi == p)
-        ridx = nbR;
-      nbR++;
-    }
-    const rsqSize = this.getReserveSquareSize(r.width, nbR);
-    return [-ridx * rsqSize, rsqSize]; //slightly inaccurate... TODO?
+  getMaxDistance(rwidth) {
+    // Works for all rectangular boards:
+    return Math.sqrt(rwidth ** 2 + (rwidth / this.size.ratio) ** 2);
+  }
+
+  getDomPiece(x, y) {
+    return (typeof x == "string" ? this.r_pieces : this.g_pieces)[x][y];
   }
 
   animate(move, callback) {
-    if (this.noAnimate) {
+    if (this.noAnimate || move.noAnimate) {
       callback();
       return;
     }
-    const [i1, j1] = [move.start.x, move.start.y];
-    const dropMove = (typeof i1 == "string");
-    const startArray = (dropMove ? this.r_pieces : this.g_pieces);
-    let startPiece = startArray[i1][j1];
-    // TODO: next "if" shouldn't be required
-    if (!startPiece) {
-      callback();
-      return;
-    }
+    let movingPiece = this.getDomPiece(move.start.x, move.start.y);
+    const initTransform = movingPiece.style.transform;
     let chessboard =
       document.getElementById(this.containerId).querySelector(".chessboard");
-    const clonePiece = (
-      !dropMove &&
-      this.options["rifle"] ||
-      (this.options["teleport"] && this.subTurnTeleport == 2)
-    );
-    if (clonePiece) {
-      startPiece = startPiece.cloneNode();
-      if (this.options["rifle"])
-        startArray[i1][j1].style.opacity = "0";
-      if (this.options["teleport"] && this.subTurnTeleport == 2) {
-        const pieces = this.pieces();
-        const startCode = (dropMove ? j1 : this.getPiece(i1, j1));
-        startPiece.classList.remove(pieces[startCode]["class"]);
-        startPiece.classList.add(pieces[this.captured.p]["class"]);
-        // Color: OK
-      }
-      chessboard.appendChild(startPiece);
-    }
-    const [i2, j2] = [move.end.x, move.end.y];
-    let startCoords;
-    if (dropMove) {
-      startCoords = [
-        i1 == this.playerColor ? this.size.x : 0,
-        this.size.y / 2 //not trying to be accurate here... (TODO?)
-      ];
-    }
-    else
-      startCoords = [i1, j1];
     const r = chessboard.getBoundingClientRect();
-    const arrival = this.getPixelPosition(i2, j2, r); //TODO: arrival on drop?
-    let rs = [0, 0];
-    if (dropMove)
-      rs = this.getReserveShift(i1, j1, r);
-    const distance =
-      Math.sqrt((startCoords[0] - i2) ** 2 + (startCoords[1] - j2) ** 2);
-    const maxDist = Math.sqrt((this.size.x - 1)** 2 + (this.size.y - 1) ** 2);
-    const multFact = (distance - 1) / (maxDist - 1); //1 == minDist
-    const duration = 0.2 + multFact * 0.3;
-    const initTransform = startPiece.style.transform;
-    startPiece.style.transform =
-      `translate(${arrival[0] + rs[0]}px, ${arrival[1] + rs[1]}px)`;
-    startPiece.style.transitionDuration = duration + "s";
-    setTimeout(
-      () => {
-        if (clonePiece) {
-          if (this.options["rifle"])
-            startArray[i1][j1].style.opacity = "1";
-          startPiece.remove();
-        }
+    const [ix, iy] = this.getPixelPosition(move.start.x, move.start.y, r);
+    const maxDist = this.getMaxDistance(r.width);
+    // NOTE: move.drag could be generalized per-segment (usage?)
+    if (move.drag) {
+      // Drag something else: require cloning
+      movingPiece = movingPiece.cloneNode();
+      const pieces = this.pieces();
+      const startCode = this.getPiece(move.start.x, move.start.y);
+      movingPiece.classList.remove(pieces[startCode]["class"]);
+      movingPiece.classList.add(pieces[move.drag.p]["class"]);
+      const apparentColor = this.getColor(move.start.x, move.start.y);
+      if (apparentColor != move.drag.c) {
+        movingPiece.classList.remove(C.GetColorClass(apparentColor));
+        movingPiece.classList.add(C.GetColorClass(move.drag.c));
+      }
+      chessboard.appendChild(movingPiece);
+    }
+    const animateSegment = (index, cb) => {
+      const [i1, j1] = move.segments[index][0];
+      const [i2, j2] = move.segments[index][1];
+      const dep = this.getPixelPosition(i1, j1, r);
+      const arr = this.getPixelPosition(i2, j2, r);
+      // Start from i1, j1:
+      movingPiece.style.transform =
+        `translate(${dep[0] - ix}px, ${dep[1] - iy}px)`;
+      movingPiece.style.transitionDuration = "0s";
+      const distance =
+        Math.sqrt((arr[0] - dep[0]) ** 2 + (arr[1] - dep[1]) ** 2);
+      const duration = 0.2 + (distance / maxDist) * 0.3;
+      movingPiece.style.transform =
+        `translate(${arr[0] - dep[0]}px, ${arr[1] - dep[1]}px)`;
+      movingPiece.style.transitionDuration = duration + "s";
+      setTimeout(cb, duration * 1000);
+    };
+    if (!move.segments)
+      move.segments = [[move.start.x, move.start.y], [move.end.x, move.end.y]];
+    let index = 0;
+    animateSegment(index, () => {
+      if (index < move.segments.length)
+        animateSegment(++index);
+      else {
+        if (move.drag)
+          movingPiece.remove();
         else {
-          startPiece.style.transform = initTransform;
-          startPiece.style.transitionDuration = "0s";
+          movingPiece.style.transform = initTransform;
+          movingPiece.style.transitionDuration = "0s";
         }
         callback();
-      },
-      duration * 1000
-    );
+      }
+    });
   }
 
   playReceivedMove(moves, callback) {
