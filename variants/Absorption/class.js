@@ -143,7 +143,7 @@ export default class AbsorptionRules extends ChessRules {
         m.appear[0].p = V.Fusion(m.vanish[0].p, m.vanish[1].p);
       }
     });
-    super.postProcessPotentialMoves(moves);
+    return super.postProcessPotentialMoves(moves);
   }
 
 };

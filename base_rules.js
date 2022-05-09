@@ -2180,6 +2180,9 @@ export default class ChessRules {
       const [i2, j2] = move.segments[index][1];
       const dep = this.getPixelPosition(i1, j1, r);
       const arr = this.getPixelPosition(i2, j2, r);
+
+console.log(dep,arr); //TODO: this seems right, but translations don't work well.
+
       // Start from i1, j1:
       movingPiece.style.transform =
         `translate(${dep[0] - ix}px, ${dep[1] - iy}px)`;
@@ -2192,12 +2195,15 @@ export default class ChessRules {
       movingPiece.style.transitionDuration = duration + "s";
       setTimeout(cb, duration * 1000);
     };
-    if (!move.segments)
-      move.segments = [[move.start.x, move.start.y], [move.end.x, move.end.y]];
+    if (!move.segments) {
+      move.segments = [
+        [[move.start.x, move.start.y], [move.end.x, move.end.y]]
+      ];
+    }
     let index = 0;
-    animateSegment(index, () => {
+    const animateSegmentCallback = () => {
       if (index < move.segments.length)
-        animateSegment(++index);
+        animateSegment(index++, animateSegmentCallback);
       else {
         if (move.drag)
           movingPiece.remove();
@@ -2207,7 +2213,8 @@ export default class ChessRules {
         }
         callback();
       }
-    });
+    };
+    animateSegmentCallback();
   }
 
   playReceivedMove(moves, callback) {
