@@ -2180,18 +2180,10 @@ export default class ChessRules {
       const [i2, j2] = move.segments[index][1];
       const dep = this.getPixelPosition(i1, j1, r);
       const arr = this.getPixelPosition(i2, j2, r);
-
-console.log(dep,arr); //TODO: this seems right, but translations don't work well.
-
-      // Start from i1, j1:
-      movingPiece.style.transform =
-        `translate(${dep[0] - ix}px, ${dep[1] - iy}px)`;
-      movingPiece.style.transitionDuration = "0s";
       const distance =
         Math.sqrt((arr[0] - dep[0]) ** 2 + (arr[1] - dep[1]) ** 2);
       const duration = 0.2 + (distance / maxDist) * 0.3;
-      movingPiece.style.transform =
-        `translate(${arr[0] - dep[0]}px, ${arr[1] - dep[1]}px)`;
+      movingPiece.style.transform = `translate(${arr[0]}px, ${arr[1]}px)`;
       movingPiece.style.transitionDuration = duration + "s";
       setTimeout(cb, duration * 1000);
     };
