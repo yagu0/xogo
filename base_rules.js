@@ -1347,6 +1347,8 @@ export default class ChessRules {
     });
   }
 
+// TODO: pawnfall + Cannibal issues
+
   pawnPostProcess(moves, color, oppCol) {
     let moreMoves = [];
     const lastRank = (color == "w" ? 0 : this.size.x - 1);
@@ -2154,6 +2156,10 @@ export default class ChessRules {
       return;
     }
     let movingPiece = this.getDomPiece(move.start.x, move.start.y);
+    if (!movingPiece) { //TODO this shouldn't be required
+      callback();
+      return;
+    }
     const initTransform = movingPiece.style.transform;
     let chessboard =
       document.getElementById(this.containerId).querySelector(".chessboard");

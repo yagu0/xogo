@@ -30,7 +30,7 @@ export default class AtomicRules extends ChessRules {
 
   canIplay(x, y) {
     if (this.options["rempawn"] && this.movesCount == 0)
-      return (this.turn == side && this.getPiece(x, y) == "p");
+      return (this.playerColor == this.turn && this.getPiece(x, y) == "p");
     return super.canIplay(x, y);
   }
 
