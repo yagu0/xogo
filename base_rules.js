@@ -1363,7 +1363,12 @@ export default class ChessRules {
       );
       if (!promotionOk)
         return; //nothing to do
-      if (!this.options["pawnfall"]) {
+      if (this.options["pawnfall"]) {
+        m.appear.shift();
+        m.pawnfall = true; //required in prePlay() /// ????????????
+        return;
+      }
+      //if (!this.options["pawnfall"]) { --> OK
         if (
           this.options["cannibal"] &&
           this.board[x2][y2] != "" &&
@@ -1373,7 +1378,7 @@ export default class ChessRules {
         }
         else
           finalPieces = this.pawnPromotions;
-      }
+      //}
       m.appear[0].p = finalPieces[0];
       if (initPiece == "!") //cannibal king-pawn
         m.appear[0].p = C.CannibalKingCode[finalPieces[0]];
@@ -1388,8 +1393,6 @@ export default class ChessRules {
         }
         let newMove = this.getBasicMove([x1, y1], [x2, y2], tr);
         if (this.options["pawnfall"]) {
-          newMove.appear.shift();
-          newMove.pawnfall = true; //required in prePlay()
         }
         moreMoves.push(newMove);
       }
@@ -1947,6 +1950,11 @@ export default class ChessRules {
       }
     });
   }
+
+
+// TODO: englober + de cas ici...
+    // + generique start/end board or reserve
+    // + bien séparer les options... ?
 
   prePlay(move) {
     if (
