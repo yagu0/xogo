@@ -1354,7 +1354,6 @@ export default class ChessRules {
     const lastRank = (color == "w" ? 0 : this.size.x - 1);
     const initPiece = this.getPiece(moves[0].start.x, moves[0].start.y);
     moves.forEach(m => {
-      let finalPieces = ["p"];
       const [x1, y1] = [m.start.x, m.start.y];
       const [x2, y2] = [m.end.x, m.end.y];
       const promotionOk = (
@@ -1365,35 +1364,28 @@ export default class ChessRules {
         return; //nothing to do
       if (this.options["pawnfall"]) {
         m.appear.shift();
-        m.pawnfall = true; //required in prePlay() /// ????????????
         return;
       }
-      //if (!this.options["pawnfall"]) { --> OK
-        if (
-          this.options["cannibal"] &&
-          this.board[x2][y2] != "" &&
-          this.getColor(x2, y2) == oppCol
-        ) {
-          finalPieces = [this.getPieceType(x2, y2)];
-        }
-        else
-          finalPieces = this.pawnPromotions;
-      //}
+      let finalPieces = ["p"];
+      if (
+        this.options["cannibal"] &&
+        this.board[x2][y2] != "" &&
+        this.getColor(x2, y2) == oppCol
+      ) {
+        finalPieces = [this.getPieceType(x2, y2)];
+      }
+      else
+        finalPieces = this.pawnPromotions;
       m.appear[0].p = finalPieces[0];
       if (initPiece == "!") //cannibal king-pawn
         m.appear[0].p = C.CannibalKingCode[finalPieces[0]];
       for (let i=1; i<finalPieces.length; i++) {
         const piece = finalPieces[i];
-        let tr = null;
-        if (!this.options["pawnfall"]) {
-          tr = {
-            c: color,
-            p: (initPiece != "!" ? piece : C.CannibalKingCode[piece])
-          };
-        }
+        const tr = {
+          c: color,
+          p: (initPiece != "!" ? piece : C.CannibalKingCode[piece])
+        };
         let newMove = this.getBasicMove([x1, y1], [x2, y2], tr);
-        if (this.options["pawnfall"]) {
-        }
         moreMoves.push(newMove);
       }
     });
@@ -1646,10 +1638,6 @@ export default class ChessRules {
           p: this.getPiece(ex, ey)
         })
       );
-      if (this.options["rifle"])
-        // Rifle captures are tricky in combination with Atomic etc,
-        // so it's useful to mark the move :
-        mv.capture = true;
       if (this.options["cannibal"] && destColor != initColor) {
         const lastIdx = mv.vanish.length - 1;
         let trPiece = mv.vanish[lastIdx].p;
@@ -1952,37 +1940,32 @@ export default class ChessRules {
   }
 
 
-// TODO: englober + de cas ici...
-    // + generique start/end board or reserve
-    // + bien séparer les options... ?
+// TODO: generique start/end board or reserve
+
+
 
   prePlay(move) {
     if (
-      typeof move.start.x == "number" &&
-      (!this.options["teleport"] || this.subTurnTeleport == 1)
+      this.hasCastle &&
+      // If flags already off, no need to re-check:
+      Object.keys(this.castleFlags).some(c => {
+        return this.castleFlags[c].some(val => val < this.size.y)})
     ) {
-      // OK, not a drop move
-      if (
-        this.hasCastle &&
-        // If flags already off, no need to re-check:
-        Object.keys(this.castleFlags).some(c => {
-          return this.castleFlags[c].some(val => val < this.size.y)})
-      ) {
-        this.updateCastleFlags(move);
-      }
-      const initSquare = C.CoordsToSquare(move.start);
-      if (
-        this.options["crazyhouse"] &&
-        (!this.options["rifle"] || !move.capture)
-      ) {
+      this.updateCastleFlags(move);
+    }
+    if (this.options["crazyhouse"]) {
+      move.vanish.forEach(v => {
+        const square = C.CoordsToSquare({x: v.x, y: v.y});
+        if (this.ispawn[square])
+          delete this.ispawn[square];
+      });
+      if (move.appear.length > 0 && move.vanish.length > 0) {
+        // Assumption: something is moving
+        const initSquare = C.CoordsToSquare(move.start);
         const destSquare = C.CoordsToSquare(move.end);
-        if (this.ispawn[initSquare]) {
-          delete this.ispawn[initSquare];
-          this.ispawn[destSquare] = true;
-        }
-        else if (
-          move.vanish[0].p == "p" &&
-          move.appear[0].p != "p"
+        if (
+          this.ispawn[initSquare] ||
+          (move.vanish[0].p == "p" && move.appear[0].p != "p")
         ) {
           this.ispawn[destSquare] = true;
         }
@@ -1995,6 +1978,10 @@ export default class ChessRules {
         }
       }
     }
+
+    // TODO: robustify this by adding fields
+    // "captures" (capts?) and "births" (e.g...) to Move
+    // --> store only indices in appear/vanish ?
     const minSize = Math.min(move.appear.length, move.vanish.length);
     if (this.hasReserve && !move.pawnfall) {
       const color = this.turn;
@@ -2010,6 +1997,12 @@ export default class ChessRules {
           this.updateReserve(color, piece, this.reserve[color][piece] + 1);
       }
     }
+    move.captures.forEach(capt => {
+      // TODO
+    });
+    move.births.forEach(bth => {
+      // TODO
+    });
   }
 
   play(move) {
