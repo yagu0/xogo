@@ -118,13 +118,13 @@ export default class ChessRules {
   ////////////////////
   // COORDINATES UTILS
 
-  // a3 --> {x:10, y:3}
+  // 3a --> {x:3, y:10}
   static SquareToCoords(sq) {
     return ArrayFun.toObject(["x", "y"],
                              [0, 1].map(i => parseInt(sq[i], 36)));
   }
 
-  // {x:1, y:12} --> 1c
+  // {x:11, y:12} --> bc
   static CoordsToSquare(cd) {
     return Object.values(cd).map(c => c.toString(36)).join("");
   }
@@ -162,12 +162,12 @@ export default class ChessRules {
 
   // Turn "wb" into "B" (for FEN)
   board2fen(b) {
-    return b[0] == "w" ? b[1].toUpperCase() : b[1];
+    return (b[0] == "w" ? b[1].toUpperCase() : b[1]);
   }
 
   // Turn "p" into "bp" (for board)
   fen2board(f) {
-    return f.charCodeAt(0) <= 90 ? "w" + f.toLowerCase() : "b" + f;
+    return (f.charCodeAt(0) <= 90 ? "w" + f.toLowerCase() : "b" + f);
   }
 
   // Setup the initial random-or-not (asymmetric-or-not) position
@@ -1346,8 +1346,6 @@ export default class ChessRules {
       }
     });
   }
-
-// TODO: pawnfall + Cannibal issues
 
   pawnPostProcess(moves, color, oppCol) {
     let moreMoves = [];
