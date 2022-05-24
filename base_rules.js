@@ -672,7 +672,7 @@ export default class ChessRules {
     }
     else
       this.r_pieces = { 'w': {}, 'b': {} };
-    let chessboard = 
+    let chessboard =
       document.getElementById(this.containerId).querySelector(".chessboard");
     if (!r)
       r = chessboard.getBoundingClientRect();
@@ -1065,13 +1065,7 @@ export default class ChessRules {
 
   // Am I allowed to move thing at square x,y ?
   canIplay(x, y) {
-    return (
-      this.playerColor == this.turn &&
-      (
-        (typeof x == "number" && this.getColor(x, y) == this.turn) ||
-        (typeof x == "string" && x == this.turn) //reserve
-      )
-    );
+    return (this.playerColor == this.turn && this.getColor(x, y) == this.turn);
   }
 
   ////////////////////////
@@ -1342,7 +1336,7 @@ export default class ChessRules {
           }
         }
         if (!this.options["rifle"])
-          m.appear.pop(); //nothin appears
+          m.appear.pop(); //nothing appears
       }
     });
   }
@@ -1401,7 +1395,6 @@ export default class ChessRules {
         m.appear[0].x == m.start.x &&
         m.appear[0].y == m.start.y
       ) {
-        const promotionPiece0 = this.pawnSpecs.promotions[0];
         m.appear[0].p = this.pawnPromotions[0];
         for (let i=1; i<this.pawnPromotions.length; i++) {
           let newMv = JSON.parse(JSON.stringify(m));
@@ -1937,11 +1930,6 @@ export default class ChessRules {
     });
   }
 
-
-// TODO: generique start/end board or reserve
-
-
-
   prePlay(move) {
     if (
       this.hasCastle &&
@@ -1976,31 +1964,31 @@ export default class ChessRules {
         }
       }
     }
-
-    // TODO: robustify this by adding fields
-    // "captures" (capts?) and "births" (e.g...) to Move
-    // --> store only indices in appear/vanish ?
     const minSize = Math.min(move.appear.length, move.vanish.length);
-    if (this.hasReserve && !move.pawnfall) {
+    if (
+      this.hasReserve &&
+      // Warning; atomic pawn removal isn't a capture
+      (!this.options["atomic"] || !this.rempawn || this.movesCount >= 1)
+    ) {
       const color = this.turn;
       for (let i=minSize; i<move.appear.length; i++) {
         // Something appears = dropped on board (some exceptions, Chakart...)
-        const piece = move.appear[i].p;
-        this.updateReserve(color, piece, this.reserve[color][piece] - 1);
+        if (move.appear[i].c == color) {
+          const piece = move.appear[i].p;
+          this.updateReserve(color, piece, this.reserve[color][piece] - 1);
+        }
       }
       for (let i=minSize; i<move.vanish.length; i++) {
         // Something vanish: add to reserve except if recycle & opponent
-        const piece = move.vanish[i].p;
-        if (this.options["crazyhouse"] || move.vanish[i].c == color)
+        if (
+          this.options["crazyhouse"] ||
+          (this.options["recycle"] && move.vanish[i].c == color)
+        ) {
+          const piece = move.vanish[i].p;
           this.updateReserve(color, piece, this.reserve[color][piece] + 1);
+        }
       }
     }
-    move.captures.forEach(capt => {
-      // TODO
-    });
-    move.births.forEach(bth => {
-      // TODO
-    });
   }
 
   play(move) {
