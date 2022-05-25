@@ -748,13 +748,13 @@ export default class ChessRules {
     for (let x=0; x<this.size.x; x++) {
       for (let y=0; y<this.size.y; y++) {
         if (!this.enlightened[x][y] && this.oldEnlightened[x][y]) {
-          let elt = document.getElementById(this.coordsToId(x, y));
+          let elt = document.getElementById(this.coordsToId({x: x, y: y}));
           elt.classList.add("in-shadow");
           if (this.g_pieces[x][y])
             this.g_pieces[x][y].classList.add("hidden");
         }
         else if (this.enlightened[x][y] && !this.oldEnlightened[x][y]) {
-          let elt = document.getElementById(this.coordsToId(x, y));
+          let elt = document.getElementById(this.coordsToId({x: x, y: y}));
           elt.classList.remove("in-shadow");
           if (this.g_pieces[x][y])
             this.g_pieces[x][y].classList.remove("hidden");
@@ -1043,7 +1043,7 @@ export default class ChessRules {
 
   // Piece type on square (i,j)
   getPieceType(i, j) {
-    const p = (typeof i == "string" ? j : this.board[i][j].charAt(1));
+    const p = this.getPiece(i, j);
     return C.CannibalKings[p] || p; //a cannibal king move as...
   }
 
@@ -1413,7 +1413,8 @@ export default class ChessRules {
       "#": "r",
       "$": "n",
       "%": "b",
-      "*": "q"
+      "*": "q",
+      "k": "k"
     };
   }
 
@@ -1429,10 +1430,7 @@ export default class ChessRules {
   }
 
   isKing(symbol) {
-    return (
-      symbol == 'k' ||
-      (this.options["cannibal"] && C.CannibalKings[symbol])
-    );
+    return !!C.CannibalKings[symbol];
   }
 
   // For Madrasi:
@@ -1528,7 +1526,6 @@ export default class ChessRules {
     let moves = [];
     // Find reverse captures (opponent takes)
     const color = this.getColor(x, y);
-    const pieceType = this.getPieceType(x, y);
     const oppCol = C.GetOppCol(color);
     for (let i=0; i<this.size.x; i++) {
       for (let j=0; j<this.size.y; j++) {
@@ -1537,10 +1534,9 @@ export default class ChessRules {
           this.canTake([i, j], [x, y]) &&
           !this.isImmobilized([i, j])
         ) {
-          const piece = this.getPieceType(i, j);
-          if (zen && C.CannibalKingCode[piece])
+          if (zen && this.isKing(this.getPiece(i, j)))
             continue; //king not captured in this way
-          const stepSpec = this.pieces(oppCol, i, j)[piece];
+          const stepSpec = this.pieces(oppCol, i, j)[this.getPieceType(i, j)];
           const attacks = stepSpec.attack || stepSpec.moves;
           for (let a of attacks) {
             for (let s of a.steps) {
@@ -1862,12 +1858,12 @@ export default class ChessRules {
         let square = kingPos,
             res = true; //a priori valid
         if (m.vanish.some(v => {
-          return (v.p == "k" || C.CannibalKings[v.p]) && v.c == color;
+          return C.CannibalKings[v.p] && v.c == color;
         })) {
           // Search king in appear array:
           const newKingIdx =
             m.appear.findIndex(a => {
-              return (a.p == "k" || C.CannibalKings[a.p]) && a.c == color;
+              return C.CannibalKings[a.p] && a.c == color;
             });
           if (newKingIdx >= 0)
             square = [m.appear[newKingIdx].x, m.appear[newKingIdx].y];
@@ -1898,13 +1894,17 @@ export default class ChessRules {
 
   // Apply a move on board
   playOnBoard(move) {
-    for (let psq of move.vanish) this.board[psq.x][psq.y] = "";
-    for (let psq of move.appear) this.board[psq.x][psq.y] = psq.c + psq.p;
+    for (let psq of move.vanish)
+      this.board[psq.x][psq.y] = "";
+    for (let psq of move.appear)
+      this.board[psq.x][psq.y] = psq.c + psq.p;
   }
   // Un-apply the played move
   undoOnBoard(move) {
-    for (let psq of move.appear) this.board[psq.x][psq.y] = "";
-    for (let psq of move.vanish) this.board[psq.x][psq.y] = psq.c + psq.p;
+    for (let psq of move.appear)
+      this.board[psq.x][psq.y] = "";
+    for (let psq of move.vanish)
+      this.board[psq.x][psq.y] = psq.c + psq.p;
   }
 
   updateCastleFlags(move) {
@@ -2093,7 +2093,6 @@ export default class ChessRules {
     return (color == "w" ? "0-1" : "1-0");
   }
 
-  // NOTE: quite suboptimal for eg. Benedict (not a big deal I think)
   playVisual(move, r) {
     move.vanish.forEach(v => {
       // TODO: next "if" shouldn't be required

@@ -22,10 +22,6 @@ export default class BenedictRules extends ChessRules {
     return false;
   }
 
-  canTake() {
-    return false;
-  }
-
   // Find potential captures from a square
   // follow steps from x,y until something is met.
   findAttacks([x, y]) {
@@ -39,54 +35,96 @@ export default class BenedictRules extends ChessRules {
         let [i, j] = [x + step[0], this.computeY(y + step[1])];
         let nbSteps = 1;
         while (this.onBoard(i, j) && this.board[i][j] == "") {
-          if (a.range <= nbSteps++) continue outerLoop;
+          if (a.range <= nbSteps++)
+            continue outerLoop;
           i += step[0];
           j = this.computeY(j + step[1]);
         }
-        if (this.onBoard(i, j) && this.getColor(i, j) == oppCol)
+        if (
+          this.onBoard(i, j) && this.getColor(i, j) == oppCol &&
+          (!this.options["zen"] || this.getPieceType(i, j) == "k")
+        ) {
           squares[C.CoordsToSquare({x: i, y: j})] = true;
+        }
       }
     }
     return Object.keys(squares);
   }
 
   postProcessPotentialMoves(moves) {
-    if (moves.length == 0) return moves;
-    const [x, y] = [moves[0].end.x, moves[0].end.y];
+    if (moves.length == 0)
+      return moves;
     const color = this.getColor(moves[0].start.x, moves[0].start.y);
     const oppCol = C.GetOppCol(color);
-    moves = super.postProcessPotentialMoves(moves);
+    // Remove captures (NOTE: altering canTake has side effects,
+    // Benedict is still based on captures even if they are forbidden):
+    moves = super.postProcessPotentialMoves(moves)
+                 .filter(m => this.board[m.end.x][m.end.y] == "");
     moves.forEach(m => {
-      this.playOnBoard(m);
-      let attacks;
+      super.playOnBoard(m);
+      let attacks = this.findAttacks([m.end.x, m.end.y])
       if (this.options["zen"]) {
         let endSquares = {};
-        super.getZenCaptures(x, y).forEach(c => {
+        super.findCapturesOn([m.end.x, m.end.y], true).forEach(c => {
           endSquares[C.CoordsToSquare(c.end)] = true;
         });
-        attacks = Object.keys(endSquares);
+        Array.prototype.push.apply(attacks, Object.keys(endSquares));
       }
-      else attacks = this.findAttacks([m.end.x, m.end.y])
-      this.undoOnBoard(m);
+      super.undoOnBoard(m);
+      m.flips = [];
       attacks.map(C.SquareToCoords).forEach(a => {
-        const p = this.getPiece(a.x, a.y);
-        m.appear.push(new PiPo({x: a.x, y: a.y, c: color, p: p}));
-        m.vanish.push(new PiPo({x: a.x, y: a.y, c: oppCol, p: p}));
+        m.flips.push({x: a.x, y: a.y});
       });
     });
     return moves;
   }
 
-  // Moves cannot flip our king's color, so (almost) all are valid
+  playOnBoard(move) {
+    super.playOnBoard(move);
+    this.flipColorOf(move.flips);
+  }
+  undoOnBoard(move) {
+    super.undoOnBoard(move);
+    this.flipColorOf(move.flips);
+  }
+
+  flipColorOf(flips) {
+    for (let xy of flips) {
+      const newColor = C.GetOppCol(this.getColor(xy.x, xy.y));
+      this.board[xy.x][xy.y] = newColor + this.board[xy.x][xy.y][1];
+    }
+  }
+
+  postPlay(move) {
+    if (this.options["balance"] && [1, 3].includes(this.movesCount)) {
+      // If enemy king is flipped: game over
+      const oppCol = C.GetOppCol(move.vanish[0].c);
+      const oppKingPos = this.searchKingPos(oppCol);
+      if (oppKingPos[0] < 0) {
+        this.turn = oppCol;
+        this.movesCount++;
+        return;
+      }
+    }
+    super.postPlay(move);
+  }
+
+  // Moves cannot flip our king's color, so all are valid
   filterValid(moves) {
-    if (this.options["balance"] && [1, 3].includes(this.movesCount))
-      return moves.filter(m => m.vanish.every(v => v.p != C.KING));
     return moves;
   }
 
-  // Since it's used just for the king, and there are no captures:
+  // A king under (regular) check flips color, and the game is over.
   underCheck(square, color) {
     return false;
+  }
+
+  playVisual(move, r) {
+    super.playVisual(move, r);
+    move.flips.forEach(f => {
+      this.g_pieces[f.x][f.y].classList.toggle("white");
+      this.g_pieces[f.x][f.y].classList.toggle("black");
+    });
   }
 
 };
