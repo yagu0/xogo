@@ -22,6 +22,10 @@ export default class BenedictRules extends ChessRules {
     return false;
   }
 
+  canTake() {
+    return false;
+  }
+
   // Find potential captures from a square
   // follow steps from x,y until something is met.
   findAttacks([x, y]) {
@@ -52,20 +56,12 @@ export default class BenedictRules extends ChessRules {
   }
 
   postProcessPotentialMoves(moves) {
-    if (moves.length == 0)
-      return moves;
-    const color = this.getColor(moves[0].start.x, moves[0].start.y);
-    const oppCol = C.GetOppCol(color);
-    // Remove captures (NOTE: altering canTake has side effects,
-    // Benedict is still based on captures even if they are forbidden):
-    moves = super.postProcessPotentialMoves(moves)
-                 .filter(m => this.board[m.end.x][m.end.y] == "");
     moves.forEach(m => {
       super.playOnBoard(m);
       let attacks = this.findAttacks([m.end.x, m.end.y])
       if (this.options["zen"]) {
         let endSquares = {};
-        super.findCapturesOn([m.end.x, m.end.y], true).forEach(c => {
+        super.findCapturesOn([m.end.x, m.end.y], {zen: true}).forEach(c => {
           endSquares[C.CoordsToSquare(c.end)] = true;
         });
         Array.prototype.push.apply(attacks, Object.keys(endSquares));
@@ -115,7 +111,7 @@ export default class BenedictRules extends ChessRules {
   }
 
   // A king under (regular) check flips color, and the game is over.
-  underCheck(square, color) {
+  underCheck() {
     return false;
   }
 

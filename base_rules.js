@@ -1521,26 +1521,29 @@ export default class ChessRules {
     if (specialAttack)
       findAddMoves("attack", stepSpec.attack);
     findAddMoves(specialAttack ? "moveonly" : "all", stepSpec.moves);
-    if (this.options["zen"])
-      Array.prototype.push.apply(moves, this.findCapturesOn([x, y], true));
+    if (this.options["zen"]) {
+      Array.prototype.push.apply(moves,
+                                 this.findCapturesOn([x, y], {zen: true}));
+    }
     return moves;
   }
 
-  findCapturesOn([x, y], zen) {
+  // Search for enemy (or not) pieces attacking [x, y]
+  findCapturesOn([x, y], args) {
     let moves = [];
-    // Find reverse captures (opponent takes)
-    const color = this.getColor(x, y);
-    const oppCol = C.GetOppCol(color);
+    if (!args.oppCol)
+      args.oppCol = C.GetOppCol(this.getColor(x, y) || this.turn);
     for (let i=0; i<this.size.x; i++) {
       for (let j=0; j<this.size.y; j++) {
         if (
           this.board[i][j] != "" &&
-          this.canTake([i, j], [x, y]) &&
+          this.getColor(i, j) == args.oppCol &&
           !this.isImmobilized([i, j])
         ) {
-          if (zen && this.isKing(this.getPiece(i, j)))
+          if (args.zen && this.isKing(this.getPiece(i, j)))
             continue; //king not captured in this way
-          const stepSpec = this.pieces(oppCol, i, j)[this.getPieceType(i, j)];
+          const stepSpec =
+            this.pieces(args.oppCol, i, j)[this.getPieceType(i, j)];
           const attacks = stepSpec.attack || stepSpec.moves;
           for (let a of attacks) {
             for (let s of a.steps) {
@@ -1550,13 +1553,21 @@ export default class ChessRules {
               // Finally verify that nothing stand in-between
               let [ii, jj] = [i + s[0], this.computeY(j + s[1])];
               let stepCounter = 1;
-              while (this.onBoard(ii, jj) && this.board[ii][jj] == "") {
+              while (
+                this.onBoard(ii, jj) &&
+                this.board[ii][jj] == "" &&
+                (ii != x || jj != y) //condition to attack empty squares too
+              ) {
                 ii += s[0];
                 jj = this.computeY(jj + s[1]);
               }
               if (ii == x && jj == y) {
-                moves.push(this.getBasicMove([x, y], [i, j]));
-                if (!zen)
+                if (args.zen)
+                  // Reverse capture:
+                  moves.push(this.getBasicMove([x, y], [i, j]));
+                else
+                  moves.push(this.getBasicMove([i, j], [x, y]));
+                if (args.one)
                   return moves; //test for underCheck
               }
             }
@@ -1813,11 +1824,13 @@ export default class ChessRules {
   ////////////////////
   // MOVES VALIDATION
 
-  // Is (king at) given position under check by "color" ?
-  underCheck([x, y], color) {
+  // Is (king at) given position under check by "oppCol" ?
+  underCheck([x, y], oppCol) {
     if (this.options["taking"] || this.options["dark"])
       return false;
-    return (this.findCapturesOn([x, y]).length >= 1);
+    return (
+      this.findCapturesOn([x, y], {oppCol: oppCol, one: true}).length >= 1
+    );
   }
 
   // Stop at first king found (TODO: multi-kings)
@@ -2158,6 +2171,12 @@ export default class ChessRules {
     let container =
       document.getElementById(this.containerId)
     const r = container.querySelector(".chessboard").getBoundingClientRect();
+    if (typeof move.start.x == "string") {
+      // Need to bound width/height (was 100% for reserve pieces)
+      const pieceWidth = this.getPieceWidth(r.width);
+      movingPiece.style.width = pieceWidth + "px";
+      movingPiece.style.height = pieceWidth + "px";
+    }
     const maxDist = this.getMaxDistance(r.width);
     const pieces = this.pieces();
     if (move.drag) {
