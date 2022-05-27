@@ -455,7 +455,7 @@ export default class ChessRules {
     const steps = this.pieces(this.playerColor)["p"].attack[0].steps;
     for (let step of steps) {
       const x = this.epSquare.x - step[0],
-            y = this.computeY(this.epSquare.y - step[1]);
+            y = this.getY(this.epSquare.y - step[1]);
       if (
         this.onBoard(x, y) &&
         this.getColor(x, y) == this.playerColor &&
@@ -1158,14 +1158,20 @@ export default class ChessRules {
   ////////////////////
   // MOVES GENERATION
 
-  // For Cylinder: get Y coordinate
-  computeY(y) {
+  // Return negative y to say "h to a" or "a to h"
+  getY_withSign(y) {
     if (!this.options["cylinder"])
       return y;
     let res = y % this.size.y;
     if (res < 0)
-      res += this.size.y;
+      // Off-board, "teleportation" marked with negative sign:
+      return - (res + this.size.y);
     return res;
+  }
+
+  // For Cylinder: get Y coordinate
+  getY(y) {
+    return Math.abs(this.getY_withSign(y));
   }
 
   // Stop at the first capture found
@@ -1180,13 +1186,13 @@ export default class ChessRules {
           const attacks = specs.attack || specs.moves;
           for (let a of attacks) {
             outerLoop: for (let step of a.steps) {
-              let [ii, jj] = [i + step[0], this.computeY(j + step[1])];
+              let [ii, jj] = [i + step[0], this.getY(j + step[1])];
               let stepCounter = 1;
               while (this.onBoard(ii, jj) && this.board[ii][jj] == "") {
                 if (a.range <= stepCounter++)
                   continue outerLoop;
                 ii += step[0];
-                jj = this.computeY(jj + step[1]);
+                jj = this.getY(jj + step[1]);
               }
               if (
                 this.onBoard(ii, jj) &&
@@ -1323,7 +1329,7 @@ export default class ChessRules {
         ];
         for (let step of steps) {
           let x = m.end.x + step[0];
-          let y = this.computeY(m.end.y + step[1]);
+          let y = this.getY(m.end.y + step[1]);
           if (
             this.onBoard(x, y) &&
             this.board[x][y] != "" &&
@@ -1455,7 +1461,7 @@ export default class ChessRules {
           if (a.range <= stepCounter++)
             continue outerLoop;
           i += step[0];
-          j = this.computeY(j + step[1]);
+          j = this.getY(j + step[1]);
         }
         if (
           this.onBoard(i, j) &&
@@ -1478,19 +1484,47 @@ export default class ChessRules {
 
     const findAddMoves = (type, stepArray) => {
       for (let s of stepArray) {
-        // TODO: if jump in y (computeY, Cylinder), move.segments
         outerLoop: for (let step of s.steps) {
-          let [i, j] = [x + step[0], this.computeY(y + step[1])];
-          let stepCounter = 1;
-          while (this.onBoard(i, j) && this.board[i][j] == "") {
-            if (type != "attack" && !explored[i + "." + j]) {
+          let segments = [];
+          let segStart = [x, y],
+              segEnd = [];
+          let [i, j] = [x, y];
+          let stepCounter = 0;
+          while (
+            this.onBoard(i, j) &&
+            (this.board[i][j] == "" || (i == x && j == y))
+          ) {
+            if (
+              type != "attack" &&
+              !explored[i + "." + j] &&
+              (i != x || j != y)
+            ) {
               explored[i + "." + j] = true;
-              moves.push(this.getBasicMove([x, y], [i, j]));
+              moves.push(
+
+
+
+
+/////////////
+
+
+
+                this.getBasicMove([x, y], [i, j]));
             }
             if (s.range <= stepCounter++)
               continue outerLoop;
+            const oldIJ = [i, j];
             i += step[0];
-            j = this.computeY(j + step[1]);
+            j = this.getY_withSign(j + step[1]);
+            if (j < 0) {
+              // Boundary between segments (cylinder mode)
+              j = -j;
+              segEnd = oldIJ;
+              segments.push(JSON.parse(JSON.stringify([segStart, segEnd])));
+              segStart = [];
+            }
+            else if (segStart.length == 0)
+              segStart = oldIJ;
           }
           if (!this.onBoard(i, j))
             continue;
@@ -1551,7 +1585,7 @@ export default class ChessRules {
               if (!C.CompatibleStep([i, j], [x, y], s, a.range))
                 continue;
               // Finally verify that nothing stand in-between
-              let [ii, jj] = [i + s[0], this.computeY(j + s[1])];
+              let [ii, jj] = [i + s[0], this.getY(j + s[1])];
               let stepCounter = 1;
               while (
                 this.onBoard(ii, jj) &&
@@ -1559,7 +1593,7 @@ export default class ChessRules {
                 (ii != x || jj != y) //condition to attack empty squares too
               ) {
                 ii += s[0];
-                jj = this.computeY(jj + s[1]);
+                jj = this.getY(jj + s[1]);
               }
               if (ii == x && jj == y) {
                 if (args.zen)
@@ -1706,7 +1740,7 @@ export default class ChessRules {
     if (
       !!this.epSquare &&
       this.epSquare.x == x + shiftX &&
-      Math.abs(this.computeY(this.epSquare.y - y)) == 1 &&
+      Math.abs(this.getY(this.epSquare.y - y)) == 1 &&
       this.getColor(x, this.epSquare.y) == oppCol //Doublemove guard...
     ) {
       const [epx, epy] = [this.epSquare.x, this.epSquare.y];
