@@ -1158,20 +1158,14 @@ export default class ChessRules {
   ////////////////////
   // MOVES GENERATION
 
-  // Return negative y to say "h to a" or "a to h"
-  getY_withSign(y) {
+  // For Cylinder: get Y coordinate
+  getY(y) {
     if (!this.options["cylinder"])
       return y;
     let res = y % this.size.y;
     if (res < 0)
-      // Off-board, "teleportation" marked with negative sign:
-      return - (res + this.size.y);
+      res += this.size.y;
     return res;
-  }
-
-  // For Cylinder: get Y coordinate
-  getY(y) {
-    return Math.abs(this.getY_withSign(y));
   }
 
   // Stop at the first capture found
@@ -1480,14 +1474,25 @@ export default class ChessRules {
     const color = this.getColor(x, y);
     const stepSpec = this.pieces(color, x, y)[piece];
     let moves = [];
-    let explored = {}; //for Cylinder mode
+    // Next 3 for Cylinder mode:
+    let explored = {};
+    let segments = [];
+    let segStart = [];
+
+    const addMove = (start, end) => {
+      let newMove = this.getBasicMove(start, end);
+      if (segments.length > 0) {
+        newMove.segments = JSON.parse(JSON.stringify(segments));
+        newMove.segments.push([[segStart[0], segStart[1]], [end[0], end[1]]]);
+      }
+      moves.push(newMove);
+    };
 
     const findAddMoves = (type, stepArray) => {
       for (let s of stepArray) {
         outerLoop: for (let step of s.steps) {
-          let segments = [];
-          let segStart = [x, y],
-              segEnd = [];
+          segments = [];
+          segStart = [x, y];
           let [i, j] = [x, y];
           let stepCounter = 0;
           while (
@@ -1500,31 +1505,18 @@ export default class ChessRules {
               (i != x || j != y)
             ) {
               explored[i + "." + j] = true;
-              moves.push(
-
-
-
-
-/////////////
-
-
-
-                this.getBasicMove([x, y], [i, j]));
+              addMove([x, y], [i, j]);
             }
             if (s.range <= stepCounter++)
               continue outerLoop;
             const oldIJ = [i, j];
             i += step[0];
-            j = this.getY_withSign(j + step[1]);
-            if (j < 0) {
+            j = this.getY(j + step[1]);
+            if (Math.abs(j - oldIJ[1]) > 1) {
               // Boundary between segments (cylinder mode)
-              j = -j;
-              segEnd = oldIJ;
-              segments.push(JSON.parse(JSON.stringify([segStart, segEnd])));
-              segStart = [];
+              segments.push([[segStart[0], segStart[1]], oldIJ]);
+              segStart = [i, j];
             }
-            else if (segStart.length == 0)
-              segStart = oldIJ;
           }
           if (!this.onBoard(i, j))
             continue;
@@ -1545,7 +1537,7 @@ export default class ChessRules {
             )
           ) {
             explored[i + "." + j] = true;
-            moves.push(this.getBasicMove([x, y], [i, j]));
+            addMove([x, y], [i, j]);
           }
         }
       }
@@ -2238,7 +2230,7 @@ export default class ChessRules {
       // TODO: unclear why we need this new delay below:
       setTimeout(() => {
         movingPiece.style.transitionDuration = duration + "s";
-        // movingPiece is child of container: no need to adjust cordinates
+        // movingPiece is child of container: no need to adjust coordinates
         movingPiece.style.transform = `translate(${arr[0]}px, ${arr[1]}px)`;
         setTimeout(cb, duration * 1000);
       }, 50);
