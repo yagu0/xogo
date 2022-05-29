@@ -98,7 +98,7 @@ export default class ChessRules {
       this.options["teleport"] && this.subTurnTeleport == 2 &&
       this.board[coords.x][coords.y] == ""
     ) {
-      return new Move({
+      let res = new Move({
         start: {x: this.captured.x, y: this.captured.y},
         appear: [
           new PiPo({
@@ -108,9 +108,10 @@ export default class ChessRules {
             p: this.captured.p
           })
         ],
-        vanish: [],
-        drag: {c: this.captured.c, p: this.captured.p}
+        vanish: []
       });
+      res.drag = {c: this.captured.c, p: this.captured.p};
+      return res;
     }
     return null;
   }
@@ -549,7 +550,7 @@ export default class ChessRules {
       cbHeight = Math.min(window.innerHeight, 767);
       cbWidth = cbHeight * this.size.ratio;
     }
-    if (this.reserve) {
+    if (this.hasReserve) {
       const sqSize = cbWidth / this.size.y;
       // NOTE: allocate space for reserves (up/down) even if they are empty
       // Cannot use getReserveSquareSize() here, but sqSize is an upper bound.
@@ -648,7 +649,7 @@ export default class ChessRules {
         }
       }
     }
-    if (this.reserve)
+    if (this.hasReserve)
       this.re_drawReserve(['w', 'b'], r);
   }
 
@@ -801,7 +802,7 @@ export default class ChessRules {
         }
       }
     }
-    if (this.reserve)
+    if (this.hasReserve)
       this.rescaleReserve(newR);
   }
 
@@ -1207,7 +1208,7 @@ export default class ChessRules {
 
   getDropMovesFrom([c, p]) {
     // NOTE: by design, this.reserve[c][p] >= 1 on user click
-    // (but not necessarily otherwise)
+    // (but not necessarily otherwise: atLeastOneMove() etc)
     if (this.reserve[c][p] == 0)
       return [];
     let moves = [];
