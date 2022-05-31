@@ -290,19 +290,20 @@ export default class ChessRules {
     return fen;
   }
 
+  static FenEmptySquares(count) {
+    // if more than 9 consecutive free spaces, break the integer,
+    // otherwise FEN parsing will fail.
+    if (count <= 9)
+      return count;
+    // Most boards of size < 18:
+    if (count <= 18)
+      return "9" + (count - 9);
+    // Except Gomoku:
+    return "99" + (count - 18);
+  }
+
   // Position part of the FEN string
   getPosition() {
-    const format = (count) => {
-      // if more than 9 consecutive free spaces, break the integer,
-      // otherwise FEN parsing will fail.
-      if (count <= 9)
-        return count;
-      // Most boards of size < 18:
-      if (count <= 18)
-        return "9" + (count - 9);
-      // Except Gomoku:
-      return "99" + (count - 18);
-    };
     let position = "";
     for (let i = 0; i < this.size.y; i++) {
       let emptyCount = 0;
@@ -312,7 +313,7 @@ export default class ChessRules {
         else {
           if (emptyCount > 0) {
             // Add empty squares in-between
-            position += format(emptyCount);
+            position += C.FenEmptySquares(emptyCount);
             emptyCount = 0;
           }
           position += this.board2fen(this.board[i][j]);
@@ -320,7 +321,7 @@ export default class ChessRules {
       }
       if (emptyCount > 0)
         // "Flush remainder"
-        position += format(emptyCount);
+        position += C.FenEmptySquares(emptyCount);
       if (i < this.size.y - 1)
         position += "/"; //separate rows
     }
@@ -789,16 +790,20 @@ export default class ChessRules {
     chessboard.style.top = newY + "px";
     const newR = {x: newX, y: newY, width: newWidth, height: newHeight};
     const pieceWidth = this.getPieceWidth(newWidth);
-    for (let i=0; i < this.size.x; i++) {
-      for (let j=0; j < this.size.y; j++) {
-        if (this.g_pieces[i][j]) {
-          // NOTE: could also use CSS transform "scale"
-          this.g_pieces[i][j].style.width = pieceWidth + "px";
-          this.g_pieces[i][j].style.height = pieceWidth + "px";
-          const [ip, jp] = this.getPixelPosition(i, j, newR);
-          // Translate coordinates to use chessboard as reference:
-          this.g_pieces[i][j].style.transform =
-            `translate(${ip - newX}px,${jp - newY}px)`;
+    // NOTE: next "if" for variants which use squares filling
+    // instead of "physical", moving pieces
+    if (this.g_pieces) {
+      for (let i=0; i < this.size.x; i++) {
+        for (let j=0; j < this.size.y; j++) {
+          if (this.g_pieces[i][j]) {
+            // NOTE: could also use CSS transform "scale"
+            this.g_pieces[i][j].style.width = pieceWidth + "px";
+            this.g_pieces[i][j].style.height = pieceWidth + "px";
+            const [ip, jp] = this.getPixelPosition(i, j, newR);
+            // Translate coordinates to use chessboard as reference:
+            this.g_pieces[i][j].style.transform =
+              `translate(${ip - newX}px,${jp - newY}px)`;
+          }
         }
       }
     }

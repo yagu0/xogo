@@ -130,7 +130,9 @@ function toggleStyle(event, obj) {
 let options;
 function prepareOptions() {
   options = {};
-  let optHtml = V.Options.select.map(select => { return `
+  let optHtml = "";
+  if (V.Options.select) {
+    optHtml += V.Options.select.map(select => { return `
       <div class="option-select">
         <label for="var_${select.variable}">${select.label}</label>
         <div class="select">
@@ -147,9 +149,10 @@ function prepareOptions() {
           <span class="focus"></span>
         </div>
       </div>`;
-  }).join("");
-  optHtml += V.Options.check.map(check => {
-    return `
+    }).join("");
+  }
+  if (V.Options.check) {
+    optHtml += V.Options.check.map(check => { return `
       <div class="option-check">
         <label class="checkbox">
           <input id="var_${check.variable}"
@@ -158,8 +161,22 @@ function prepareOptions() {
           <span>${check.label}</span>
         </label>
       </div>`;
-  }).join("");
-  if (V.Options.styles.length >= 1) {
+    }).join("");
+  }
+  if (V.Options.input) {
+    optHtml += V.Options.input.map(input => { return `
+      <div class="option-input">
+        <label class="input">
+          <input id="var_${input.variable}"
+                 type="${input.type}"
+                 content="${input.defaut}"/>
+          <span class="spacer"></span>
+          <span>${input.label}</span>
+        </label>
+      </div>`;
+    }).join("");
+  }
+  if (V.Options.styles) {
     optHtml += '<div class="words">';
     let i = 0;
     const stylesLength = V.Options.styles.length;

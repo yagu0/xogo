@@ -303,12 +303,14 @@ piece.hidden {
   height: 100%;
 }
 
+/* Default squares colors (can be overriden or unused) */
 .dark-square {
   fill: #b58863;
 }
 .light-square {
   fill: #f0d9b5;
 }
+
 .in-shadow {
   filter: brightness(50%);
 }
