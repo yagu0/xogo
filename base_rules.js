@@ -787,9 +787,10 @@ export default class ChessRules {
     if (newHeight > window.innerHeight)
       newHeight = window.innerHeight;
     const newRatio = newWidth / newHeight;
-    if (newRatio > self.size.ratio)
+    const epsilon = 1e-4; //arbitrary small value to avoid instabilities
+    if (newRatio - self.size.ratio > epsilon)
       newWidth = newHeight * self.size.ratio;
-    else if (newRatio < self.size.ratio)
+    else if (newRatio - self.size.ratio < -epsilon)
       newHeight = newWidth / self.size.ratio;
     chessboard.style.width = newWidth + "px";
     chessboard.style.height = newHeight + "px";

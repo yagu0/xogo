@@ -78,14 +78,14 @@ export default class HexRules extends ChessRules {
     return (emptyCount + "/").repeat(this.size.x).slice(0, -1) + " w 0";
   }
 
-  // TODO: re-enable rotation
+  // TODO: enable vertical board (rotate?)
   getSvgChessboard() {
     // NOTE: with small margin seems nicer
     let width = 173.2 * this.size.y + 173.2 * (this.size.y-1) / 2 + 30,
         height = 50 + Math.floor(150 * this.size.x) + 30,
         min_x = -86.6 - 15,
         min_y = -100 - 15;
-//    if (this.size.rotate) {
+//    if (this.size.ratio < 1) {
 //      [width, height] = [height, width];
 //      [min_x, min_y] = [min_y, min_x];
 //    }
@@ -93,7 +93,7 @@ export default class HexRules extends ChessRules {
       <svg
         viewBox="${min_x} ${min_y} ${width} ${height}"
         class="chessboard_SVG"`;
-//    if (this.size.rotate)
+//    if (this.size.ratio < 1)
 //      board += ` transform="rotate(90 ${min_x} ${min_y})"`
     board += `>
       <defs>
@@ -177,14 +177,14 @@ export default class HexRules extends ChessRules {
       document.addEventListener("touchstart", mousedown, {passive: false});
   }
 
+  // TODO: enable rotation
   get size() {
     const baseRatio = 1.619191; // 2801.2 / 1730, "widescreen"
-    const rotate = window.innerWidth < window.innerHeight; //"vertical screen"
+    const rotate = false; //window.innerWidth < window.innerHeight; //"vertical screen"
     return {
       x: this.options["bsize"],
       y: this.options["bsize"],
-      ratio: rotate ? 1 / baseRatio : baseRatio,
-      rotate: rotate
+      ratio: (rotate ? 1 / baseRatio : baseRatio)
     };
   }
 
