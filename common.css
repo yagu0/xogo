@@ -231,13 +231,17 @@ button.cancel-something {
   text-align: center;
 }
 
-.option-select, .option-check {
+.option-select, .option-input {
   margin: 15px 0 0 0;
 }
 
-.option-check {
+.option-input {
   display: inline-block;
   margin-right: 10px;
+}
+
+.option-input input[type=number] {
+  width: 64px;
 }
 
 .btn-wrap {

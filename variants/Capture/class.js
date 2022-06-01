@@ -5,7 +5,7 @@ export default class CaptureRules extends ChessRules {
   static get Options() {
     return {
       select: C.Options.select,
-      check: C.Options.check,
+      input: C.Options.input,
       styles: C.Options.styles.filter(s => s != "capture")
     };
   }

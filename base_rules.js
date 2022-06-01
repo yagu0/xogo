@@ -372,6 +372,11 @@ export default class ChessRules {
 
   constructor(o) {
     this.options = o.options;
+    // Fill missing options (always the case if random challenge)
+    (V.Options.select || []).concat(V.Options.input || []).forEach(opt => {
+      if (this.options[opt.variable] === undefined)
+        this.options[opt.variable] = opt.defaut;
+    });
     this.playerColor = o.color;
     this.afterPlay = o.afterPlay; //trigger some actions after playing a move
 
@@ -528,7 +533,8 @@ export default class ChessRules {
     this.initMouseEvents();
     const chessboard =
       document.getElementById(this.containerId).querySelector(".chessboard");
-    new ResizeObserver(this.rescale).observe(chessboard);
+    // TODO: calling with "this" seems required by Hex. Understand why...
+    new ResizeObserver(() => this.rescale(this)).observe(chessboard);
   }
 
   re_drawBoardElements() {
@@ -583,8 +589,7 @@ export default class ChessRules {
     let board = `
       <svg
         viewBox="0 0 80 80"
-        class="chessboard_SVG">
-      <g>`;
+        class="chessboard_SVG">`;
     for (let i=0; i < this.size.x; i++) {
       for (let j=0; j < this.size.y; j++) {
         const ii = (flipped ? this.size.x - 1 - i : i);
@@ -593,16 +598,18 @@ export default class ChessRules {
         if (this.enlightened && !this.enlightened[ii][jj])
           classes += " in-shadow";
         // NOTE: x / y reversed because coordinates system is reversed.
-        board += `<rect
-          class="${classes}"
-          id="${this.coordsToId({x: ii, y: jj})}"
-          width="10"
-          height="10"
-          x="${10*j}"
-          y="${10*i}" />`;
+        board += `
+          <rect
+            class="${classes}"
+            id="${this.coordsToId({x: ii, y: jj})}"
+            width="10"
+            height="10"
+            x="${10*j}"
+            y="${10*i}"
+          />`;
       }
     }
-    board += "</g></svg>";
+    board += "</svg>";
     return board;
   }
 
@@ -767,48 +774,50 @@ export default class ChessRules {
   }
 
   // After resize event: no need to destroy/recreate pieces
-  rescale() {
-    const container = document.getElementById(this.containerId);
+  rescale(self) {
+    const container = document.getElementById(self.containerId);
     if (!container)
       return; //useful at initial loading
     let chessboard = container.querySelector(".chessboard");
-    const r = chessboard.getBoundingClientRect();
-    const newRatio = r.width / r.height;
-    let newWidth = r.width,
-        newHeight = r.height;
-    if (newRatio > this.size.ratio) {
-      newWidth = r.height * this.size.ratio;
-      chessboard.style.width = newWidth + "px";
-    }
-    else if (newRatio < this.size.ratio) {
-      newHeight = r.width / this.size.ratio;
-      chessboard.style.height = newHeight + "px";
-    }
+    let r = chessboard.getBoundingClientRect();
+    let [newWidth, newHeight] = [r.width, r.height];
+    // Stay in window:
+    if (newWidth > window.innerWidth)
+      newWidth = window.innerWidth;
+    if (newHeight > window.innerHeight)
+      newHeight = window.innerHeight;
+    const newRatio = newWidth / newHeight;
+    if (newRatio > self.size.ratio)
+      newWidth = newHeight * self.size.ratio;
+    else if (newRatio < self.size.ratio)
+      newHeight = newWidth / self.size.ratio;
+    chessboard.style.width = newWidth + "px";
+    chessboard.style.height = newHeight + "px";
     const newX = (window.innerWidth - newWidth) / 2;
     chessboard.style.left = newX + "px";
     const newY = (window.innerHeight - newHeight) / 2;
     chessboard.style.top = newY + "px";
     const newR = {x: newX, y: newY, width: newWidth, height: newHeight};
-    const pieceWidth = this.getPieceWidth(newWidth);
+    const pieceWidth = self.getPieceWidth(newWidth);
     // NOTE: next "if" for variants which use squares filling
     // instead of "physical", moving pieces
     if (this.g_pieces) {
-      for (let i=0; i < this.size.x; i++) {
-        for (let j=0; j < this.size.y; j++) {
-          if (this.g_pieces[i][j]) {
+      for (let i=0; i < self.size.x; i++) {
+        for (let j=0; j < self.size.y; j++) {
+          if (self.g_pieces[i][j]) {
             // NOTE: could also use CSS transform "scale"
-            this.g_pieces[i][j].style.width = pieceWidth + "px";
-            this.g_pieces[i][j].style.height = pieceWidth + "px";
-            const [ip, jp] = this.getPixelPosition(i, j, newR);
+            self.g_pieces[i][j].style.width = pieceWidth + "px";
+            self.g_pieces[i][j].style.height = pieceWidth + "px";
+            const [ip, jp] = self.getPixelPosition(i, j, newR);
             // Translate coordinates to use chessboard as reference:
-            this.g_pieces[i][j].style.transform =
+            self.g_pieces[i][j].style.transform =
               `translate(${ip - newX}px,${jp - newY}px)`;
           }
         }
       }
     }
-    if (this.hasReserve)
-      this.rescaleReserve(newR);
+    if (self.hasReserve)
+      self.rescaleReserve(newR);
   }
 
   rescaleReserve(r) {

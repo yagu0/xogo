@@ -6,7 +6,7 @@ export default class TeleportRules extends ChessRules {
     return {
       select: C.Options.select,
       // TODO? option "teleport king"?
-      check: C.Options.check,
+      input: C.Options.input,
       styles: C.Options.styles.filter(s => s != "teleport")
     };
   }

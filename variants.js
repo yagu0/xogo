@@ -67,7 +67,7 @@ const variants = [
 //  {name: 'Grasshopper', desc: 'Long jumps over pieces'},
 //  {name: 'Gridolina', desc: 'Jump the borders'},
 //  {name: 'Hamilton', desc: 'Walk on a graph'},
-  {names: 'Hex', desc: 'Connect sides'},
+  {name: 'Hex', desc: 'Connect sides'},
 //  {name: 'Hidden', desc: 'Unidentified pieces', disp: 'Strate-Go'},
 //  {name: 'Hiddenqueen', desc: 'Queen disguised as a pawn', disp: 'Hidden Queen'},
 //  {name: 'Hoppelpoppel', desc: 'Knibis and Bisknis', disp: 'Hoppel-Poppel'},

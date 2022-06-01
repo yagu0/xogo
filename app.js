@@ -136,7 +136,7 @@ function prepareOptions() {
       <div class="option-select">
         <label for="var_${select.variable}">${select.label}</label>
         <div class="select">
-          <select id="var_${select.variable}" data-numeric="1">` +
+          <select id="var_${select.variable}">` +
           select.options.map(option => { return `
             <option
               value="${option.value}"
@@ -151,25 +151,16 @@ function prepareOptions() {
       </div>`;
     }).join("");
   }
-  if (V.Options.check) {
-    optHtml += V.Options.check.map(check => { return `
-      <div class="option-check">
-        <label class="checkbox">
-          <input id="var_${check.variable}"
-                 type="checkbox"${check.defaut ? " checked" : ""}/>
-          <span class="spacer"></span>
-          <span>${check.label}</span>
-        </label>
-      </div>`;
-    }).join("");
-  }
   if (V.Options.input) {
     optHtml += V.Options.input.map(input => { return `
       <div class="option-input">
         <label class="input">
           <input id="var_${input.variable}"
                  type="${input.type}"
-                 content="${input.defaut}"/>
+                 ${input.type == "checkbox" && input.defaut
+                   ? "checked"
+                   : 'value="' + input.defaut + '"'}
+          />
           <span class="spacer"></span>
           <span>${input.label}</span>
         </label>
@@ -200,15 +191,15 @@ function getGameLink() {
   const vname = $.getElementById("selectVariant").value;
   const color = $.getElementById("selectColor").value;
   for (const select of $.querySelectorAll("#gameOptions select")) {
-    let value = select.value;
-    if (select.attributes["data-numeric"])
-      value = parseInt(value, 10);
-    if (value)
-      options[ select.id.split("_")[1] ] = value;
+    const value = parseInt(select.value, 10) || select.value;
+    options[ select.id.split("_")[1] ] = value;
   }
-  for (const check of $.querySelectorAll("#gameOptions input")) {
-    if (check.checked)
-      options[ check.id.split("_")[1] ] = check.checked;
+  for (const input of $.querySelectorAll("#gameOptions input")) {
+    const variable = input.id.split("_")[1];
+    if (input.type == "number")
+      options[variable] = parseInt(input.value, 10); //TODO: real numbers?
+    else if (input.type == "checkbox")
+      options[variable] = input.checked;
   }
   send("creategame", {
     vname: vname,

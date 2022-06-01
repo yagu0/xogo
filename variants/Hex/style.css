@@ -1,3 +1,10 @@
 .neutral-square {
   fill: #eaeded;
 }
+
+.bg-white {
+  fill: red;
+}
+.bg-black {
+  fill: blue;
+}

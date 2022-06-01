@@ -5,13 +5,14 @@ export default class ProgressiveRules extends ChessRules {
   static get Options() {
     return {
       select: C.Options.select,
-      check: [
+      input: [
         {
           label: "Logical",
-          defaut: false,
-          variable: "logical"
+          variable: "logical",
+          type: "checkbox",
+          defaut: false
         }
-      ].concat(C.Options.check),
+      ].concat(C.Options.input),
       styles: C.Options.styles.filter(s => s != "progressive")
     };
   }

@@ -7,16 +7,18 @@ export default class AtomicRules extends ChessRules {
   static get Options() {
     return {
       select: C.Options.select,
-      check: [
+      input: [
         {
           label: "Balanced",
-          defaut: false,
-          variable: "rempawn"
+          variable: "rempawn",
+          type: "checkbox",
+          defaut: false
         },
         {
           label: "Falling pawn",
-          defaut: false,
-          variable: "pawnfall"
+          variable: "pawnfall",
+          type: "checkbox",
+          defaut: false
         }
       ],
       styles: C.Options.styles.filter(s => s != "atomic")

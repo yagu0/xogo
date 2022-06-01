@@ -5,13 +5,14 @@ export default class MadrasiRules extends ChessRules {
   static get Options() {
     return {
       select: C.Options.select,
-      check: [
+      input: [
         {
           label: "Rex Incl.",
-          defaut: false,
-          variable: "rexincl"
+          variable: "rexincl",
+          type: "checkbox",
+          defaut: false
         }
-      ].concat(C.Options.check),
+      ].concat(C.Options.input),
       styles: C.Options.styles.filter(s => s != "madrasi")
     };
   }
