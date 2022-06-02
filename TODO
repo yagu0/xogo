@@ -1,9 +1,3 @@
-Fix rescaling by adopting a different strategy: use mouse scroll instead, +/- 5% each time ?
-Seems easier to control width/height accurately and safely in this way...
-
-Impossible to play / triple move in Doublemove : turn issues, maybe because a move is sent twice to the server...
-=> solution = sign (hash?) moves, and if an already received signature received again, ignore?
-
 add variants : Chakart first (dark,cylinder)
 Dark Racing Kings ?
 Checkered-Teleport ?

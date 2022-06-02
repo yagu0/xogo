@@ -533,8 +533,6 @@ export default class ChessRules {
     this.initMouseEvents();
     const chessboard =
       document.getElementById(this.containerId).querySelector(".chessboard");
-    // TODO: calling with "this" seems required by Hex. Understand why...
-    new ResizeObserver(() => this.rescale(this)).observe(chessboard);
   }
 
   re_drawBoardElements() {
@@ -773,25 +771,22 @@ export default class ChessRules {
     }
   }
 
-  // After resize event: no need to destroy/recreate pieces
-  rescale(self) {
-    const container = document.getElementById(self.containerId);
-    if (!container)
-      return; //useful at initial loading
-    let chessboard = container.querySelector(".chessboard");
-    let r = chessboard.getBoundingClientRect();
-    let [newWidth, newHeight] = [r.width, r.height];
+  // Resize board: no need to destroy/recreate pieces
+  rescale(mode) {
+    let chessboard =
+      document.getElementById(this.containerId).querySelector(".chessboard");
+    const r = chessboard.getBoundingClientRect();
+    const multFact = (mode == "up" ? 1.05 : 0.95);
+    let [newWidth, newHeight] = [multFact * r.width, multFact * r.height];
     // Stay in window:
-    if (newWidth > window.innerWidth)
+    if (newWidth > window.innerWidth) {
       newWidth = window.innerWidth;
-    if (newHeight > window.innerHeight)
+      newHeight = newWidth / this.size.ratio;
+    }
+    if (newHeight > window.innerHeight) {
       newHeight = window.innerHeight;
-    const newRatio = newWidth / newHeight;
-    const epsilon = 1e-4; //arbitrary small value to avoid instabilities
-    if (newRatio - self.size.ratio > epsilon)
-      newWidth = newHeight * self.size.ratio;
-    else if (newRatio - self.size.ratio < -epsilon)
-      newHeight = newWidth / self.size.ratio;
+      newWidth = newHeight * this.size.ratio;
+    }
     chessboard.style.width = newWidth + "px";
     chessboard.style.height = newHeight + "px";
     const newX = (window.innerWidth - newWidth) / 2;
@@ -799,26 +794,26 @@ export default class ChessRules {
     const newY = (window.innerHeight - newHeight) / 2;
     chessboard.style.top = newY + "px";
     const newR = {x: newX, y: newY, width: newWidth, height: newHeight};
-    const pieceWidth = self.getPieceWidth(newWidth);
+    const pieceWidth = this.getPieceWidth(newWidth);
     // NOTE: next "if" for variants which use squares filling
     // instead of "physical", moving pieces
     if (this.g_pieces) {
-      for (let i=0; i < self.size.x; i++) {
-        for (let j=0; j < self.size.y; j++) {
-          if (self.g_pieces[i][j]) {
+      for (let i=0; i < this.size.x; i++) {
+        for (let j=0; j < this.size.y; j++) {
+          if (this.g_pieces[i][j]) {
             // NOTE: could also use CSS transform "scale"
-            self.g_pieces[i][j].style.width = pieceWidth + "px";
-            self.g_pieces[i][j].style.height = pieceWidth + "px";
-            const [ip, jp] = self.getPixelPosition(i, j, newR);
+            this.g_pieces[i][j].style.width = pieceWidth + "px";
+            this.g_pieces[i][j].style.height = pieceWidth + "px";
+            const [ip, jp] = this.getPixelPosition(i, j, newR);
             // Translate coordinates to use chessboard as reference:
-            self.g_pieces[i][j].style.transform =
+            this.g_pieces[i][j].style.transform =
               `translate(${ip - newX}px,${jp - newY}px)`;
           }
         }
       }
     }
-    if (self.hasReserve)
-      self.rescaleReserve(newR);
+    if (this.hasReserve)
+      this.rescaleReserve(newR);
   }
 
   rescaleReserve(r) {
@@ -977,10 +972,15 @@ export default class ChessRules {
       curPiece.remove();
     };
 
+    const wheelResize = (e) => {
+      this.rescale(e.deltaY < 0 ? "up" : "down");
+    };
+
     if ('onmousedown' in window) {
       document.addEventListener("mousedown", mousedown);
       document.addEventListener("mousemove", mousemove);
       document.addEventListener("mouseup", mouseup);
+      document.addEventListener("wheel", wheelResize);
     }
     if ('ontouchstart' in window) {
       // https://stackoverflow.com/a/42509310/12660887

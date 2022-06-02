@@ -516,7 +516,7 @@ function initializeGame(obj) {
           </g>
         </svg>
       </div>
-      <div class="resizeable chessboard"></div>`;
+      <div class="chessboard"></div>`;
     vr = new V({
       seed: obj.seed, //may be null if FEN already exists (running game)
       fen: obj.fen,

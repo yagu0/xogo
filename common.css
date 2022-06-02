@@ -277,12 +277,6 @@ a {
 .chessboard {
   position: absolute;
   cursor: pointer;
-}
-
-/* Board container can be resized */
-.resizeable {
-  resize: both;
-  overflow: hidden;
   min-width: 200px;
   min-height: 200px;
 }
