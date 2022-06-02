@@ -78,24 +78,21 @@ export default class HexRules extends ChessRules {
     return (emptyCount + "/").repeat(this.size.x).slice(0, -1) + " w 0";
   }
 
-  // TODO: enable vertical board (rotate?)
   getSvgChessboard() {
     // NOTE: with small margin seems nicer
     let width = 173.2 * this.size.y + 173.2 * (this.size.y-1) / 2 + 30,
         height = 50 + Math.floor(150 * this.size.x) + 30,
         min_x = -86.6 - 15,
         min_y = -100 - 15;
-//    if (this.size.ratio < 1) {
-//      [width, height] = [height, width];
-//      [min_x, min_y] = [min_y, min_x];
-//    }
+    if (this.size.ratio < 1) {
+      // Rotate by 30 degrees to display vertically
+      [width, height] = [height, width];
+      [min_x, min_y] = [min_y, min_x];
+    }
     let board = `
       <svg
         viewBox="${min_x} ${min_y} ${width} ${height}"
-        class="chessboard_SVG"`;
-//    if (this.size.ratio < 1)
-//      board += ` transform="rotate(90 ${min_x} ${min_y})"`
-    board += `>
+        class="chessboard_SVG">
       <defs>
         <g id="hexa">
           <polygon
@@ -104,7 +101,10 @@ export default class HexRules extends ChessRules {
           />
         </g>
       </defs>`;
-    board += "<g>";
+    board += "<g";
+    if (this.size.ratio < 1)
+      board += ` transform="rotate(30)"`
+    board += ">";
     for (let i=0; i < this.size.x; i++) {
       for (let j=0; j < this.size.y; j++) {
         board += `
@@ -117,9 +117,11 @@ export default class HexRules extends ChessRules {
           />`;
       }
     }
-    board += `</g><g style="fill:none;stroke-width:10">`;
+    board += `</g><g style="fill:none;stroke-width:10"`;
+    if (this.size.ratio < 1)
+      board += ` transform="rotate(30)"`
     // Goals: up/down/left/right
-    board += `<polyline style="stroke:red" points="`
+    board += `><polyline style="stroke:red" points="`
     for (let i=0; i<=2*this.size.y; i++)
       board += ((i-1)*86.6) + ',' + (i % 2 == 0 ? -50 : -100) + ' ';
     board += `"/><polyline style="stroke:red" points="`;
@@ -180,10 +182,9 @@ export default class HexRules extends ChessRules {
       document.addEventListener("touchstart", mousedown, {passive: false});
   }
 
-  // TODO: enable rotation
   get size() {
-    const baseRatio = 1.619191; // 2801.2 / 1730, "widescreen"
-    const rotate = false; //window.innerWidth < window.innerHeight; //"vertical screen"
+    const baseRatio = 1.6191907514450865; //2801.2 / 1730, "widescreen"
+    const rotate = window.innerWidth < window.innerHeight; //"vertical screen"
     return {
       x: this.options["bsize"],
       y: this.options["bsize"],
