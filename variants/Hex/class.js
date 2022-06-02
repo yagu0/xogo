@@ -171,8 +171,11 @@ export default class HexRules extends ChessRules {
       }
     };
 
-    if ('onmousedown' in window)
+    if ('onmousedown' in window) {
       document.addEventListener("mousedown", mousedown);
+      document.addEventListener("wheel",
+        (e) => this.rescale(e.deltaY < 0 ? "up" : "down"));
+    }
     if ('ontouchstart' in window)
       document.addEventListener("touchstart", mousedown, {passive: false});
   }

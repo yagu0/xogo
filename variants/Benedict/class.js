@@ -35,13 +35,13 @@ export default class BenedictRules extends ChessRules {
     const attacks = specs.attack || specs.moves;
     for (let a of attacks) {
       outerLoop: for (let step of a.steps) {
-        let [i, j] = [x + step[0], this.computeY(y + step[1])];
+        let [i, j] = [x + step[0], this.getY(y + step[1])];
         let nbSteps = 1;
         while (this.onBoard(i, j) && this.board[i][j] == "") {
           if (a.range <= nbSteps++)
             continue outerLoop;
           i += step[0];
-          j = this.computeY(j + step[1]);
+          j = this.getY(j + step[1]);
         }
         if (
           this.onBoard(i, j) && this.getColor(i, j) == oppCol &&

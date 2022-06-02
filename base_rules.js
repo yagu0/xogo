@@ -29,16 +29,18 @@ export default class ChessRules {
           {label: "Asymmetric random", value: 2}
         ]
       }],
-      check: [
+      input: [
         {
           label: "Capture king",
-          defaut: false,
-          variable: "taking"
+          variable: "taking",
+          type: "checkbox",
+          defaut: false
         },
         {
           label: "Falling pawn",
-          defaut: false,
-          variable: "pawnfall"
+          variable: "pawnfall",
+          type: "checkbox",
+          defaut: false
         }
       ],
       // Game modifiers (using "elementary variants"). Default: false
@@ -943,11 +945,6 @@ export default class ChessRules {
     };
 
     const mouseup = (e) => {
-      const newR = chessboard.getBoundingClientRect();
-      if (newR.width != r.width || newR.height != r.height) {
-        this.rescale();
-        return;
-      }
       if (!start)
         return;
       const [x, y] = [start.x, start.y];
@@ -972,15 +969,12 @@ export default class ChessRules {
       curPiece.remove();
     };
 
-    const wheelResize = (e) => {
-      this.rescale(e.deltaY < 0 ? "up" : "down");
-    };
-
     if ('onmousedown' in window) {
       document.addEventListener("mousedown", mousedown);
       document.addEventListener("mousemove", mousemove);
       document.addEventListener("mouseup", mouseup);
-      document.addEventListener("wheel", wheelResize);
+      document.addEventListener("wheel",
+        (e) => this.rescale(e.deltaY < 0 ? "up" : "down"));
     }
     if ('ontouchstart' in window) {
       // https://stackoverflow.com/a/42509310/12660887
