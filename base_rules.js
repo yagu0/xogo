@@ -2154,9 +2154,7 @@ export default class ChessRules {
 
   playVisual(move, r) {
     move.vanish.forEach(v => {
-      // TODO: next "if" shouldn't be required
-      if (this.g_pieces[v.x][v.y])
-        this.g_pieces[v.x][v.y].remove();
+      this.g_pieces[v.x][v.y].remove();
       this.g_pieces[v.x][v.y] = null;
     });
     let chessboard =
@@ -2203,10 +2201,6 @@ export default class ChessRules {
       return;
     }
     let initPiece = this.getDomPiece(move.start.x, move.start.y);
-    if (!initPiece) { //TODO this shouldn't be required
-      callback();
-      return;
-    }
     // NOTE: cloning generally not required, but light enough, and simpler
     let movingPiece = initPiece.cloneNode();
     initPiece.style.opacity = "0";
