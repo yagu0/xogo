@@ -1,6 +1,7 @@
 import ChessRules from "/base_rules";
-import { SuicideRules } from "/variants/Suicide"; ////////:TODO generalize genRandInitFen ?!
-// constraints satisfaction ? + Chakart display bonus messages
+import GiveawayRules from "/variants/Giveaway";
+
+// TODO + display bonus messages
 // + animation + multi-moves for bananas/bombs/mushrooms
 
 
@@ -1165,11 +1166,12 @@ export class ChakartRules extends ChessRules {
     return "*";
   }
 
-  static GenRandInitFen(options) {
+  genRandInitFen(seed) {
+    const gr = new GiveawayRules({}, true);
     return (
-      SuicideRules.GenRandInitFen(options).slice(0, -1) +
+      gr.genRandInitFen(seed).slice(0, -1) +
       // Add Peach + Mario flags + capture counts
-      "1111 000000000000"
+      '{"flags": "1111", "ccount": "000000000000"}'
     );
   }
 

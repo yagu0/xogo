@@ -184,7 +184,7 @@ export default class ChessRules {
 
     else {
       // Randomize
-      let pieces = { w: new Array(8), b: new Array(8) };
+      let pieces = {w: new Array(8), b: new Array(8)};
       flags = "";
       // Shuffle pieces on first (and last rank if randomness == 2)
       for (let c of ["w", "b"]) {
@@ -372,13 +372,16 @@ export default class ChessRules {
   //////////////////
   // INITIALIZATION
 
-  constructor(o) {
+  constructor(o, genFenOnly) {
     this.options = o.options;
     // Fill missing options (always the case if random challenge)
     (V.Options.select || []).concat(V.Options.input || []).forEach(opt => {
       if (this.options[opt.variable] === undefined)
         this.options[opt.variable] = opt.defaut;
     });
+    if (genFenOnly)
+      // This object will be used only for initial FEN generation
+      return;
     this.playerColor = o.color;
     this.afterPlay = o.afterPlay; //trigger some actions after playing a move
 
