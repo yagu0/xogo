@@ -1,7 +1,14 @@
-import { ChessRules, Move, PiPo } from "@/base_rules";
-import { SuicideRules } from "@/variants/Suicide";
-import { ArrayFun } from "@/utils/array";
-import { randInt } from "@/utils/alea";
+import ChessRules from "/base_rules";
+import { SuicideRules } from "/variants/Suicide"; ////////:TODO generalize genRandInitFen ?!
+// constraints satisfaction ? + Chakart display bonus messages
+// + animation + multi-moves for bananas/bombs/mushrooms
+
+
+
+import { ArrayFun } from "/utils/array";
+import { randInt } from "/utils/alea";
+import PiPo from "/utils/PiPo.js";
+import Move from "/utils/Move.js";
 
 export class ChakartRules extends ChessRules {
 
@@ -25,26 +32,11 @@ export class ChakartRules extends ChessRules {
   static get PawnSpecs() {
     return SuicideRules.PawnSpecs;
   }
-
-  static get HasCastle() {
+  get hasCastle() {
     return false;
   }
-
-  static get HasEnpassant() {
+  get hasEnpassant() {
     return false;
-  }
-
-  static get CorrConfirm() {
-    // Because of bonus effects
-    return false;
-  }
-
-  static get CanAnalyze() {
-    return false;
-  }
-
-  static get SomeHiddenMoves() {
-    return true;
   }
 
   static get IMMOBILIZE_CODE() {
