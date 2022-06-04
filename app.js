@@ -457,7 +457,7 @@ let curMoves = [],
 const afterPlay = (move_s) => {
   const callbackAfterSend = () => {
     curMoves = [];
-    const result = vr.getCurrentScore(move);
+    const result = vr.getCurrentScore(move_s);
     if (result != "*") {
       setTimeout(() => {
         toggleVisible("gameStopped");
