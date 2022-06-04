@@ -13,14 +13,8 @@ export default class AtomicRules extends ChessRules {
           variable: "rempawn",
           type: "checkbox",
           defaut: false
-        },
-        {
-          label: "Falling pawn",
-          variable: "pawnfall",
-          type: "checkbox",
-          defaut: false
         }
-      ],
+      ].concat(C.Options.input.filter(i => i.variable == "pawnfall")),
       styles: C.Options.styles.filter(s => s != "atomic")
     };
   }

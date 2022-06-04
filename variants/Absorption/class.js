@@ -5,6 +5,7 @@ export default class AbsorptionRules extends ChessRules {
   static get Options() {
     return {
       select: C.Options.select,
+      input: C.Options.input,
       styles: [
         "balance",
         "capture",

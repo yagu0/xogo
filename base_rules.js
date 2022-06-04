@@ -175,8 +175,6 @@ export default class ChessRules {
 
   // Setup the initial random-or-not (asymmetric-or-not) position
   genRandInitFen(seed) {
-    Random.setSeed(seed);
-
     let fen, flags = "0707";
     if (!this.options.randomness)
       // Deterministic:
@@ -184,6 +182,7 @@ export default class ChessRules {
 
     else {
       // Randomize
+      Random.setSeed(seed);
       let pieces = {w: new Array(8), b: new Array(8)};
       flags = "";
       // Shuffle pieces on first (and last rank if randomness == 2)

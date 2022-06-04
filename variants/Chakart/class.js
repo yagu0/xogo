@@ -1,15 +1,12 @@
 import ChessRules from "/base_rules";
 import GiveawayRules from "/variants/Giveaway";
+import { ArrayFun } from "/utils/array.js";
+import { Random } from "/utils/alea.js";
+import PiPo from "/utils/PiPo.js";
+import Move from "/utils/Move.js";
 
 // TODO + display bonus messages
 // + animation + multi-moves for bananas/bombs/mushrooms
-
-
-
-import { ArrayFun } from "/utils/array";
-import { randInt } from "/utils/alea";
-import PiPo from "/utils/PiPo.js";
-import Move from "/utils/Move.js";
 
 export class ChakartRules extends ChessRules {
 
@@ -30,9 +27,10 @@ export class ChakartRules extends ChessRules {
     };
   }
 
-  static get PawnSpecs() {
-    return SuicideRules.PawnSpecs;
+  get pawnPromotions() {
+    return ['q', 'r', 'n', 'b', 'k'];
   }
+
   get hasCastle() {
     return false;
   }
@@ -80,7 +78,7 @@ export class ChakartRules extends ChessRules {
     return 'm';
   }
 
-  static fen2board(f) {
+  fen2board(f) {
     return (
       f.charCodeAt() <= 90
         ? "w" + f.toLowerCase()
@@ -88,89 +86,13 @@ export class ChakartRules extends ChessRules {
     );
   }
 
-  static get PIECES() {
-    return (
-      ChessRules.PIECES.concat(
-      Object.keys(V.IMMOBILIZE_DECODE)).concat(
-      [V.BANANA, V.BOMB, V.EGG, V.MUSHROOM, V.INVISIBLE_QUEEN])
-    );
-  }
-
-  getPpath(b) {
-    let prefix = "";
-    if (
-      b[0] == 'a' ||
-      b[1] == V.INVISIBLE_QUEEN ||
-      Object.keys(V.IMMOBILIZE_DECODE).includes(b[1])
-    ) {
-      prefix = "Chakart/";
-    }
-    return prefix + b;
-  }
-
-  getPPpath(m) {
-    if (!!m.promoteInto) return m.promoteInto;
-    if (m.appear.length == 0 && m.vanish.length == 1)
-      // King 'remote shell capture', on an adjacent square:
-      return this.getPpath(m.vanish[0].c + m.vanish[0].p);
-    let piece = m.appear[0].p;
-    if (Object.keys(V.IMMOBILIZE_DECODE).includes(piece))
-      // Promotion by capture into immobilized piece: do not reveal!
-      piece = V.IMMOBILIZE_DECODE[piece];
-    return this.getPpath(m.appear[0].c + piece);
-  }
-
-  static ParseFen(fen) {
-    const fenParts = fen.split(" ");
-    return Object.assign(
-      ChessRules.ParseFen(fen),
-      { captured: fenParts[4] }
-    );
-  }
-
-  static IsGoodFen(fen) {
-    if (!ChessRules.IsGoodFen(fen)) return false;
-    const captured = V.ParseFen(fen).captured;
-    if (!captured || !captured.match(/^[0-9]{12,12}$/)) return false;
-    return true;
-  }
-
-  // King can be l or L (immobilized) --> similar to Alice variant
-  static IsGoodPosition(position) {
-    if (position.length == 0) return false;
-    const rows = position.split("/");
-    if (rows.length != V.size.x) return false;
-    let kings = { "k": 0, "K": 0, 'l': 0, 'L': 0 };
-    for (let row of rows) {
-      let sumElts = 0;
-      for (let i = 0; i < row.length; i++) {
-        if (['K', 'k', 'L', 'l'].includes(row[i])) kings[row[i]]++;
-        if (V.PIECES.includes(row[i].toLowerCase())) sumElts++;
-        else {
-          const num = parseInt(row[i], 10);
-          if (isNaN(num)) return false;
-          sumElts += num;
-        }
-      }
-      if (sumElts != V.size.y) return false;
-    }
-    if (kings['k'] + kings['l'] == 0 || kings['K'] + kings['L'] == 0)
-      return false;
-    return true;
-  }
-
-  static IsGoodFlags(flags) {
-    // 4 for Peach + Mario w, b
-    return !!flags.match(/^[01]{4,4}$/);
-  }
-
   setFlags(fenflags) {
     // King can send shell? Queen can be invisible?
     this.powerFlags = {
-      w: { 'k': false, 'q': false },
-      b: { 'k': false, 'q': false }
+      w: {k: false, q: false},
+      b: {k: false, q: false}
     };
-    for (let c of ["w", "b"]) {
+    for (let c of ['w', 'b']) {
       for (let p of ['k', 'q']) {
         this.powerFlags[c][p] =
           fenflags.charAt((c == "w" ? 0 : 2) + (p == 'k' ? 0 : 1)) == "1";
@@ -190,49 +112,27 @@ export class ChakartRules extends ChessRules {
     return super.getFen() + " " + this.getCapturedFen();
   }
 
-  getFenForRepeat() {
-    return super.getFenForRepeat() + "_" + this.getCapturedFen();
-  }
-
   getCapturedFen() {
-    let counts = [...Array(12).fill(0)];
-    let i = 0;
-    for (let p of V.RESERVE_PIECES) {
-      counts[i] = this.captured["w"][p];
-      counts[6 + i] = this.captured["b"][p];
-      i++;
-    }
-    return counts.join("");
+    const res = ['w', 'b'].map(c => {
+      Object.values(this.captured[c])
+    });
+    return res[0].concat(res[1]).join("");
   }
 
-  scanKings() {}
-
-  setOtherVariables(fen) {
-    super.setOtherVariables(fen);
+  setOtherVariables(fenParsed) {
+    super.setOtherVariables(fenParsed);
     // Initialize captured pieces' counts from FEN
-    const captured =
-      V.ParseFen(fen).captured.split("").map(x => parseInt(x, 10));
+    const allCapts = fenParsed.captured.split("").map(x => parseInt(x, 10));
+    const pieces = ['p', 'r', 'n', 'b', 'q', 'k'];
     this.captured = {
-      w: {
-        [V.PAWN]: captured[0],
-        [V.ROOK]: captured[1],
-        [V.KNIGHT]: captured[2],
-        [V.BISHOP]: captured[3],
-        [V.QUEEN]: captured[4],
-        [V.KING]: captured[5]
-      },
-      b: {
-        [V.PAWN]: captured[6],
-        [V.ROOK]: captured[7],
-        [V.KNIGHT]: captured[8],
-        [V.BISHOP]: captured[9],
-        [V.QUEEN]: captured[10],
-        [V.KING]: captured[11]
-      }
+      w: Array.toObject(pieces, allCapts.slice(0, 6)),
+      b: Array.toObject(pieces, allCapts.slice(6, 12))
     };
     this.effects = [];
-    this.subTurn = 1;
   }
+
+
+  // TODO from here ::::::::
 
   getFlagsFen() {
     let fen = "";
@@ -240,20 +140,6 @@ export class ChakartRules extends ChessRules {
     for (let c of ["w", "b"])
       for (let p of ['k', 'q']) fen += (this.powerFlags[c][p] ? "1" : "0");
     return fen;
-  }
-
-  getColor(i, j) {
-    if (i >= V.size.x) return i == V.size.x ? "w" : "b";
-    return this.board[i][j].charAt(0);
-  }
-
-  getPiece(i, j) {
-    if (i >= V.size.x) return V.RESERVE_PIECES[j];
-    return this.board[i][j].charAt(1);
-  }
-
-  getReservePpath(index, color) {
-    return color + V.RESERVE_PIECES[index];
   }
 
   static get RESERVE_PIECES() {
@@ -1167,7 +1053,7 @@ export class ChakartRules extends ChessRules {
   }
 
   genRandInitFen(seed) {
-    const gr = new GiveawayRules({}, true);
+    const gr = new GiveawayRules({mode: "suicide"}, true);
     return (
       gr.genRandInitFen(seed).slice(0, -1) +
       // Add Peach + Mario flags + capture counts

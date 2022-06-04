@@ -454,7 +454,7 @@ function notifyMe(code) {
 
 let curMoves = [],
     lastFen;
-const afterPlay = (move) => {
+const afterPlay = (move_s) => {
   const callbackAfterSend = () => {
     curMoves = [];
     const result = vr.getCurrentScore(move);
@@ -466,7 +466,12 @@ const afterPlay = (move) => {
     }
   };
   // Pack into one moves array, then send
-  curMoves.push(move);
+  if (Array.isArray(move_s))
+    // Array of simple moves (e.g. Chakart)
+    Array.prototype.push.apply(curMoves, move_s);
+  else
+    // Usual case
+    curMoves.push(move_s);
   if (vr.turn != playerColor) {
     toggleTurnIndicator(false);
     send("newmove",
