@@ -5,9 +5,6 @@ import { Random } from "/utils/alea.js";
 import PiPo from "/utils/PiPo.js";
 import Move from "/utils/Move.js";
 
-// TODO + display bonus messages
-// + animation + multi-moves for bananas/bombs/mushrooms
-
 export class ChakartRules extends ChessRules {
 
   static get Options() {
@@ -78,6 +75,15 @@ export class ChakartRules extends ChessRules {
     return 'm';
   }
 
+  genRandInitFen(seed) {
+    const gr = new GiveawayRules({mode: "suicide"}, true);
+    return (
+      gr.genRandInitFen(seed).slice(0, -1) +
+      // Add Peach + Mario flags + capture counts
+      '{"flags": "1111", "ccount": "000000000000"}'
+    );
+  }
+
   fen2board(f) {
     return (
       f.charCodeAt() <= 90
@@ -112,6 +118,12 @@ export class ChakartRules extends ChessRules {
     return super.getFen() + " " + this.getCapturedFen();
   }
 
+  getFlagsFen() {
+    return ['w', 'b'].map(c => {
+      return ['k', 'q'].map(p => this.powerFlags[c][p] ? "1" : "0").join("");
+    }).join("");
+  }
+
   getCapturedFen() {
     const res = ['w', 'b'].map(c => {
       Object.values(this.captured[c])
@@ -128,46 +140,49 @@ export class ChakartRules extends ChessRules {
       w: Array.toObject(pieces, allCapts.slice(0, 6)),
       b: Array.toObject(pieces, allCapts.slice(6, 12))
     };
-    this.effects = [];
+    this.reserve = { w: {}, b: {} }; //to be replaced by this.captured
+    this.effect = "";
   }
 
-
-  // TODO from here ::::::::
-
-  getFlagsFen() {
-    let fen = "";
-    // Add power flags
-    for (let c of ["w", "b"])
-      for (let p of ['k', 'q']) fen += (this.powerFlags[c][p] ? "1" : "0");
-    return fen;
-  }
-
-  static get RESERVE_PIECES() {
-    return [V.PAWN, V.ROOK, V.KNIGHT, V.BISHOP, V.QUEEN, V.KING];
-  }
-
-  getReserveMoves([x, y]) {
-    const color = this.turn;
-    const p = V.RESERVE_PIECES[y];
-    if (this.reserve[color][p] == 0) return [];
+  getDropMovesFrom([c, p]) {
+    if (this.reserve[c][p] == 0) return [];
     let moves = [];
-    const start = (color == 'w' && p == V.PAWN ? 1 : 0);
-    const end = (color == 'b' && p == V.PAWN ? 7 : 8);
+    const start = (c == 'w' && p == 'p' ? 1 : 0);
+    const end = (color == 'b' && p == 'p' ? 7 : 8);
     for (let i = start; i < end; i++) {
-      for (let j = 0; j < V.size.y; j++) {
+      for (let j = 0; j < this.size.y; j++) {
+        const pieceIJ = this.getPiece(i, j);
         if (
-          this.board[i][j] == V.EMPTY ||
+          this.board[i][j] == "" ||
           this.getColor(i, j) == 'a' ||
-          this.getPiece(i, j) == V.INVISIBLE_QUEEN
+          pieceIJ == V.INVISIBLE_QUEEN
         ) {
-          let m = this.getBasicMove({ p: p, x: i, y: j});
-          m.start = { x: x, y: y };
+          let m = new Move({
+            start: {x: c, y: p},
+            end: {x: i, y: j},
+            appear: [new PiPo({x: i, y: j, c: c, p: p})],
+            vanish: []
+          });
+          // A drop move may remove a bonus (or hidden queen!)
+          if (this.board[i][j] != "")
+            m.vanish.push(new PiPo({x: i, y: j, c: 'a', p: pieceIJ}));
           moves.push(m);
         }
       }
     }
     return moves;
   }
+
+
+
+
+
+
+
+
+
+
+// TODO: rethink from here:
 
   getPotentialMovesFrom([x, y]) {
     let moves = [];
@@ -897,30 +912,22 @@ export class ChakartRules extends ChessRules {
     return moves;
   }
 
-  play(move) {
-//    if (!this.states) this.states = [];
-//    const stateFen = this.getFen();
-//    this.states.push(stateFen);
 
-    move.flags = JSON.stringify(this.aggregateFlags());
-    V.PlayOnBoard(this.board, move);
-    move.turn = [this.turn, this.subTurn];
-    if (["kingboo", "toadette", "daisy"].includes(move.end.effect)) {
-      this.effects.push(move.end.effect);
-      this.subTurn = 2;
-    }
-    else {
-      this.turn = V.GetOppCol(this.turn);
-      this.movesCount++;
-      this.subTurn = 1;
-    }
-    this.postPlay(move);
-  }
 
-  postPlay(move) {
-    if (move.end.effect == "toadette") this.reserve = this.captured;
-    else this.reserve = undefined;
-    const color = move.turn[0];
+
+
+
+
+
+
+
+
+  prePlay(move) {
+    if (move.effect == "toadette")
+      this.reserve = this.captured;
+    else
+      this.reserve = { w: {}, b: {} };;
+    const color = this.turn;
     if (
       move.vanish.length == 2 &&
       move.vanish[1].c != 'a' &&
@@ -928,7 +935,8 @@ export class ChakartRules extends ChessRules {
     ) {
       // Capture: update this.captured
       let capturedPiece = move.vanish[1].p;
-      if (capturedPiece == V.INVISIBLE_QUEEN) capturedPiece = V.QUEEN;
+      if (capturedPiece == V.INVISIBLE_QUEEN)
+        capturedPiece = V.QUEEN;
       else if (Object.keys(V.IMMOBILIZE_DECODE).includes(capturedPiece))
         capturedPiece = V.IMMOBILIZE_DECODE[capturedPiece];
       this.captured[move.vanish[1].c][capturedPiece]++;
@@ -986,233 +994,25 @@ export class ChakartRules extends ChessRules {
     }
   }
 
-  undo(move) {
-    this.disaggregateFlags(JSON.parse(move.flags));
-    V.UndoOnBoard(this.board, move);
-    if (["kingboo", "toadette", "daisy"].includes(move.end.effect))
-      this.effects.pop();
-    else this.movesCount--;
-    this.turn = move.turn[0];
-    this.subTurn = move.turn[1];
-    this.postUndo(move);
-
-//    const stateFen = this.getFen();
-//    if (stateFen != this.states[this.states.length-1]) debugger;
-//    this.states.pop();
-  }
-
-  postUndo(move) {
-    if (!!move.wasImmobilized) {
-      const [i, j] = move.wasImmobilized;
-      this.board[i][j] =
-        this.getColor(i, j) + V.IMMOBILIZE_CODE[this.getPiece(i, j)];
+  play(move) {
+    this.prePlay(move);
+    this.playOnBoard(move);
+    if (["kingboo", "toadette", "daisy"].includes(move.effect)) {
+      this.effect = move.effect;
+      this.subTurn = 2;
     }
-    if (!!move.wasInvisible) {
-      const [i, j] = move.wasInvisible;
-      this.board[i][j] = this.getColor(i, j) + V.INVISIBLE_QUEEN;
+    else {
+      this.turn = C.GetOppCol(this.turn);
+      this.movesCount++;
+      this.subTurn = 1;
     }
-    if (move.vanish.length == 2 && move.vanish[1].c != 'a') {
-      let capturedPiece = move.vanish[1].p;
-      if (capturedPiece == V.INVISIBLE_QUEEN) capturedPiece = V.QUEEN;
-      else if (Object.keys(V.IMMOBILIZE_DECODE).includes(capturedPiece))
-        capturedPiece = V.IMMOBILIZE_DECODE[capturedPiece];
-      this.captured[move.vanish[1].c][capturedPiece]--;
-    }
-    else if (move.vanish.length == 0) {
-      if (move.appear.length == 0 || move.appear[0].c == 'a') return;
-      // A piece was back on board
-      this.captured[move.appear[0].c][move.appear[0].p]++;
-    }
-    else if (move.appear.length == 0 && move.end.effect == "chomp")
-      this.captured[move.vanish[0].c][move.vanish[0].p]--;
-    if (move.vanish.length == 0) this.reserve = this.captured;
-    else this.reserve = undefined;
-  }
-
-  getCheckSquares() {
-    return [];
-  }
-
-  getCurrentScore() {
-    // Find kings (not tracked in this variant)
-    let kingThere = { w: false, b: false };
-    for (let i=0; i<8; i++) {
-      for (let j=0; j<8; j++) {
-        if (
-          this.board[i][j] != V.EMPTY &&
-          ['k', 'l'].includes(this.getPiece(i, j))
-        ) {
-          kingThere[this.getColor(i, j)] = true;
-        }
-      }
-    }
-    if (!kingThere['w']) return "0-1";
-    if (!kingThere['b']) return "1-0";
-    if (!this.atLeastOneMove()) return (this.turn == 'w' ? "0-1" : "1-0");
-    return "*";
-  }
-
-  genRandInitFen(seed) {
-    const gr = new GiveawayRules({mode: "suicide"}, true);
-    return (
-      gr.genRandInitFen(seed).slice(0, -1) +
-      // Add Peach + Mario flags + capture counts
-      '{"flags": "1111", "ccount": "000000000000"}'
-    );
   }
 
   filterValid(moves) {
     return moves;
   }
 
-  static get VALUES() {
-    return Object.assign(
-      {},
-      ChessRules.VALUES,
-      {
-        s: 1,
-        u: 5,
-        o: 3,
-        c: 3,
-        t: 9,
-        l: 1000,
-        e: 0,
-        d: 0,
-        w: 0,
-        m: 0
-      }
-    );
-  }
-
-  static get SEARCH_DEPTH() {
-    return 1;
-  }
-
-  getComputerMove() {
-    const moves = this.getAllValidMoves();
-    // Split into "normal" and "random" moves:
-    // (Next splitting condition is OK because cannot take self object
-    // without a banana or bomb on the way).
-    const deterministicMoves = moves.filter(m => {
-      return m.vanish.every(a => a.c != 'a' || a.p == V.MUSHROOM);
-    });
-    const randomMoves = moves.filter(m => {
-      return m.vanish.some(a => a.c == 'a' && a.p != V.MUSHROOM);
-    });
-    if (Math.random() < deterministicMoves.length / randomMoves.length)
-      // Play a deterministic one: capture king or material if possible
-      return super.getComputerMove(deterministicMoves);
-    // Play a random effect move, at random:
-    let move1 = randomMoves[randInt(randomMoves.length)];
-    this.play(move1);
-    let move2 = undefined;
-    if (this.subTurn == 2) {
-      const moves2 = this.getAllValidMoves();
-      move2 = moves2[randInt(moves2.length)];
-    }
-    this.undo(move1);
-    if (!move2) return move1;
-    return [move1, move2];
-  }
-
-  getNotation(move) {
-    if (move.vanish.length == 0 && move.appear.length == 0) return "-";
-    if (
-      !move.end.effect &&
-      move.appear.length > 0 &&
-      move.appear[0].p == V.INVISIBLE_QUEEN
-    ) {
-      return "Q??";
-    }
-    const finalSquare = V.CoordsToSquare(move.end);
-    // Next condition also includes Toadette placements:
-    if (move.appear.length > 0 && move.vanish.every(a => a.c == 'a')) {
-      const piece =
-        move.appear[0].p != V.PAWN ? move.appear[0].p.toUpperCase() : "";
-      return piece + "@" + finalSquare;
-    }
-    else if (move.appear.length == 0) {
-      const piece = this.getPiece(move.start.x, move.start.y);
-      if (piece == V.KING && !move.end.effect)
-        // King remote capture
-        return "Kx" + finalSquare;
-      // Koopa or Chomp, or loopback after bananas, bombs & mushrooms:
-      return (
-        piece.toUpperCase() + "x" + finalSquare +
-        (
-          !!move.end.effect
-            ? "*" + (move.end.effect == "koopa" ? "K" : "C")
-            : ""
-        )
-      );
-    }
-    if (move.appear.length == 1 && move.vanish.length == 1) {
-      const moveStart = move.appear[0].p.toUpperCase() + "@";
-      if (move.appear[0].c == 'a' && move.vanish[0].c == 'a')
-        // Bonus replacement:
-        return moveStart + finalSquare;
-      if (
-        move.vanish[0].p == V.INVISIBLE_QUEEN &&
-        move.appear[0].x == move.vanish[0].x &&
-        move.appear[0].y == move.vanish[0].y
-      ) {
-        // Toadette takes invisible queen
-        return moveStart + "Q" + finalSquare;
-      }
-    }
-    if (
-      move.appear.length == 2 &&
-      move.vanish.length == 2 &&
-      move.appear.every(a => a.c != 'a') &&
-      move.vanish.every(v => v.c != 'a')
-    ) {
-      // King Boo exchange
-      return V.CoordsToSquare(move.start) + finalSquare;
-    }
-    const piece = move.vanish[0].p;
-    let notation = undefined;
-    if (piece == V.PAWN) {
-      // Pawn move
-      if (this.board[move.end.x][move.end.y] != V.EMPTY) {
-        // Capture
-        const startColumn = V.CoordToColumn(move.start.y);
-        notation = startColumn + "x" + finalSquare;
-      }
-      else notation = finalSquare;
-      if (move.appear[0].p != V.PAWN)
-        // Promotion
-        notation += "=" + move.appear[0].p.toUpperCase();
-    }
-    else {
-      notation =
-        piece.toUpperCase() +
-        (this.board[move.end.x][move.end.y] != V.EMPTY ? "x" : "") +
-        finalSquare;
-    }
-    if (!!move.end.effect) {
-      switch (move.end.effect) {
-        case "kingboo":
-          notation += "*B";
-          break;
-        case "toadette":
-          notation += "*T";
-          break;
-        case "daisy":
-          notation += "*D";
-          break;
-        case "bowser":
-          notation += "*M";
-          break;
-        case "luigi":
-        case "waluigi":
-          const lastAppear = move.appear[move.appear.length - 1];
-          const effectOn =
-            V.CoordsToSquare({ x: lastAppear.x, y : lastAppear.y });
-          notation += "*" + move.end.effect[0].toUpperCase() + effectOn;
-          break;
-      }
-    }
-    return notation;
-  }
+  // TODO + display bonus messages
+  // + animation + multi-moves for bananas/bombs/mushrooms
 
 };

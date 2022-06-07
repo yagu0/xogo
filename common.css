@@ -136,6 +136,12 @@ h4 {
   text-align: center;
 }
 
+@media(max-height: 399px) {
+  #footer {
+    display: none;
+  }
+}
+
 a.left-link {
   margin-right: 25px;
 }
