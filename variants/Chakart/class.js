@@ -144,8 +144,10 @@ export class ChakartRules extends ChessRules {
     this.effect = "";
   }
 
+  // For Toadette bonus
   getDropMovesFrom([c, p]) {
-    if (this.reserve[c][p] == 0) return [];
+    if (this.reserve[c][p] == 0)
+      return [];
     let moves = [];
     const start = (c == 'w' && p == 'p' ? 1 : 0);
     const end = (color == 'b' && p == 'p' ? 7 : 8);
