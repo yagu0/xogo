@@ -141,7 +141,7 @@ export class ChakartRules extends ChessRules {
       b: Array.toObject(pieces, allCapts.slice(6, 12))
     };
     this.reserve = { w: {}, b: {} }; //to be replaced by this.captured
-    this.effect = "";
+    this.moveStack = [];
   }
 
   // For Toadette bonus
@@ -186,10 +186,57 @@ export class ChakartRules extends ChessRules {
 
 // TODO: rethink from here:
 
+
+// allow pawns 
+  // queen invisible move, king shell: special functions
+
+// prevent pawns from capturing invisible queen (post)
+// post-process: 
+
+//events : playPlusVisual after mouse up, playReceived (include animation) on opp move
+// ==> if move.cont (banana...) self re-call playPlusVisual (rec ?)
+
+  // Initial call: effects resolved after playing
   getPotentialMovesFrom([x, y]) {
     let moves = [];
-    if (this.subTurn == 1) {
-      moves = super.getPotentialMovesFrom([x, y]);
+    switch (this.getPiece(x, y)) {
+      case 'p':
+        moves = this.getPawnMovesFrom([x, y]); //apply promotions
+        break;
+      case 'q':
+        moves = this.getQueenMovesFrom([x, y]);
+        break;
+      case 'k',
+          moves = this.getKingMoves([x, y]);
+          break;
+      default:
+        moves = super.getPotentialMovesFrom([x, y]);
+    }
+    return moves;
+  }
+
+
+
+  tryMoveFollowup(move) {
+    if (this.getColor(move.end.x, move.end.y) == 'a') {
+      // effect, or bonus/malus
+      const endType = this.getPiece(m.end.x, m.end.y);
+      if (endType == V.EGG)
+        this.applyRandomBonus(m);
+      else {
+        this.moveStack.push(m);
+        switch (endType) {
+          case V.BANANA:
+            this.randomRedirect(
+        case V.BOMB:
+        case V.MUSHROOM:
+          // aller dans direction, saut par dessus pièce adverse
+              // ou amie (tjours), new step si roi caval pion
+      }
+    }
+  }
+
+
       const finalPieces = V.PawnSpecs.promotions;
       const color = this.turn;
       const lastRank = (color == "w" ? 0 : 7);
@@ -271,8 +318,8 @@ export class ChakartRules extends ChessRules {
 
   // Helper for getBasicMove(): banana/bomb effect
   getRandomSquare([x, y], steps) {
-    const validSteps = steps.filter(s => V.OnBoard(x + s[0], y + s[1]));
-    const step = validSteps[randInt(validSteps.length)];
+    const validSteps = steps.filter(s => this.onBoard(x + s[0], y + s[1]));
+    const step = validSteps[Random.randInt(validSteps.length)];
     return [x + step[0], y + step[1]];
   }
 
@@ -923,7 +970,8 @@ export class ChakartRules extends ChessRules {
 
 
 
-
+/// if any of my pieces was immobilized, it's not anymore.
+  //if play set a piece immobilized, then mark it
   prePlay(move) {
     if (move.effect == "toadette")
       this.reserve = this.captured;
