@@ -146,7 +146,7 @@ export class ChakartRules extends ChessRules {
 
   // For Toadette bonus
   getDropMovesFrom([c, p]) {
-    if (this.reserve[c][p] == 0)
+    if (typeof c != "string" || this.reserve[c][p] == 0)
       return [];
     let moves = [];
     const start = (c == 'w' && p == 'p' ? 1 : 0);
@@ -175,17 +175,7 @@ export class ChakartRules extends ChessRules {
     return moves;
   }
 
-
-
-
-
-
-
-
-
-
 // TODO: rethink from here:
-
 
 // allow pawns 
   // queen invisible move, king shell: special functions
@@ -196,9 +186,17 @@ export class ChakartRules extends ChessRules {
 //events : playPlusVisual after mouse up, playReceived (include animation) on opp move
 // ==> if move.cont (banana...) self re-call playPlusVisual (rec ?)
 
-  // Initial call: effects resolved after playing
-  getPotentialMovesFrom([x, y]) {
+  // Moving something. Potential effects resolved after playing
+  getPotentialMovesFrom([x, y], bonus) {
     let moves = [];
+    if (bonus == "toadette")
+      return this.getDropMovesFrom([x, y]);
+    else if (bonus == "kingboo") {
+      // Only allow to swap pieces
+      // TODO (end of move, as for toadette)
+      return moves;
+    }
+    // Normal case (including bonus daisy)
     switch (this.getPiece(x, y)) {
       case 'p':
         moves = this.getPawnMovesFrom([x, y]); //apply promotions
@@ -215,7 +213,8 @@ export class ChakartRules extends ChessRules {
     return moves;
   }
 
-
+  // idée : on joue le coup, puis son effet est déterminé, puis la suite (si suite)
+  // est jouée automatiquement ou demande action utilisateur, etc jusqu'à coup terminal.
 
   tryMoveFollowup(move) {
     if (this.getColor(move.end.x, move.end.y) == 'a') {
@@ -772,18 +771,23 @@ export class ChakartRules extends ChessRules {
     return move;
   }
 
+
+
+
+
   getPotentialPawnMoves([x, y]) {
     const color = this.turn;
-    const oppCol = V.GetOppCol(color);
-    const [sizeX, sizeY] = [V.size.x, V.size.y];
-    const shiftX = V.PawnSpecs.directions[color];
-    const firstRank = (color == "w" ? sizeX - 1 : 0);
+    const oppCol = C.GetOppCol(color);
+    const shiftX = (color == 'w' ? -1 : 1);
+    const firstRank = (color == "w" ? this.size.x - 1 : 0);
     let moves = [];
     if (
-      this.board[x + shiftX][y] == V.EMPTY ||
+      this.board[x + shiftX][y] == "" ||
       this.getColor(x + shiftX, y) == 'a' ||
       this.getPiece(x + shiftX, y) == V.INVISIBLE_QUEEN
     ) {
+
+      // TODO:
       this.addPawnMoves([x, y], [x + shiftX, y], moves);
       if (
         [firstRank, firstRank + shiftX].includes(x) &&
@@ -1062,7 +1066,14 @@ export class ChakartRules extends ChessRules {
     return moves;
   }
 
-  // TODO + display bonus messages
-  // + animation + multi-moves for bananas/bombs/mushrooms
+  playPlusVisual(move, r) {
+    this.play(move);
+    this.playVisual(move, r);
+    
+
+  // TODO: display bonus messages
+// TODO: si continuation, continuer, et sinon :
+    this.afterPlay(this.moveStack); //user method
+  }
 
 };
