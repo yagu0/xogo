@@ -80,7 +80,7 @@ export class ChakartRules extends ChessRules {
     return (
       gr.genRandInitFen(seed).slice(0, -1) +
       // Add Peach + Mario flags + capture counts
-      '{"flags":"1111", "ccount":"000000000000"}'
+      '{"flags":"1111","ccount":"000000000000"}'
     );
   }
 
@@ -175,23 +175,12 @@ export class ChakartRules extends ChessRules {
     return moves;
   }
 
-// TODO: rethink from here:
-
-// allow pawns 
-  // queen invisible move, king shell: special functions
-
-// prevent pawns from capturing invisible queen (post)
-// post-process: 
-
-//events : playPlusVisual after mouse up, playReceived (include animation) on opp move
-// ==> if move.cont (banana...) self re-call playPlusVisual (rec ?)
-
   // Moving something. Potential effects resolved after playing
   getPotentialMovesFrom([x, y], bonus) {
     let moves = [];
     if (bonus == "toadette")
       return this.getDropMovesFrom([x, y]);
-    else if (bonus == "kingboo") {
+    if (bonus == "kingboo") {
       const initPiece = this.getPiece(x, y);
       const color = this.getColor(x, y);
       const oppCol = C.GetOppCol(color);
@@ -199,8 +188,6 @@ export class ChakartRules extends ChessRules {
       for (let i=0; i<this.size.x; i++) {
         for (let j=0; j<this.size.y; j++) {
           if ((i != x || j != y) && this.board[i][j] != "") {
-            const pstart = new PiPo({x: x, y: y, p: initPiece, c: color});
-            const pend =
             let m = this.getBasicMove([x, y], [i, j]);
             m.appear.push(
               new PiPo({x: x, y: y, p: this.getPiece(i, j), c: oppCol}));
@@ -214,7 +201,6 @@ export class ChakartRules extends ChessRules {
     switch (this.getPiece(x, y)) {
       case 'p':
         moves = this.getPawnMovesFrom([x, y]); //apply promotions
-        // TODO: add mushroom on init square
         break;
       case 'q':
         moves = this.getQueenMovesFrom([x, y]);
@@ -223,10 +209,11 @@ export class ChakartRules extends ChessRules {
         moves = this.getKingMovesFrom([x, y]);
         break;
       case 'n':
-        moves = super.getPotentialMovesFrom([x, y]);
-        // TODO: add egg on init square
+        moves = this.getKnightMovesFrom([x, y]);
         break;
-      default:
+      case 'b':
+      case 'r':
+        // explicitely listing types to avoid moving immobilized piece
         moves = super.getPotentialMovesFrom([x, y]);
     }
     return moves;
@@ -243,40 +230,39 @@ export class ChakartRules extends ChessRules {
       this.getColor(x + shiftX, y) == 'a' ||
       this.getPiece(x + shiftX, y) == V.INVISIBLE_QUEEN
     ) {
-
-      // TODO:
-      this.addPawnMoves([x, y], [x + shiftX, y], moves);
+      moves.push(this.getBasicMove([x, y], [x + shiftX, y]));
       if (
         [firstRank, firstRank + shiftX].includes(x) &&
         (
-          this.board[x + 2 * shiftX][y] == V.EMPTY ||
+          this.board[x + 2 * shiftX][y] == "" ||
           this.getColor(x + 2 * shiftX, y) == 'a' ||
           this.getPiece(x + 2 * shiftX, y) == V.INVISIBLE_QUEEN
         )
       ) {
-        moves.push(this.getBasicMove({ x: x, y: y }, [x + 2 * shiftX, y]));
+        moves.push(this.getBasicMove([x, y], [x + 2 * shiftX, y]));
       }
     }
     for (let shiftY of [-1, 1]) {
       if (
         y + shiftY >= 0 &&
         y + shiftY < sizeY &&
-        this.board[x + shiftX][y + shiftY] != V.EMPTY &&
+        this.board[x + shiftX][y + shiftY] != "" &&
         // Pawns cannot capture invisible queen this way!
         this.getPiece(x + shiftX, y + shiftY) != V.INVISIBLE_QUEEN &&
         ['a', oppCol].includes(this.getColor(x + shiftX, y + shiftY))
       ) {
-        this.addPawnMoves([x, y], [x + shiftX, y + shiftY], moves);
+        moves.push(this.getBasicMove([x, y], [x + shiftX, y + shiftY]));
       }
     }
+    super.pawnPostProcess(moves, color, oppCol);
     return moves;
   }
 
   getQueenMovesFrom(sq) {
-    const normalMoves = super.getPotentialQueenMoves(sq);
+    const normalMoves = super.getPotentialMovesOf('q', sq);
     // If flag allows it, add 'invisible movements'
     let invisibleMoves = [];
-    if (this.powerFlags[this.turn][V.QUEEN]) {
+    if (this.powerFlags[this.turn]['q']) {
       normalMoves.forEach(m => {
         if (
           m.appear.length == 1 &&
@@ -295,16 +281,15 @@ export class ChakartRules extends ChessRules {
   }
 
   getKingMovesFrom([x, y]) {
-    let moves = super.getPotentialKingMoves([x, y]);
-    const color = this.turn;
+    let moves = super.getPotentialMovesOf('k', [x, y]);
     // If flag allows it, add 'remote shell captures'
-    if (this.powerFlags[this.turn][V.KING]) {
-      V.steps[V.ROOK].concat(V.steps[V.BISHOP]).forEach(step => {
+    if (this.powerFlags[this.turn]['k']) {
+      super.pieces()['k'].moves[0].steps.forEach(step => {
         let [i, j] = [x + step[0], y + step[1]];
         while (
-          V.OnBoard(i, j) &&
+          this.onBoard(i, j) &&
           (
-            this.board[i][j] == V.EMPTY ||
+            this.board[i][j] == "" ||
             this.getPiece(i, j) == V.INVISIBLE_QUEEN ||
             (
               this.getColor(i, j) == 'a' &&
@@ -315,19 +300,17 @@ export class ChakartRules extends ChessRules {
           i += step[0];
           j += step[1];
         }
-        if (V.OnBoard(i, j)) {
+        if (this.onBoard(i, j)) {
           const colIJ = this.getColor(i, j);
-          if (colIJ != color) {
+          if (colIJ != this.turn) {
             // May just destroy a bomb or banana:
             moves.push(
               new Move({
-                start: { x: x, y: y},
-                end: { x: i, y: j },
+                start: {x: x, y: y},
+                end: {x: i, y: j},
                 appear: [],
                 vanish: [
-                  new PiPo({
-                    x: i, y: j, c: colIJ, p: this.getPiece(i, j)
-                  })
+                  new PiPo({x: i, y: j, c: colIJ, p: this.getPiece(i, j)})
                 ]
               })
             );
@@ -338,14 +321,25 @@ export class ChakartRules extends ChessRules {
     return moves;
   }
 
-  // TODO: can merge prePlay into play() ==> no need to distinguish
+  getKnightMovesFrom([x, y]) {
+    // Add egg on initial square:
+    return super.getPotentialMovesOf('n', [x, y]).map(m => {
+      m.appear.push(new PiPo({p: "e", c: "a", x: x, y: y}));
+      return m;
+    });
+  }
+
 /// if any of my pieces was immobilized, it's not anymore.
   //if play set a piece immobilized, then mark it
-  prePlay(move) {
-    if (move.effect == "toadette")
+  play(move) {
+    if (move.effect == "toadette") {
       this.reserve = this.captured;
-    else
-      this.reserve = { w: {}, b: {} };;
+      this.re_drawReserve([this.turn]);
+    }
+    else if (this.reserve) {
+      this.reserve = { w: {}, b: {} };
+      this.re_drawReserve([this.turn]);
+    }
     const color = this.turn;
     if (
       move.vanish.length == 2 &&
@@ -361,7 +355,8 @@ export class ChakartRules extends ChessRules {
       this.captured[move.vanish[1].c][capturedPiece]++;
     }
     else if (move.vanish.length == 0) {
-      if (move.appear.length == 0 || move.appear[0].c == 'a') return;
+      if (move.appear.length == 0 || move.appear[0].c == 'a')
+        return;
       // A piece is back on board
       this.captured[move.appear[0].c][move.appear[0].p]--;
     }
@@ -411,10 +406,6 @@ export class ChakartRules extends ChessRules {
         }
       }
     }
-  }
-
-  play(move) {
-    this.prePlay(move);
     this.playOnBoard(move);
     if (["kingboo", "toadette", "daisy"].includes(move.effect)) {
       this.effect = move.effect;
@@ -460,7 +451,13 @@ export class ChakartRules extends ChessRules {
     }
   }
 
-  applyRandomBonnus(move, cb) {
+  playVisual(move, r) {
+    super.playVisual(move, r);
+    if (move.bonus)
+      alert(move.bonus); //TODO: nicer display
+  }
+
+  applyRandomBonus(move, cb) {
     // TODO: determine bonus/malus, and then 
   }
 
@@ -470,13 +467,12 @@ export class ChakartRules extends ChessRules {
     const step = validSteps[Random.randInt(validSteps.length)];
     return [x + step[0], y + step[1]];
   }
-// TODO: turn change indicator ?!
+
+  // Warning: if play() is called, then move.end changed.
   playPlusVisual(move, r) {
     this.moveStack.push(move);
     this.play(move);
     this.playVisual(move, r);
-    if (move.bonus)
-      alert(move.bonus); //TODO: nicer display
     this.tryMoveFollowup(move, (nextMove) => {
       if (nextMove)
         this.playPlusVisual(nextMove, r);
