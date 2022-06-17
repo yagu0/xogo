@@ -1,11 +1,11 @@
-import ChessRules from "/base_rules";
-import GiveawayRules from "/variants/Giveaway";
+import ChessRules from "/base_rules.js";
+import GiveawayRules from "/variants/Giveaway/class.js";
 import { ArrayFun } from "/utils/array.js";
 import { Random } from "/utils/alea.js";
 import PiPo from "/utils/PiPo.js";
 import Move from "/utils/Move.js";
 
-export class ChakartRules extends ChessRules {
+export default class ChakartRules extends ChessRules {
 
   static get Options() {
     return {
@@ -76,9 +76,10 @@ export class ChakartRules extends ChessRules {
   }
 
   genRandInitFen(seed) {
-    const gr = new GiveawayRules({mode: "suicide"}, true);
+    const gr = new GiveawayRules(
+      {mode: "suicide", options: {}, genFenOnly: true});
     return (
-      gr.genRandInitFen(seed).slice(0, -1) +
+      gr.genRandInitFen(seed).slice(0, -17) +
       // Add Peach + Mario flags + capture counts
       '{"flags":"1111","ccount":"000000000000"}'
     );
@@ -125,23 +126,22 @@ export class ChakartRules extends ChessRules {
   }
 
   getCapturedFen() {
-    const res = ['w', 'b'].map(c => {
-      Object.values(this.captured[c])
-    });
+    const res = ['w', 'b'].map(c => Object.values(this.captured[c]));
     return res[0].concat(res[1]).join("");
   }
 
   setOtherVariables(fenParsed) {
     super.setOtherVariables(fenParsed);
     // Initialize captured pieces' counts from FEN
-    const allCapts = fenParsed.captured.split("").map(x => parseInt(x, 10));
+    const allCapts = fenParsed.ccount.split("").map(x => parseInt(x, 10));
     const pieces = ['p', 'r', 'n', 'b', 'q', 'k'];
     this.captured = {
-      w: Array.toObject(pieces, allCapts.slice(0, 6)),
-      b: Array.toObject(pieces, allCapts.slice(6, 12))
+      w: ArrayFun.toObject(pieces, allCapts.slice(0, 6)),
+      b: ArrayFun.toObject(pieces, allCapts.slice(6, 12))
     };
     this.reserve = { w: {}, b: {} }; //to be replaced by this.captured
     this.moveStack = [];
+    this.egg = null;
   }
 
   // For Toadette bonus
@@ -176,18 +176,39 @@ export class ChakartRules extends ChessRules {
   }
 
   // Moving something. Potential effects resolved after playing
-  getPotentialMovesFrom([x, y], bonus) {
+  getPotentialMovesFrom([x, y]) {
     let moves = [];
-    if (bonus == "toadette")
+    if (this.egg == "toadette")
       return this.getDropMovesFrom([x, y]);
-    if (bonus == "kingboo") {
+    if (this.egg == "kingboo") {
       const initPiece = this.getPiece(x, y);
       const color = this.getColor(x, y);
       const oppCol = C.GetOppCol(color);
-      // Only allow to swap pieces (TODO: restrict for pawns)
+      // Only allow to swap pieces
       for (let i=0; i<this.size.x; i++) {
         for (let j=0; j<this.size.y; j++) {
-          if ((i != x || j != y) && this.board[i][j] != "") {
+          const colIJ = this.getColor(i, j);
+          const pieceIJ = this.getPiece(i, j);
+          if (
+            (i != x || j != y) &&
+            ['w', 'b'].includes(colIJ) &&
+            // Next conditions = no pawn on last rank
+            (
+              initPiece != 'p' ||
+              (
+                (color != 'w' || i != 0) &&
+                (color != 'b' || i != this.size.x - 1)
+              )
+            )
+            &&
+            (
+              pieceIJ != 'p' ||
+              (
+                (colIJ != 'w' || x != 0) &&
+                (colIJ != 'b' || x != this.size.x - 1)
+              )
+            )
+          ) {
             let m = this.getBasicMove([x, y], [i, j]);
             m.appear.push(
               new PiPo({x: x, y: y, p: this.getPiece(i, j), c: oppCol}));
@@ -205,7 +226,7 @@ export class ChakartRules extends ChessRules {
       case 'q':
         moves = this.getQueenMovesFrom([x, y]);
         break;
-      case 'k',
+      case 'k':
         moves = this.getKingMovesFrom([x, y]);
         break;
       case 'n':
@@ -245,7 +266,7 @@ export class ChakartRules extends ChessRules {
     for (let shiftY of [-1, 1]) {
       if (
         y + shiftY >= 0 &&
-        y + shiftY < sizeY &&
+        y + shiftY < this.size.y &&
         this.board[x + shiftX][y + shiftY] != "" &&
         // Pawns cannot capture invisible queen this way!
         this.getPiece(x + shiftX, y + shiftY) != V.INVISIBLE_QUEEN &&
@@ -416,18 +437,27 @@ export class ChakartRules extends ChessRules {
       this.movesCount++;
       this.subTurn = 1;
     }
+
+
+    if (move.egg)
+      this.displayBonus(move.egg);
+    else if (this.egg)
+      this.egg = null; //the egg is consumed
+  }
+
+  displayBonus(egg) {
+    alert(egg); //TODO: nicer display
   }
 
   filterValid(moves) {
     return moves;
   }
 
-  // idée : on joue le coup, puis son effet est déterminé, puis la suite (si suite)
-  // est jouée automatiquement ou demande action utilisateur, etc jusqu'à coup terminal.
   tryMoveFollowup(move, cb) {
-    if (this.getColor(move.end.x, move.end.y) == 'a') {
+    // Warning: at this stage, the move is played
+    if (move.vanish.length == 2 && move.vanish[1].c == 'a') {
       // effect, or bonus/malus
-      const endType = this.getPiece(m.end.x, m.end.y);
+      const endType = move.vanish[1].p;
       switch (endType) {
         case V.EGG:
           this.applyRandomBonus(move, cb);
@@ -439,26 +469,48 @@ export class ChakartRules extends ChessRules {
               endType == V.BANANA
                 ? [[1, 1], [1, -1], [-1, 1], [-1, -1]]
                 : [[1, 0], [-1, 0], [0, 1], [0, -1]]);
-          const nextMove = this.getBasicMove([move.end.x, move.end.y], dest);
-          cb(nextMove);
+          cb(this.getBasicMove([move.end.x, move.end.y], dest));
           break;
         }
-        case V.MUSHROOM:
-          // aller dans direction, saut par dessus pièce adverse
-          // ou amie (tjours), new step si roi caval pion
+        case V.MUSHROOM: {
+          let step = [move.end.x - move.start.x, move.end.y - move.start.y];
+          if ([0, 1].some(i => step[i] >= 2 && step[1-i] != 1)) {
+            // Slider, multi-squares: normalize step
+            for (let j of [0, 1])
+              step[j] = step[j] / Math.abs(step[j]) || 0;
+          }
+          const nextSquare = [move.end.x + step[0], move.end.y + step[1]];
+          if (this.onBoard(nextSquare[0], nextSquare[1])) {
+            if (
+              this.board[nextSquare[0]][nextSquare[1]] != "" &&
+              this.getColor(nextSquare[0], nextSquare[1]) != 'a'
+            ) {
+              // (try to) jump
+              const afterSquare =
+                [nextSquare[0] + step[0], nextSquare[1] + step[1]];
+              if (
+                this.onBoard(afterSquare[0], afterSquare[1]) &&
+                this.getColor(afterSquare[0], afterSquare[1]) != this.turn
+              ) {
+                cb(this.getBasicMove([move.end.x, move.end.y], afterSquare));
+              }
+            }
+            else if (!['b', 'r', 'q'].includes(move.vanish[0].p))
+              // Take another step forward if not slider move
+              cb(this.getBasicMove([move.end.x, move.end.y], nextSquare));
+          }
           break;
+        }
       }
     }
   }
 
-  playVisual(move, r) {
-    super.playVisual(move, r);
-    if (move.bonus)
-      alert(move.bonus); //TODO: nicer display
-  }
-
   applyRandomBonus(move, cb) {
-    // TODO: determine bonus/malus, and then 
+    // TODO: determine bonus/malus, and then ...
+    // if toadette, daisy or kingboo : do not call cb
+    this.egg = "daisy"; //not calling cb in this case
+    this.displayBonus(this.egg);
+    move.egg = this.egg; //for play() by opponent
   }
 
   // Helper to apply banana/bomb effect

@@ -37,6 +37,9 @@ export default class GiveawayRules extends ChessRules {
   }
 
   genRandInitFen(seed) {
+    if (this.options["mode"] == "losers")
+      return super.genRandInitFen(seed);
+
     if (this.options["randomness"] == 0) {
       return (
         'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 {"enpassant":"-"}'

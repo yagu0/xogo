@@ -371,14 +371,14 @@ export default class ChessRules {
   //////////////////
   // INITIALIZATION
 
-  constructor(o, genFenOnly) {
+  constructor(o) {
     this.options = o.options;
     // Fill missing options (always the case if random challenge)
     (V.Options.select || []).concat(V.Options.input || []).forEach(opt => {
       if (this.options[opt.variable] === undefined)
         this.options[opt.variable] = opt.defaut;
     });
-    if (genFenOnly)
+    if (o.genFenOnly)
       // This object will be used only for initial FEN generation
       return;
     this.playerColor = o.color;
@@ -1046,7 +1046,11 @@ export default class ChessRules {
   }
 
   static GetColorClass(c) {
-    return (c == 'w' ? "white" : "black");
+    if (c == 'w')
+      return "white";
+    if (c == 'b')
+      return "black";
+    return ""; //unidentified color
   }
 
   // Assume square i,j isn't empty
@@ -2161,7 +2165,7 @@ export default class ChessRules {
     move.appear.forEach(a => {
       this.g_pieces[a.x][a.y] = document.createElement("piece");
       this.g_pieces[a.x][a.y].classList.add(this.pieces()[a.p]["class"]);
-      this.g_pieces[a.x][a.y].classList.add(a.c == "w" ? "white" : "black");
+      this.g_pieces[a.x][a.y].classList.add(C.GetColorClass(a.c));
       this.g_pieces[a.x][a.y].style.width = pieceWidth + "px";
       this.g_pieces[a.x][a.y].style.height = pieceWidth + "px";
       const [ip, jp] = this.getPixelPosition(a.x, a.y, r);

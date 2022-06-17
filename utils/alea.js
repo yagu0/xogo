@@ -31,14 +31,14 @@ export const Random = {
     n = n || 1;
     let cpArr = arr.map(e => e);
     for (let index = 0; index < n; index++) {
-      const rand = randInt(index, arr.length);
+      const rand = Random.randInt(index, arr.length);
       [ cpArr[index], cpArr[rand] ] = [ cpArr[rand], cpArr[index] ];
     }
     return cpArr.slice(0, n);
   },
 
   shuffle: function(arr) {
-    return sample(arr, arr.length);
+    return Random.sample(arr, arr.length);
   }
 
 };

@@ -27,7 +27,7 @@ const variants = [
 //  {name: 'Capablanca', desc: 'Capablanca Chess', disp: 'Capablanca Chess'},
   {name: 'Capture', desc: 'Mandatory captures'},
 //  {name: 'Castle', desc: 'Win by castling long'},
-//  {name: 'Chakart', desc: 'Capture the princess'},
+  {name: 'Chakart', desc: 'Capture the princess'},
 //  {name: 'Checkered', desc: 'Shared pieces'},
 //  {name: 'Checkless', desc: 'No-check mode'},
   {name: 'Chess960', disp: "Chess 960", desc: "Standard rules"},

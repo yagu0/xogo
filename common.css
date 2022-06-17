@@ -117,6 +117,15 @@ h4 {
   margin: 10px 0;
 }
 
+#gameInfos > .rules > ul {
+  list-style-type: square;
+  padding-left: 30px;
+}
+#gameInfos > .rules > ol {
+  list-style-type: numeric;
+  padding-left: 30px;
+}
+
 #gameInfos > .rules > a {
   padding-bottom: 1px;
   border-bottom: 1px dotted black;
