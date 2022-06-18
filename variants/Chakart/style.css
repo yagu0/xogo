@@ -1,4 +1,31 @@
 @import url("/base_pieces.css");
 
-/* TODO: images des bananes/bombes/oeufs/champis + Chomp etc pour animations
- * Toadette/Waluigi/Luigi/King boo/Koopa/Daisy/Bowser avec petit texte */
+piece.egg {
+  background-image: url('/pieces/chakart_egg');
+}
+
+piece.mushroom {
+  background-image: url('/pieces/chakart_mushroom.svg');
+}
+
+piece.banana {
+  background-image: url('/pieces/chakart_banana.svg');
+}
+
+piece.bomb {
+  background-image: url('/pieces/chakart_bomb.svg');
+}
+
+piece.white.invisible {
+  background-image: url('/pieces/empty.svg');
+}
+piece.black.invisible {
+  background-image: url('/pieces/empty.svg');
+}
+
+piece.white.immobilized {
+  background-color: yellow;
+}
+piece.black.immobilized {
+  background-color: red;
+}

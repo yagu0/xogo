@@ -87,6 +87,10 @@ export default class ChessRules {
       (!!this.options["recycle"] && !this.options["teleport"])
     );
   }
+  // Some variants do not store reserve state (Align4, Chakart...)
+  get hasReserveFen() {
+    return this.hasReserve;
+  }
 
   get noAnimate() {
     return !!this.options["dark"];
@@ -282,7 +286,7 @@ export default class ChessRules {
       parts.push(`"flags":"${this.getFlagsFen()}"`);
     if (this.hasEnpassant)
       parts.push(`"enpassant":"${this.getEnpassantFen()}"`);
-    if (this.hasReserve)
+    if (this.hasReserveFen)
       parts.push(`"reserve":"${this.getReserveFen()}"`);
     if (this.options["crazyhouse"])
       parts.push(`"ispawn":"${this.getIspawnFen()}"`);
@@ -663,24 +667,17 @@ export default class ChessRules {
       this.re_drawReserve(['w', 'b'], r);
   }
 
-  // NOTE: assume !!this.reserve
+  // NOTE: assume this.reserve != null
   re_drawReserve(colors, r) {
     if (this.r_pieces) {
       // Remove (old) reserve pieces
       for (let c of colors) {
-        if (!this.reserve[c])
-          continue;
-        Object.keys(this.reserve[c]).forEach(p => {
-          if (this.r_pieces[c][p]) {
-            this.r_pieces[c][p].remove();
-            delete this.r_pieces[c][p];
-            const numId = this.getReserveNumId(c, p);
-            document.getElementById(numId).remove();
-          }
+        Object.keys(this.r_pieces[c]).forEach(p => {
+          this.r_pieces[c][p].remove();
+          delete this.r_pieces[c][p];
+          const numId = this.getReserveNumId(c, p);
+          document.getElementById(numId).remove();
         });
-        let reservesDiv = document.getElementById("reserves_" + c);
-        if (reservesDiv)
-          reservesDiv.remove();
       }
     }
     else
@@ -689,6 +686,9 @@ export default class ChessRules {
     if (!r)
       r = container.querySelector(".chessboard").getBoundingClientRect();
     for (let c of colors) {
+      let reservesDiv = document.getElementById("reserves_" + c);
+      if (reservesDiv)
+        reservesDiv.remove();
       if (!this.reserve[c])
         continue;
       const nbR = this.getNbReservePieces(c);
@@ -1050,7 +1050,7 @@ export default class ChessRules {
       return "white";
     if (c == 'b')
       return "black";
-    return ""; //unidentified color
+    return "other-color"; //unidentified color
   }
 
   // Assume square i,j isn't empty
