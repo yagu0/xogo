@@ -534,6 +534,22 @@ export default class ChessRules {
     return `${this.containerId}|rnum-${color}${piece}`;
   }
 
+  static AddClass_es(piece, class_es) {
+    if (!Array.isArray(class_es))
+      class_es = [class_es];
+    class_es.forEach(cl => {
+      piece.classList.add(cl);
+    });
+  }
+
+  static RemoveClass_es(piece, class_es) {
+    if (!Array.isArray(class_es))
+      class_es = [class_es];
+    class_es.forEach(cl => {
+      piece.classList.remove(cl);
+    });
+  }
+
   graphicalInit() {
     // NOTE: not window.onresize = this.re_drawBoardElts because scope (this)
     window.onresize = () => this.re_drawBoardElements();
@@ -649,7 +665,7 @@ export default class ChessRules {
           const color = this.getColor(i, j);
           const piece = this.getPiece(i, j);
           this.g_pieces[i][j] = document.createElement("piece");
-          this.g_pieces[i][j].classList.add(this.pieces()[piece]["class"]);
+          C.AddClass_es(this.g_pieces[i][j], this.pieces()[piece]["class"]);
           this.g_pieces[i][j].classList.add(C.GetColorClass(color));
           this.g_pieces[i][j].style.width = pieceWidth + "px";
           this.g_pieces[i][j].style.height = pieceWidth + "px";
@@ -717,8 +733,7 @@ export default class ChessRules {
         r_cell.style.height = sqResSize + "px";
         rcontainer.appendChild(r_cell);
         let piece = document.createElement("piece");
-        const pieceSpec = this.pieces()[p];
-        piece.classList.add(pieceSpec["class"]);
+        C.AddClass_es(piece, this.pieces()[p]["class"]);
         piece.classList.add(C.GetColorClass(c));
         piece.style.width = "100%";
         piece.style.height = "100%";
@@ -1017,8 +1032,8 @@ export default class ChessRules {
       choice.style.backgroundColor = "lightyellow";
       choice.onclick = () => callback(moves[i]);
       const piece = document.createElement("piece");
-      const pieceSpec = this.pieces()[moves[i].appear[0].p];
-      piece.classList.add(pieceSpec["class"]);
+      const cdisp = moves[i].choice || moves[i].appear[0].p;
+      C.AddClass_es(piece, this.pieces()[cdisp]["class"]);
       piece.classList.add(C.GetColorClass(color));
       piece.style.width = "100%";
       piece.style.height = "100%";
@@ -1485,6 +1500,11 @@ export default class ChessRules {
     return false;
   }
 
+  canStepOver(i, j) {
+    // In some variants, objects on boards don't stop movement (Chakart)
+    return this.board[i][j] == "";
+  }
+
   // Generic method to find possible moves of "sliding or jumping" pieces
   getPotentialMovesOf(piece, [x, y]) {
     const color = this.getColor(x, y);
@@ -1513,7 +1533,7 @@ export default class ChessRules {
           let stepCounter = 0;
           while (
             this.onBoard(i, j) &&
-            (this.board[i][j] == "" || (i == x && j == y))
+            (this.canStepOver(i, j) || (i == x && j == y))
           ) {
             if (
               type != "attack" &&
@@ -2164,7 +2184,7 @@ export default class ChessRules {
     const pieceWidth = this.getPieceWidth(r.width);
     move.appear.forEach(a => {
       this.g_pieces[a.x][a.y] = document.createElement("piece");
-      this.g_pieces[a.x][a.y].classList.add(this.pieces()[a.p]["class"]);
+      C.AddClass_es(this.g_pieces[a.x][a.y], this.pieces()[a.p]["class"]);
       this.g_pieces[a.x][a.y].classList.add(C.GetColorClass(a.c));
       this.g_pieces[a.x][a.y].style.width = pieceWidth + "px";
       this.g_pieces[a.x][a.y].style.height = pieceWidth + "px";
@@ -2217,8 +2237,8 @@ export default class ChessRules {
     const pieces = this.pieces();
     if (move.drag) {
       const startCode = this.getPiece(move.start.x, move.start.y);
-      movingPiece.classList.remove(pieces[startCode]["class"]);
-      movingPiece.classList.add(pieces[move.drag.p]["class"]);
+      C.RemoveClass_es(movingPiece, pieces[startCode]["class"]);
+      C.AddClass_es(movingPiece, pieces[move.drag.p]["class"]);
       const apparentColor = this.getColor(move.start.x, move.start.y);
       if (apparentColor != move.drag.c) {
         movingPiece.classList.remove(C.GetColorClass(apparentColor));

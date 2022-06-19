@@ -1,7 +1,7 @@
 @import url("/base_pieces.css");
 
 piece.egg {
-  background-image: url('/pieces/chakart_egg');
+  background-image: url('/pieces/chakart_egg.svg');
 }
 
 piece.mushroom {
@@ -23,9 +23,11 @@ piece.black.invisible {
   background-image: url('/pieces/empty.svg');
 }
 
-piece.white.immobilized {
-  background-color: yellow;
+piece.immobilized {
+  background-color: lightgreen;
+  opacity: 0.6;
 }
-piece.black.immobilized {
-  background-color: red;
+
+piece.remote-capture {
+  background-image: url('/pieces/chakart_shell.svg');
 }

@@ -34,7 +34,8 @@ export const Random = {
       const rand = Random.randInt(index, arr.length);
       [ cpArr[index], cpArr[rand] ] = [ cpArr[rand], cpArr[index] ];
     }
-    return cpArr.slice(0, n);
+    const res = cpArr.slice(0, n);
+    return (n >= 2 ? res : res[0]);
   },
 
   shuffle: function(arr) {
