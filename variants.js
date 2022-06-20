@@ -137,7 +137,7 @@ const variants = [
 //  {name: 'Spartan', desc: 'Spartan versus Persians'},
 //  {name: 'Squatter', desc: 'Squat last rank'},
 //  {name: 'Stealthbomb', desc: 'Beware the bomb'},
-//  {name: 'Suction', desc: 'Attract opposite king'},
+  {name: 'Suction', desc: 'Attract opposite king'},
 //  {name: 'Swap', desc: 'Dangerous captures'},
 //  {name: 'Switching', desc: "Exchange pieces' positions"},
 //  {name: 'Synchrone', desc: 'Play at the same time'},

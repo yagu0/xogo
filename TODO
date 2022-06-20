@@ -1,5 +1,7 @@
-add variants : Dark Racing Kings ?
-Checkered-Teleport ?
+add variants :
+Ambiguous
+Refusal
+Dark Racing Kings ? Checkered-Teleport ?
 
 Otage, Emergo, Pacosako : fonction "buildPiece(arg1, arg2)" returns HTML element with 2 SVG or SVG + number
 réfléchir aux animations par variante (reversi, Chakart, Atomic, ...)

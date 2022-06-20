@@ -117,7 +117,7 @@ export default class ChakartRules extends ChessRules {
 
   genRandInitFen(seed) {
     const gr = new GiveawayRules(
-      {mode: "suicide", options: {}, genFenOnly: true});
+      {mode: "suicide", options: this.options, genFenOnly: true});
     // Add Peach + mario flags
     return gr.genRandInitFen(seed).slice(0, -17) + '{"flags":"1111"}';
   }
