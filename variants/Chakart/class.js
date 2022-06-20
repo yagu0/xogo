@@ -640,7 +640,7 @@ export default class ChakartRules extends ChessRules {
   }
 
   getMushroomEffect(move) {
-    if (move.koopa)
+    if (move.koopa || typeof move.start.x == "string")
       return null;
     let step = [move.end.x - move.start.x, move.end.y - move.start.y];
     if ([0, 1].some(i => Math.abs(step[i]) >= 2 && Math.abs(step[1-i]) != 1)) {
@@ -652,24 +652,11 @@ export default class ChakartRules extends ChessRules {
     const afterSquare =
       [nextSquare[0] + step[0], nextSquare[1] + step[1]];
     let nextMove = null;
-    this.playOnBoard(move); //HACK for getBasicMove() below
-    if (
-      this.onBoard(nextSquare[0], nextSquare[1]) &&
-      ['k', 'p', 'n'].includes(move.vanish[0].p) &&
-      !['w', 'b'].includes(this.getColor(nextSquare[0], nextSquare[1]))
-    ) {
-      // Speed up non-sliders
+    if (this.onBoard(nextSquare[0], nextSquare[1])) {
+      this.playOnBoard(move); //HACK for getBasicMove()
       nextMove = this.getBasicMove([move.end.x, move.end.y], nextSquare);
+      this.undoOnBoard(move);
     }
-    else if (
-      this.onBoard(afterSquare[0], afterSquare[1]) &&
-      this.board[nextSquare[0]][nextSquare[1]] != "" &&
-      this.getColor(nextSquare[0], nextSquare[1]) != 'a' &&
-      this.getColor(afterSquare[0], afterSquare[1]) != this.turn
-    ) {
-      nextMove = this.getBasicMove([move.end.x, move.end.y], afterSquare);
-    }
-    this.undoOnBoard(move);
     return nextMove;
   }
 
