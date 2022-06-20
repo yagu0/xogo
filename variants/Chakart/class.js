@@ -64,10 +64,6 @@ export default class ChakartRules extends ChessRules {
     };
   }
 
-  static get INVISIBLE_QUEEN() {
-    return 'i';
-  }
-
   // Fictive color 'a', bomb banana mushroom egg
   static get BOMB() {
     return 'w'; //"Wario"
@@ -101,6 +97,7 @@ export default class ChakartRules extends ChessRules {
   pieces(color, x, y) {
     const specials = {
       'i': {"class": "invisible"}, //queen
+      '?': {"class": "mystery"}, //...initial square
       'e': {"class": "egg"},
       'm': {"class": "mushroom"},
       'd': {"class": "banana"},
@@ -182,11 +179,7 @@ export default class ChakartRules extends ChessRules {
       for (let j = 0; j < this.size.y; j++) {
         const pieceIJ = this.getPiece(i, j);
         const colIJ = this.getColor(i, j);
-        if (
-          this.board[i][j] == "" ||
-          colIJ == 'a' ||
-          pieceIJ == V.INVISIBLE_QUEEN
-        ) {
+        if (this.board[i][j] == "" || colIJ == 'a' || pieceIJ == 'i') {
           let m = new Move({
             start: {x: c, y: p},
             appear: [new PiPo({x: i, y: j, c: c, p: p})],
@@ -272,7 +265,8 @@ export default class ChakartRules extends ChessRules {
   canStepOver(i, j) {
     return (
       this.board[i][j] == "" ||
-      [V.MUSHROOM, V.EGG].includes(this.getPiece(i, j)));
+      ['i', V.EGG, V.MUSHROOM].includes(this.getPiece(i, j))
+    );
   }
 
   getPawnMovesFrom([x, y]) {
@@ -281,18 +275,20 @@ export default class ChakartRules extends ChessRules {
     const shiftX = (color == 'w' ? -1 : 1);
     const firstRank = (color == "w" ? this.size.x - 1 : 0);
     let moves = [];
+    const frontPiece = this.getPiece(x + shiftX, y);
     if (
       this.board[x + shiftX][y] == "" ||
       this.getColor(x + shiftX, y) == 'a' ||
-      this.getPiece(x + shiftX, y) == V.INVISIBLE_QUEEN
+      frontPiece == 'i'
     ) {
       moves.push(this.getBasicMove([x, y], [x + shiftX, y]));
       if (
         [firstRank, firstRank + shiftX].includes(x) &&
+        ![V.BANANA, V.BOMB].includes(frontPiece) &&
         (
           this.board[x + 2 * shiftX][y] == "" ||
           this.getColor(x + 2 * shiftX, y) == 'a' ||
-          this.getPiece(x + 2 * shiftX, y) == V.INVISIBLE_QUEEN
+          this.getPiece(x + 2 * shiftX, y) == 'i'
         )
       ) {
         moves.push(this.getBasicMove([x, y], [x + 2 * shiftX, y]));
@@ -304,7 +300,7 @@ export default class ChakartRules extends ChessRules {
         y + shiftY < this.size.y &&
         this.board[x + shiftX][y + shiftY] != "" &&
         // Pawns cannot capture invisible queen this way!
-        this.getPiece(x + shiftX, y + shiftY) != V.INVISIBLE_QUEEN &&
+        this.getPiece(x + shiftX, y + shiftY) != 'i' &&
         ['a', oppCol].includes(this.getColor(x + shiftX, y + shiftY))
       ) {
         moves.push(this.getBasicMove([x, y], [x + shiftX, y + shiftY]));
@@ -351,7 +347,7 @@ export default class ChakartRules extends ChessRules {
           m.vanish[0].c != 'a'
         ) {
           let im = JSON.parse(JSON.stringify(m));
-          im.appear[0].p = V.INVISIBLE_QUEEN;
+          im.appear[0].p = 'i';
           im.noAnimate = true;
           invisibleMoves.push(im);
         }
@@ -366,17 +362,7 @@ export default class ChakartRules extends ChessRules {
     if (this.powerFlags[this.turn]['k']) {
       super.pieces()['k'].moves[0].steps.forEach(step => {
         let [i, j] = [x + step[0], y + step[1]];
-        while (
-          this.onBoard(i, j) &&
-          (
-            this.board[i][j] == "" ||
-            this.getPiece(i, j) == V.INVISIBLE_QUEEN ||
-            (
-              this.getColor(i, j) == 'a' &&
-              [V.EGG, V.MUSHROOM].includes(this.getPiece(i, j))
-            )
-          )
-        ) {
+        while (this.onBoard(i, j) && this.canStepOver(i, j)) {
           i += step[0];
           j += step[1];
         }
@@ -471,10 +457,12 @@ export default class ChakartRules extends ChessRules {
     }
     if (move.shell)
       this.powerFlags[color]['k'] = false;
-    else if (move.appear.length > 0 && move.appear[0].p == V.INVISIBLE_QUEEN) {
+    else if (move.appear.length > 0 && move.appear[0].p == 'i') {
       this.powerFlags[move.appear[0].c]['q'] = false;
-      if (color != this.playerColor)
-        alert("Invisible queen!");
+      if (color == this.playerColor) {
+        move.appear.push(
+          new PiPo({x: move.start.x, y: move.start.y, c: color, p: '?'}));
+      }
     }
     if (color == this.playerColor) {
       // Look for an immobilized piece of my color: it can now move
@@ -501,15 +489,15 @@ export default class ChakartRules extends ChessRules {
         for (let j=0; j<8; j++) {
           if (
             this.board[i][j] != "" &&
-            this.getColor(i, j) == oppCol &&
-            this.getPiece(i, j) == V.INVISIBLE_QUEEN
+            this.getColor(i, j) == oppCol
           ) {
-            move.vanish.push(new PiPo({
-              x: i, y: j, c: oppCol, p: V.INVISIBLE_QUEEN
-            }));
-            move.appear.push(new PiPo({
-              x: i, y: j, c: oppCol, p: 'q'
-            }));
+            const pieceIJ = this.getPiece(i, j);
+            if (pieceIJ == 'i') {
+              move.vanish.push(new PiPo({x: i, y: j, c: oppCol, p: 'i'}));
+              move.appear.push(new PiPo({x: i, y: j, c: oppCol, p: 'q'}));
+            }
+            else if (pieceIJ == '?')
+              move.vanish.push(new PiPo({x: i, y: j, c: oppCol, p: '?'}));
           }
         }
       }
@@ -519,7 +507,7 @@ export default class ChakartRules extends ChessRules {
       this.movesCount++;
     }
     if (move.egg)
-      this.displayBonus(move.egg);
+      this.displayBonus(move);
     this.playOnBoard(move);
     this.nextMove = move.next;
   }
@@ -616,6 +604,7 @@ export default class ChakartRules extends ChessRules {
             p: this.getPiece(move.start.x, move.start.y)
           }));
         }
+        em.koopa = true; //to cancel mushroom effect
         break;
       case "chomp":
         // Eat piece
@@ -636,6 +625,8 @@ export default class ChakartRules extends ChessRules {
   }
 
   getMushroomEffect(move) {
+    if (move.koopa)
+      return null;
     let step = [move.end.x - move.start.x, move.end.y - move.start.y];
     if ([0, 1].some(i => Math.abs(step[i]) >= 2 && Math.abs(step[1-i]) != 1)) {
       // Slider, multi-squares: normalize step
@@ -678,8 +669,13 @@ export default class ChakartRules extends ChessRules {
     return res;
   }
 
-  displayBonus(egg) {
-    alert(egg); //TODO: nicer display
+  displayBonus(move) {
+    let divBonus = document.createElement("div");
+    divBonus.classList.add("bonus-text");
+    divBonus.innerHTML = move.egg;
+    let container = document.getElementById(this.containerId);
+    container.appendChild(divBonus);
+    setTimeout(() => container.removeChild(divBonus), 2000);
   }
 
   atLeastOneMove() {

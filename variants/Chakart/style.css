@@ -31,3 +31,28 @@ piece.immobilized {
 piece.remote-capture {
   background-image: url('/pieces/chakart_shell.svg');
 }
+
+piece.mystery.white {
+  background-image: url('/pieces/chakart_mystery_white.svg');
+}
+piece.mystery.black {
+  background-image: url('/pieces/chakart_mystery_black.svg');
+}
+
+div.bonus-text {
+  position: relative;
+  margin-top: 5%;
+  width: 100%;
+  text-align: center;
+  background-color: transparent;
+  color: darkred;
+  font-weight: bold;
+  font-size: 2em;
+  animation: blinker 0.5s linear infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
