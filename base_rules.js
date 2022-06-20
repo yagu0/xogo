@@ -1007,6 +1007,8 @@ export default class ChessRules {
     let chessboard = container.querySelector(".chessboard");
     let choices = document.createElement("div");
     choices.id = "choices";
+    if (!r)
+      r = chessboard.getBoundingClientRect();
     choices.style.width = r.width + "px";
     choices.style.height = r.height + "px";
     choices.style.left = r.x + "px";

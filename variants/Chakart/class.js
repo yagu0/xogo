@@ -306,7 +306,7 @@ export default class ChakartRules extends ChessRules {
         moves.push(this.getBasicMove([x, y], [x + shiftX, y + shiftY]));
       }
     }
-    this.pawnPostProcess(moves, color, oppCol);
+    super.pawnPostProcess(moves, color, oppCol);
     // Add mushroom on before-last square
     moves.forEach(m => {
       let revStep = [m.start.x - m.end.x, m.start.y - m.end.y];
@@ -389,6 +389,22 @@ export default class ChakartRules extends ChessRules {
   }
 
   play(move) {
+    const color = this.turn;
+    const oppCol = C.GetOppCol(color);
+    if (
+      move.appear.length > 0 &&
+      move.appear[0].p == 'p' &&
+      (
+        (color == 'w' && move.end.x == 0) ||
+        (color == 'b' && move.end.x == this.size.x - 1)
+      )
+    ) {
+      // "Forgotten" promotion, which occurred after some effect
+      let moves = [move];
+      super.pawnPostProcess(moves, color, oppCol);
+      super.showChoices(moves);
+      return false;
+    }
     if (!move.nextComputed) {
       // Set potential random effects, so that play() is deterministic
       // from opponent viewpoint:
@@ -441,8 +457,6 @@ export default class ChakartRules extends ChessRules {
       move.nextComputed = true;
     }
     this.egg = move.egg;
-    const color = this.turn;
-    const oppCol = C.GetOppCol(color);
     if (move.egg == "toadette") {
       this.reserve = { w: {}, b: {} };
       // Randomly select a piece in pawnPromotions
@@ -510,6 +524,7 @@ export default class ChakartRules extends ChessRules {
       this.displayBonus(move);
     this.playOnBoard(move);
     this.nextMove = move.next;
+    return true;
   }
 
   // Helper to set and apply banana/bomb effect
@@ -687,9 +702,10 @@ export default class ChakartRules extends ChessRules {
   }
 
   playPlusVisual(move, r) {
-    this.moveStack.push(move);
     const nextLines = () => {
-      this.play(move);
+      if (!this.play(move))
+        return;
+      this.moveStack.push(move);
       this.playVisual(move, r);
       if (this.nextMove)
         this.playPlusVisual(this.nextMove, r);
@@ -698,7 +714,7 @@ export default class ChakartRules extends ChessRules {
         this.moveStack = [];
       }
     };
-    if (this.moveStack.length == 1)
+    if (this.moveStack.length == 0)
       nextLines();
     else
       this.animate(move, nextLines);
