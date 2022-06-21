@@ -191,7 +191,9 @@ function getGameLink() {
   const vname = $.getElementById("selectVariant").value;
   const color = $.getElementById("selectColor").value;
   for (const select of $.querySelectorAll("#gameOptions select")) {
-    const value = parseInt(select.value, 10) || select.value;
+    let value = parseInt(select.value, 10);
+    if (isNaN(value)) //not an integer
+      value = select.value;
     options[ select.id.split("_")[1] ] = value;
   }
   for (const input of $.querySelectorAll("#gameOptions input")) {
@@ -229,7 +231,7 @@ function fillGameInfos(gameInfos, oppIndex) {
           if (j == options.length)
             break;
           const opt = options[j];
-          if (!opt[1])
+          if (!opt[1]) //includes 0 and false (lighter display)
             continue;
           htmlContent +=
             '<span class="option">' +

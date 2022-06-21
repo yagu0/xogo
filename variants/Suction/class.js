@@ -53,7 +53,7 @@ export default class SuctionRules extends ChessRules {
     const cmoveFen = !this.cmove
       ? "-"
       : C.CoordsToSquare(this.cmove.start) + C.CoordsToSquare(this.cmove.end);
-    return super.getFen().slice(0, -1) + ',"' + cmoveFen + '"}';
+    return super.getFen().slice(0, -1) + ',"cmove":"' + cmoveFen + '"}';
   }
 
   getBasicMove([sx, sy], [ex, ey]) {

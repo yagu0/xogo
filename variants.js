@@ -120,7 +120,7 @@ const variants = [
 //  {name: 'Relayup', desc: 'Upgrade pieces', disp: 'Relay-up'},
   {name: 'Rifle', desc: 'Shoot pieces'},
   {name: 'Recycle', desc: 'Reuse pieces'},
-//  {name: 'Refusal', desc: 'Do not play that!'},
+  {name: 'Refusal', desc: 'Do not play that!'},
 //  {name: 'Rollerball', desc: 'As in the movie'},
 //  {name: 'Rococo', desc: 'Capture on the edge'},
 //  {name: 'Royalrace', desc: 'Kings cross the 11x11 board', disp: 'Royal Race'},

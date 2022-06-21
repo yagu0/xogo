@@ -112,7 +112,22 @@ export default class ChakartRules extends ChessRules {
       't': {"class": ["immobilized", "queen"]},
       'l': {"class": ["immobilized", "king"]}
     };
-    return Object.assign({}, specials, bowsered, super.pieces(color, x, y));
+    return Object.assign(
+      {
+        'y': {
+          // Virtual piece for "king remote shell captures"
+          moves: [],
+          attack: [
+            {
+              steps: [
+                [0, 1], [0, -1], [1, 0], [-1, 0],
+                [1, 1], [1, -1], [-1, 1], [-1, -1]
+              ]
+            }
+          ]
+        }
+      },
+      specials, bowsered, super.pieces(color, x, y));
   }
 
   genRandInitFen(seed) {
@@ -255,7 +270,7 @@ export default class ChakartRules extends ChessRules {
         case 'b':
         case 'r':
           // Explicitely listing types to avoid moving immobilized piece
-          moves = super.getPotentialMovesOf(piece, [x, y]);
+          moves = this.getPotentialMovesOf(piece, [x, y]);
           break;
       }
     }
@@ -295,32 +310,38 @@ export default class ChakartRules extends ChessRules {
       }
     }
     for (let shiftY of [-1, 1]) {
+      const nextY = this.getY(y + shiftY);
       if (
-        y + shiftY >= 0 &&
-        y + shiftY < this.size.y &&
-        this.board[x + shiftX][y + shiftY] != "" &&
+        nextY >= 0 &&
+        nextY < this.size.y &&
+        this.board[x + shiftX][nextY] != "" &&
         // Pawns cannot capture invisible queen this way!
-        this.getPiece(x + shiftX, y + shiftY) != 'i' &&
-        ['a', oppCol].includes(this.getColor(x + shiftX, y + shiftY))
+        this.getPiece(x + shiftX, nextY) != 'i' &&
+        ['a', oppCol].includes(this.getColor(x + shiftX, nextY))
       ) {
-        moves.push(this.getBasicMove([x, y], [x + shiftX, y + shiftY]));
+        moves.push(this.getBasicMove([x, y], [x + shiftX, nextY]));
       }
     }
-    super.pawnPostProcess(moves, color, oppCol);
-    // Add mushroom on before-last square
+    this.pawnPostProcess(moves, color, oppCol);
+    // Add mushroom on before-last square (+ potential segments)
     moves.forEach(m => {
-      let revStep = [m.start.x - m.end.x, m.start.y - m.end.y];
-      for (let i of [0, 1])
-        revStep[i] = revStep[i] / Math.abs(revStep[i]) || 0;
-      const [blx, bly] = [m.end.x + revStep[0], m.end.y + revStep[1]];
-      m.appear.push(new PiPo({x: blx, y: bly, c: 'a', p: 'm'}));
-      if (blx != x && this.board[blx][bly] != "") {
+      let [mx, my] = [x, y];
+      if (Math.abs(m.end.x - m.start.x) == 2)
+        mx = (m.start.x + m.end.x) / 2;
+      m.appear.push(new PiPo({x: mx, y: my, c: 'a', p: 'm'}));
+      if (mx != x && this.board[mx][my] != "") {
         m.vanish.push(new PiPo({
-          x: blx,
-          y: bly,
-          c: this.getColor(blx, bly),
-          p: this.getPiece(blx, bly)
+          x: mx,
+          y: my,
+          c: this.getColor(mx, my),
+          p: this.getPiece(mx, my)
         }));
+      }
+      if (Math.abs(m.end.y - m.start.y) > 1) {
+        m.segments = [
+          [[x, y], [x, y]],
+          [[m.end.x, m.end.y], [m.end.x, m.end.y]]
+        ];
       }
     });
     return moves;
@@ -360,30 +381,15 @@ export default class ChakartRules extends ChessRules {
     let moves = this.getPotentialMovesOf('k', [x, y]);
     // If flag allows it, add 'remote shell captures'
     if (this.powerFlags[this.turn]['k']) {
-      super.pieces()['k'].moves[0].steps.forEach(step => {
-        let [i, j] = [x + step[0], y + step[1]];
-        while (this.onBoard(i, j) && this.canStepOver(i, j)) {
-          i += step[0];
-          j += step[1];
-        }
-        if (this.onBoard(i, j)) {
-          const colIJ = this.getColor(i, j);
-          if (colIJ != this.turn) {
-            // May just destroy a bomb or banana:
-            let shellCapture = new Move({
-              start: {x: x, y: y},
-              end: {x: i, y: j},
-              appear: [],
-              vanish: [
-                new PiPo({x: i, y: j, c: colIJ, p: this.getPiece(i, j)})
-              ]
-            });
-            shellCapture.shell = true; //easier play()
-            shellCapture.choice = 'z'; //to display in showChoices()
-            moves.push(shellCapture);
-          }
-        }
+      let shellCaptures = this.getPotentialMovesOf('y', [x, y]);
+      shellCaptures.forEach(sc => {
+        sc.shell = true; //easier play()
+        sc.choice = 'z'; //to display in showChoices()
+        // Fix move (Rifle style):
+        sc.vanish.shift();
+        sc.appear.shift();
       });
+      Array.prototype.push.apply(moves, shellCaptures);
     }
     return moves;
   }
@@ -619,7 +625,6 @@ export default class ChakartRules extends ChessRules {
             p: this.getPiece(move.start.x, move.start.y)
           }));
         }
-        em.koopa = true; //to cancel mushroom effect
         break;
       case "chomp":
         // Eat piece
@@ -640,7 +645,7 @@ export default class ChakartRules extends ChessRules {
   }
 
   getMushroomEffect(move) {
-    if (move.koopa || typeof move.start.x == "string")
+    if (typeof move.start.x == "string") //drop move (toadette)
       return null;
     let step = [move.end.x - move.start.x, move.end.y - move.start.y];
     if ([0, 1].some(i => Math.abs(step[i]) >= 2 && Math.abs(step[1-i]) != 1)) {

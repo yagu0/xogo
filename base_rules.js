@@ -1908,10 +1908,12 @@ export default class ChessRules {
     return [-1, -1]; //king not found
   }
 
-  filterValid(moves) {
+  // Some variants (e.g. Refusal) may need to check opponent moves too
+  filterValid(moves, color) {
     if (moves.length == 0)
       return [];
-    const color = this.turn;
+    if (!color)
+      color = this.turn;
     const oppCol = C.GetOppCol(color);
     if (this.options["balance"] && [1, 3].includes(this.movesCount)) {
       // Forbid moves either giving check or exploding opponent's king:
