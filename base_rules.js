@@ -569,15 +569,16 @@ export default class ChessRules {
     // Compare window ratio width / height to aspectRatio:
     const windowRatio = window.innerWidth / window.innerHeight;
     let cbWidth, cbHeight;
-    if (windowRatio <= this.size.ratio) {
+    const vRatio = this.size.ratio || 1;
+    if (windowRatio <= vRatio) {
       // Limiting dimension is width:
       cbWidth = Math.min(window.innerWidth, 767);
-      cbHeight = cbWidth / this.size.ratio;
+      cbHeight = cbWidth / vRatio;
     }
     else {
       // Limiting dimension is height:
       cbHeight = Math.min(window.innerHeight, 767);
-      cbWidth = cbHeight * this.size.ratio;
+      cbWidth = cbHeight * vRatio;
     }
     if (this.hasReserve) {
       const sqSize = cbWidth / this.size.y;
@@ -585,7 +586,7 @@ export default class ChessRules {
       // Cannot use getReserveSquareSize() here, but sqSize is an upper bound.
       if ((window.innerHeight - cbHeight) / 2 < sqSize + 5) {
         cbHeight = window.innerHeight - 2 * (sqSize + 5);
-        cbWidth = cbHeight * this.size.ratio;
+        cbWidth = cbHeight * vRatio;
       }
     }
     chessboard.style.width = cbWidth + "px";
@@ -610,7 +611,7 @@ export default class ChessRules {
     const flipped = (this.playerColor == 'b');
     let board = `
       <svg
-        viewBox="0 0 80 80"
+        viewBox="0 0 ${10*this.size.y} ${10*this.size.x}"
         class="chessboard_SVG">`;
     for (let i=0; i < this.size.x; i++) {
       for (let j=0; j < this.size.y; j++) {
@@ -798,13 +799,14 @@ export default class ChessRules {
     const multFact = (mode == "up" ? 1.05 : 0.95);
     let [newWidth, newHeight] = [multFact * r.width, multFact * r.height];
     // Stay in window:
+    const vRatio = this.size.ratio || 1;
     if (newWidth > window.innerWidth) {
       newWidth = window.innerWidth;
-      newHeight = newWidth / this.size.ratio;
+      newHeight = newWidth / vRatio;
     }
     if (newHeight > window.innerHeight) {
       newHeight = window.innerHeight;
-      newWidth = newHeight * this.size.ratio;
+      newWidth = newHeight * vRatio;
     }
     chessboard.style.width = newWidth + "px";
     chessboard.style.height = newHeight + "px";
@@ -1051,7 +1053,7 @@ export default class ChessRules {
     return {
       x: 8,
       y: 8,
-      ratio: 1 //for rectangular board = y / x
+      ratio: 1 //for rectangular board = y / x (optional, 1 = default)
     };
   }
 
@@ -2210,9 +2212,9 @@ export default class ChessRules {
     this.afterPlay(move); //user method
   }
 
-  getMaxDistance(rwidth) {
+  getMaxDistance(r) {
     // Works for all rectangular boards:
-    return Math.sqrt(rwidth ** 2 + (rwidth / this.size.ratio) ** 2);
+    return Math.sqrt(r.width ** 2 + r.height ** 2);
   }
 
   getDomPiece(x, y) {
@@ -2237,7 +2239,7 @@ export default class ChessRules {
       movingPiece.style.width = pieceWidth + "px";
       movingPiece.style.height = pieceWidth + "px";
     }
-    const maxDist = this.getMaxDistance(r.width);
+    const maxDist = this.getMaxDistance(r);
     const pieces = this.pieces();
     if (move.drag) {
       const startCode = this.getPiece(move.start.x, move.start.y);

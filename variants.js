@@ -1,7 +1,7 @@
 const variants = [
   // TODO: https://mancala.fandom.com/wiki/William_Daniel_Troyka Cleopatra chess
   {name: 'Absorption', desc: 'Absorb powers'},
-//  {name: 'Alapo', desc: 'Geometric Chess'},
+  {name: 'Alapo', desc: 'Geometric Chess'},
 //  {name: 'Alice', desc: 'Both sides of the mirror'},
 //  {name: 'Align4', desc: 'Align four pawns'},
 //  {name: 'Allmate', desc: 'Mate any piece'},

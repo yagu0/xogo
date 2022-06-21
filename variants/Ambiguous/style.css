@@ -1,7 +1,7 @@
 @import url("/base_pieces.css");
 
 piece.target {
-  background-image: url('/pieces/ambiguous_target.svg');
+  background-image: url('/pieces/Ambiguous/target.svg');
 }
 
 piece.white.target-pawn {
