@@ -6,6 +6,14 @@ export default class BenedictRules extends ChessRules {
   static get Options() {
     return {
       select: C.Options.select,
+      input: [
+        {
+          label: "Cleopatra",
+          variable: "cleopatra",
+          type: "checkbox",
+          defaut: false
+        }
+      ],
       styles: [
         "balance",
         "cylinder",
@@ -23,6 +31,24 @@ export default class BenedictRules extends ChessRules {
 
   canTake() {
     return false;
+  }
+
+  pieces(color, x, y) {
+    if (!this.options["cleopatra"])
+      return super.pieces(color, x, y);
+    return Object.assign({}, super.pieces(color, x, y), {
+      'q': {
+        "class": "cleopatra",
+        moves: [
+          {
+            steps: [
+              [0, 1], [0, -1], [1, 0], [-1, 0],
+              [1, 1], [1, -1], [-1, 1], [-1, -1]
+            ]
+          }
+        ]
+      },
+    });
   }
 
   // Find potential captures from a square
@@ -56,20 +82,22 @@ export default class BenedictRules extends ChessRules {
 
   postProcessPotentialMoves(moves) {
     moves.forEach(m => {
-      super.playOnBoard(m);
-      let attacks = this.findAttacks([m.end.x, m.end.y])
-      if (this.options["zen"]) {
-        let endSquares = {};
-        super.findCapturesOn([m.end.x, m.end.y], {zen: true}).forEach(c => {
-          endSquares[C.CoordsToSquare(c.end)] = true;
-        });
-        Array.prototype.push.apply(attacks, Object.keys(endSquares));
-      }
-      super.undoOnBoard(m);
       m.flips = [];
-      attacks.map(C.SquareToCoords).forEach(a => {
-        m.flips.push({x: a.x, y: a.y});
-      });
+      if (!this.options["cleopatra"] || m.vanish[0].p == 'q') {
+        super.playOnBoard(m);
+        let attacks = this.findAttacks([m.end.x, m.end.y])
+        if (this.options["zen"]) {
+          let endSquares = {};
+          super.findCapturesOn([m.end.x, m.end.y], {zen: true}).forEach(c => {
+            endSquares[C.CoordsToSquare(c.end)] = true;
+          });
+          Array.prototype.push.apply(attacks, Object.keys(endSquares));
+        }
+        super.undoOnBoard(m);
+        attacks.map(C.SquareToCoords).forEach(a => {
+          m.flips.push({x: a.x, y: a.y});
+        });
+      }
     });
     return moves;
   }
