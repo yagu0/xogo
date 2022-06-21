@@ -666,7 +666,8 @@ export default class ChessRules {
           const color = this.getColor(i, j);
           const piece = this.getPiece(i, j);
           this.g_pieces[i][j] = document.createElement("piece");
-          C.AddClass_es(this.g_pieces[i][j], this.pieces()[piece]["class"]);
+          C.AddClass_es(this.g_pieces[i][j],
+                        this.pieces(color, i, j)[piece]["class"]);
           this.g_pieces[i][j].classList.add(C.GetColorClass(color));
           this.g_pieces[i][j].style.width = pieceWidth + "px";
           this.g_pieces[i][j].style.height = pieceWidth + "px";
@@ -734,7 +735,7 @@ export default class ChessRules {
         r_cell.style.height = sqResSize + "px";
         rcontainer.appendChild(r_cell);
         let piece = document.createElement("piece");
-        C.AddClass_es(piece, this.pieces()[p]["class"]);
+        C.AddClass_es(piece, this.pieces(c, c, p)[p]["class"]);
         piece.classList.add(C.GetColorClass(c));
         piece.style.width = "100%";
         piece.style.height = "100%";
@@ -1037,7 +1038,8 @@ export default class ChessRules {
       choice.onclick = () => callback(moves[i]);
       const piece = document.createElement("piece");
       const cdisp = moves[i].choice || moves[i].appear[0].p;
-      C.AddClass_es(piece, this.pieces()[cdisp]["class"]);
+      C.AddClass_es(piece,
+        this.pieces(color, moves[i].end.x, moves[i].end.y)[cdisp]["class"]);
       piece.classList.add(C.GetColorClass(color));
       piece.style.width = "100%";
       piece.style.height = "100%";
@@ -2190,7 +2192,8 @@ export default class ChessRules {
     const pieceWidth = this.getPieceWidth(r.width);
     move.appear.forEach(a => {
       this.g_pieces[a.x][a.y] = document.createElement("piece");
-      C.AddClass_es(this.g_pieces[a.x][a.y], this.pieces()[a.p]["class"]);
+      C.AddClass_es(this.g_pieces[a.x][a.y],
+                    this.pieces(a.c, a.x, a.y)[a.p]["class"]);
       this.g_pieces[a.x][a.y].classList.add(C.GetColorClass(a.c));
       this.g_pieces[a.x][a.y].style.width = pieceWidth + "px";
       this.g_pieces[a.x][a.y].style.height = pieceWidth + "px";
@@ -2240,12 +2243,12 @@ export default class ChessRules {
       movingPiece.style.height = pieceWidth + "px";
     }
     const maxDist = this.getMaxDistance(r);
-    const pieces = this.pieces();
+    const apparentColor = this.getColor(move.start.x, move.start.y);
+    const pieces = this.pieces(apparentColor, move.start.x, move.start.y);
     if (move.drag) {
       const startCode = this.getPiece(move.start.x, move.start.y);
       C.RemoveClass_es(movingPiece, pieces[startCode]["class"]);
       C.AddClass_es(movingPiece, pieces[move.drag.p]["class"]);
-      const apparentColor = this.getColor(move.start.x, move.start.y);
       if (apparentColor != move.drag.c) {
         movingPiece.classList.remove(C.GetColorClass(apparentColor));
         movingPiece.classList.add(C.GetColorClass(move.drag.c));

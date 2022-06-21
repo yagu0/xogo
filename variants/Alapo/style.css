@@ -16,7 +16,7 @@ piece.black.babyrook {
 piece.black.babybishop {
   background-image: url('/pieces/Alapo/black_triangle.svg');
 }
-piece.black.babybishop {
+piece.black.babybishop_inv {
   background-image: url('/pieces/Alapo/black_triangle_inv.svg');
 }
 piece.black.babyqueen {
@@ -29,7 +29,7 @@ piece.white.rook {
 piece.white.bishop {
   background-image: url('/pieces/Alapo/white_TRIANGLE.svg');
 }
-piece.white.bishop {
+piece.white.bishop_inv {
   background-image: url('/pieces/Alapo/white_TRIANGLE_inv.svg');
 }
 piece.white.queen {
@@ -41,7 +41,7 @@ piece.white.babyrook {
 piece.white.babybishop {
   background-image: url('/pieces/Alapo/white_triangle.svg');
 }
-piece.white.babybishop {
+piece.white.babybishop_inv {
   background-image: url('/pieces/Alapo/white_triangle_inv.svg');
 }
 piece.white.babyqueen {
