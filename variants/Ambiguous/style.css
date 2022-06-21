@@ -1,0 +1,43 @@
+@import url("/base_pieces.css");
+
+piece.target {
+  background-image: url('/pieces/ambiguous_target.svg');
+}
+
+piece.white.target-pawn {
+  background-image: url('/pieces/yellow_pawn.svg');
+}
+piece.white.target-rook {
+  background-image: url('/pieces/yellow_rook.svg');
+}
+piece.white.target-knight {
+  background-image: url('/pieces/yellow_knight.svg');
+}
+piece.white.target-bishop {
+  background-image: url('/pieces/yellow_bishop.svg');
+}
+piece.white.target-queen {
+  background-image: url('/pieces/yellow_queen.svg');
+}
+piece.white.target-king {
+  background-image: url('/pieces/yellow_king.svg');
+}
+
+piece.black.target-pawn {
+  background-image: url('/pieces/red_pawn.svg');
+}
+piece.black.target-rook {
+  background-image: url('/pieces/red_rook.svg');
+}
+piece.black.target-knight {
+  background-image: url('/pieces/red_knight.svg');
+}
+piece.black.target-bishop {
+  background-image: url('/pieces/red_bishop.svg');
+}
+piece.black.target-queen {
+  background-image: url('/pieces/red_queen.svg');
+}
+piece.black.target-king {
+  background-image: url('/pieces/red_king.svg');
+}

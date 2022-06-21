@@ -37,15 +37,12 @@ function initializeGame(vname, players, options) {
 function launchGame(gid) {
   moveHash[gid] = {};
   const gameInfo = Object.assign(
-    {seed: Math.floor(Math.random() * 1984), gid: gid},
+    {seed: Math.floor(Math.random() * 19840), gid: gid},
     games[gid]
   );
   // players array is supposed to be full:
-  for (const p of games[gid].players) {
-    send(p.sid,
-         "gamestart",
-         Object.assign({randvar: p.randvar}, gameInfo));
-  }
+  for (const p of games[gid].players)
+    send(p.sid, "gamestart", gameInfo);
 }
 
 function getRandomVariant() {
@@ -137,11 +134,10 @@ wss.on("connection", (socket, req) => {
             const allrand = games[obj.gid].rematch.every(r => r == 2);
             if (allrand)
               vname = getRandomVariant();
-            games[obj.gid].players.forEach(p =>
-              p.randvar = allrand ? true : false);
+            games[obj.gid].players.forEach(p => p.randvar = allrand);
             const gid = initializeGame(vname,
-                           games[obj.gid].players.reverse(),
-                           games[obj.gid].options);
+                                       games[obj.gid].players.reverse(),
+                                       games[obj.gid].options);
             launchGame(gid);
           }
         }

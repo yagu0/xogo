@@ -1,10 +1,14 @@
 import ChessRules from "/base_rules.js";
-import { randInt, shuffle } from "@/utils/alea";
-import { ArrayFun } from "@/utils/array";
+import GiveawayRules from "/variants/Giveaway/class.js";
 
 export default class AmbiguousRules extends ChessRules {
 
-  // TODO: options
+  static get Options() {
+    return {
+      select: C.Options.select,
+      styles: ["cylinder"]
+    };
+  }
 
   get hasFlags() {
     return false;
@@ -19,25 +23,29 @@ export default class AmbiguousRules extends ChessRules {
   }
 
   genRandInitFen(seed) {
-    const gr = new GiveawayRules(
-      {mode: "suicide", options: this.options, genFenOnly: true});
+    const options = Object.assign({mode: "suicide"}, this.options);
+    const gr = new GiveawayRules({options: options, genFenOnly: true});
     return gr.genRandInitFen(seed);
+  }
+
+  canStepOver(x, y) {
+    return this.board[x][y] == "" || this.getPiece(x, y) == V.GOAL;
   }
 
   // Subturn 1: play a move for the opponent on the designated square.
   // Subturn 2: play a move for me (which just indicate a square).
   getPotentialMovesFrom([x, y]) {
     const color = this.turn;
-    const oppCol = V.GetOppCol(color);
+    const oppCol = C.GetOppCol(color);
     if (this.subTurn == 2) {
       // Just play a normal move (which in fact only indicate a square)
       let movesHash = {};
       return (
         super.getPotentialMovesFrom([x, y])
         .filter(m => {
-          // Filter promotions: keep only one, since no choice now.
+          // Filter promotions: keep only one, since no choice for now.
           if (m.appear[0].p != m.vanish[0].p) {
-            const hash = V.CoordsToSquare(m.start) + V.CoordsToSquare(m.end);
+            const hash = C.CoordsToSquare(m.start) + C.CoordsToSquare(m.end);
             if (!movesHash[hash]) {
               movesHash[hash] = true;
               return true;
@@ -47,48 +55,37 @@ export default class AmbiguousRules extends ChessRules {
           return true;
         })
         .map(m => {
-          if (m.vanish.length == 1) m.appear[0].p = V.GOAL;
-          else m.appear[0].p = V.TARGET_CODE[m.vanish[1].p];
-          m.appear[0].c = oppCol;
+          if (m.vanish.length == 1) {
+            m.appear[0].c = 'a'; //a-color
+            m.appear[0].p = V.GOAL;
+          }
+          else {
+            m.appear[0].p = V.TARGET_CODE[m.vanish[1].p];
+            m.appear[0].c = oppCol;
+          }
           m.vanish.shift();
           return m;
         })
       );
     }
-    // At subTurn == 1, play a targeted move for opponent
+    // At subTurn == 1, play a targeted move for the opponent.
     // Search for target (we could also have it in a stack...)
-    let target = { x: -1, y: -1 };
-    outerLoop: for (let i = 0; i < V.size.x; i++) {
-      for (let j = 0; j < V.size.y; j++) {
-        if (this.board[i][j] != V.EMPTY) {
-          const piece = this.board[i][j][1];
+    let target = {x: -1, y: -1};
+    outerLoop: for (let i = 0; i < this.size.x; i++) {
+      for (let j = 0; j < this.size.y; j++) {
+        if (this.board[i][j] != "") {
+          const piece = this.getPiece(i, j);
           if (
             piece == V.GOAL ||
             Object.keys(V.TARGET_DECODE).includes(piece)
           ) {
-            target = { x: i, y: j};
+            target = {x: i, y:j};
             break outerLoop;
           }
         }
       }
     }
-    // TODO: could be more efficient than generating all moves.
-    this.turn = oppCol;
-    const emptyTarget = (this.board[target.x][target.y][1] == V.GOAL);
-    if (emptyTarget) this.board[target.x][target.y] = V.EMPTY;
-    let moves = super.getPotentialMovesFrom([x, y]);
-    if (emptyTarget) {
-      this.board[target.x][target.y] = color + V.GOAL;
-      moves.forEach(m => {
-        m.vanish.push({
-          x: target.x,
-          y: target.y,
-          c: color,
-          p: V.GOAL
-        });
-      });
-    }
-    this.turn = color;
+    const moves = super.getPotentialMovesFrom([x, y], oppCol);
     return moves.filter(m => m.end.x == target.x && m.end.y == target.y);
   }
 
@@ -127,8 +124,17 @@ export default class AmbiguousRules extends ChessRules {
     };
   }
 
-  pieces() {
-    // .........
+  pieces(color, x, y) {
+    const targets = {
+      's': {"class": "target-pawn", moves: []},
+      'u': {"class": "target-rook", moves: []},
+      'o': {"class": "target-knight", moves: []},
+      'c': {"class": "target-bishop", moves: []},
+      't': {"class": "target-queen", moves: []},
+      'l': {"class": "target-king", moves: []}
+    };
+    return Object.assign(
+      { 'g': {"class": "target"} }, targets, super.pieces(color, x, y));
   }
 
   atLeastOneMove() {
@@ -140,27 +146,26 @@ export default class AmbiguousRules extends ChessRules {
     return moves;
   }
 
+  isKing(symbol) {
+    return ['k', 'l'].includes(symbol);
+  }
+
   getCurrentScore() {
     // This function is only called at subTurn 1
-    const color = V.GetOppCol(this.turn);
-    if (this.kingPos[color][0] < 0) return (color == 'w' ? "0-1" : "1-0");
+    const color = C.GetOppCol(this.turn);
+    const kingPos = this.searchKingPos(color);
+    if (kingPos[0] < 0)
+      return (color == 'w' ? "0-1" : "1-0");
     return "*";
   }
 
-  play(move) {
-    let kingCaptured = false;
-    if (this.subTurn == 1) {
-      this.prePlay(move);
-      this.epSquares.push(this.getEpSquare(move));
-      kingCaptured = this.kingPos[this.turn][0] < 0;
-    }
-    if (kingCaptured) move.kingCaptured = true;
-    V.PlayOnBoard(this.board, move);
-    if (this.subTurn == 2 || kingCaptured) {
-      this.turn = V.GetOppCol(this.turn);
+  postPlay(move) {
+    const color = this.turn;
+    if (this.subTurn == 2 || this.searchKingPos(color)[0] < 0) {
+      this.turn = C.GetOppCol(color);
       this.movesCount++;
     }
-    if (!kingCaptured) this.subTurn = 3 - this.subTurn;
+    this.subTurn = 3 - this.subTurn;
   }
 
 };

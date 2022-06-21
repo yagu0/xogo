@@ -131,8 +131,8 @@ export default class ChakartRules extends ChessRules {
   }
 
   genRandInitFen(seed) {
-    const gr = new GiveawayRules(
-      {mode: "suicide", options: this.options, genFenOnly: true});
+    const options = Object.assign({mode: "suicide"}, this.options);
+    const gr = new GiveawayRules({options: options, genFenOnly: true});
     // Add Peach + mario flags
     return gr.genRandInitFen(seed).slice(0, -17) + '{"flags":"1111"}';
   }
@@ -180,7 +180,7 @@ export default class ChakartRules extends ChessRules {
     this.moveStack = [];
     // Change seed (after FEN generation!!)
     // so that further calls differ between players:
-    Random.setSeed(Math.floor(10000 * Math.random()));
+    Random.setSeed(Math.floor(19840 * Math.random()));
   }
 
   // For Toadette bonus

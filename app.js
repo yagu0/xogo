@@ -545,8 +545,9 @@ function initializeGame(obj) {
         break;
       }
     }
-    fillGameInfos(obj, playerColor == "w" ? 1 : 0);
-    if (obj.randvar)
+    const playerIndex = (playerColor == "w" ? 0 : 1);
+    fillGameInfos(obj, 1 - playerIndex);
+    if (obj.players[playerIndex].randvar)
       toggleVisible("gameInfos");
     else
       toggleVisible("boardContainer");

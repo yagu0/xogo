@@ -42,8 +42,8 @@ export default class SuctionRules extends ChessRules {
   }
 
   genRandInitFen(seed) {
-    const gr = new GiveawayRules(
-      {mode: "suicide", options: this.options, genFenOnly: true});
+    const options = Object.assign({mode: "suicide"}, this.options);
+    const gr = new GiveawayRules({options: options, genFenOnly: true});
     // Add empty cmove:
     return (
       gr.genRandInitFen(seed).slice(0, -17) + '{"enpassant":"-","cmove":"-"}');
