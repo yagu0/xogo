@@ -2,7 +2,7 @@ const variants = [
   {name: 'Absorption', desc: 'Absorb powers'},
   {name: 'Alapo', desc: 'Geometric Chess'},
   {name: 'Alice', desc: 'Both sides of the mirror'},
-//  {name: 'Align4', desc: 'Align four pawns'},
+  {name: 'Align4', desc: 'Align four pawns'},
 //  {name: 'Allmate', desc: 'Mate any piece'},
   {name: 'Ambiguous', desc: "Play opponent's pieces"},
 //  {name: 'Antiking1', desc: 'Keep antiking in check', disp: 'Anti-King'},

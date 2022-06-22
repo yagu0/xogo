@@ -7,7 +7,6 @@ const wss = new WebSocket.Server({
 
 let challenges = {}; //variantName --> socketId, name
 let games = {}; //gameId --> gameInfo (vname, fen, players, options, time)
-let moveHash = {}; //gameId --> set of hashes seen so far
 let sockets = {}; //socketId --> socket
 const variants = require("./variants.js");
 const Crypto = require("crypto");
@@ -28,14 +27,14 @@ function initializeGame(vname, players, options) {
     vname: vname,
     players: players,
     options: options,
-    time: Date.now()
+    time: Date.now(),
+    moveHash: {} //set of moves hashes seen so far
   };
   return gid;
 }
 
 // Provide seed in case of, so that both players initialize with same FEN
 function launchGame(gid) {
-  moveHash[gid] = {};
   const gameInfo = Object.assign(
     {seed: Math.floor(Math.random() * 19840), gid: gid},
     games[gid]
@@ -195,11 +194,11 @@ wss.on("connection", (socket, req) => {
         const hash = Crypto.createHash("md5")
                      .update(JSON.stringify(obj.fen))
                      .digest("hex");
-        if (moveHash[hash])
+        if (games[obj.gid].moveHash[hash])
           break;
-        moveHash[hash] = true;
+        games[obj.gid].moveHash[hash] = true;
         games[obj.gid].fen = obj.fen;
-        games[obj.gid].time = Date.now(); //update timestamp in case of
+        games[obj.gid].time = Date.now(); //update useful if verrry slow game
         const playingWhite = (games[obj.gid].players[0].sid == sid);
         const oppSid = games[obj.gid].players[playingWhite ? 1 : 0].sid;
         send(oppSid, "newmove", {moves: obj.moves});
