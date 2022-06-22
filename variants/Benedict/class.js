@@ -36,19 +36,11 @@ export default class BenedictRules extends ChessRules {
   pieces(color, x, y) {
     if (!this.options["cleopatra"])
       return super.pieces(color, x, y);
-    return Object.assign({}, super.pieces(color, x, y), {
-      'q': {
-        "class": "cleopatra",
-        moves: [
-          {
-            steps: [
-              [0, 1], [0, -1], [1, 0], [-1, 0],
-              [1, 1], [1, -1], [-1, 1], [-1, -1]
-            ]
-          }
-        ]
-      },
-    });
+    const allSpecs = super.pieces(color, x, y);
+    return Object.assign({},
+      allSpecs,
+      {'q': Object.assign({}, allSpecs['q'], {"class": "cleopatra"})}
+    );
   }
 
   // Find potential captures from a square

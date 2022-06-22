@@ -55,14 +55,10 @@ export default class AmbiguousRules extends ChessRules {
           return true;
         })
         .map(m => {
-          if (m.vanish.length == 1) {
-            m.appear[0].c = 'a'; //a-color
+          if (m.vanish.length == 1)
             m.appear[0].p = V.GOAL;
-          }
-          else {
+          else
             m.appear[0].p = V.TARGET_CODE[m.vanish[1].p];
-            m.appear[0].c = oppCol;
-          }
           m.vanish.shift();
           return m;
         })
@@ -133,8 +129,8 @@ export default class AmbiguousRules extends ChessRules {
       't': {"class": "target-queen", moves: []},
       'l': {"class": "target-king", moves: []}
     };
-    return Object.assign(
-      { 'g': {"class": "target"} }, targets, super.pieces(color, x, y));
+    return Object.assign({ 'g': {"class": "target", moves: []} },
+      targets, super.pieces(color, x, y));
   }
 
   atLeastOneMove() {

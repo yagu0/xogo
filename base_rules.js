@@ -1082,8 +1082,9 @@ export default class ChessRules {
   }
 
   // Piece type on square (i,j)
-  getPieceType(i, j) {
-    const p = this.getPiece(i, j);
+  getPieceType(i, j, p) {
+    if (!p)
+      p = this.getPiece(i, j);
     return C.CannibalKings[p] || p; //a cannibal king move as...
   }
 
@@ -1092,7 +1093,7 @@ export default class ChessRules {
     return (color == "w" ? "b" : "w");
   }
 
-  // Can thing on square1 capture (no return) thing on square2?
+  // Can thing on square1 capture (enemy) thing on square2?
   canTake([x1, y1], [x2, y2]) {
     return (this.getColor(x1, y1) !== this.getColor(x2, y2));
   }
@@ -1214,6 +1215,8 @@ export default class ChessRules {
         if (this.board[i][j] != "" && this.getColor(i, j) == color) {
           const allSpecs = this.pieces(color, i, j)
           let specs = allSpecs[this.getPieceType(i, j)];
+          if (specs.moveas)
+            specs = allSpecs[specs.moveas];
           const attacks = specs.attack || specs.moves;
           for (let a of attacks) {
             outerLoop: for (let step of a.steps) {
@@ -1482,7 +1485,10 @@ export default class ChessRules {
     const color = this.getColor(x, y);
     const oppCol = C.GetOppCol(color);
     const piece = this.getPieceType(x, y); //ok not cannibal king
-    const stepSpec = this.pieces(color, x, y)[piece];
+    const allSpecs = this.pieces(color, x, y);
+    let stepSpec = allSpecs[piece];
+    if (stepSpec.moveas)
+      stepSpec = allSpecs[stepSpec.moveas];
     const attacks = stepSpec.attack || stepSpec.moves;
     for (let a of attacks) {
       outerLoop: for (let step of a.steps) {
@@ -1506,7 +1512,7 @@ export default class ChessRules {
     return false;
   }
 
-  canStepOver(i, j) {
+  canStepOver(i, j, p) {
     // In some variants, objects on boards don't stop movement (Chakart)
     return this.board[i][j] == "";
   }
@@ -1514,7 +1520,11 @@ export default class ChessRules {
   // Generic method to find possible moves of "sliding or jumping" pieces
   getPotentialMovesOf(piece, [x, y]) {
     const color = this.getColor(x, y);
-    const stepSpec = this.pieces(color, x, y)[piece];
+    const apparentPiece = this.getPiece(x, y); //how it looks
+    const allSpecs = this.pieces(color, x, y);
+    let stepSpec = allSpecs[piece];
+    if (stepSpec.moveas)
+      stepSpec = allSpecs[stepSpec.moveas];
     let moves = [];
     // Next 3 for Cylinder mode:
     let explored = {};
@@ -1539,7 +1549,7 @@ export default class ChessRules {
           let stepCounter = 0;
           while (
             this.onBoard(i, j) &&
-            (this.canStepOver(i, j) || (i == x && j == y))
+            ((i == x && j == y) || this.canStepOver(i, j, apparentPiece))
           ) {
             if (
               type != "attack" &&
@@ -1610,8 +1620,14 @@ export default class ChessRules {
         ) {
           if (args.zen && this.isKing(this.getPiece(i, j)))
             continue; //king not captured in this way
-          const stepSpec =
-            this.pieces(args.oppCol, i, j)[this.getPieceType(i, j)];
+          const apparentPiece = this.getPiece(i, j);
+          // Quick check: does this potential attacker target x,y ?
+          if (this.canStepOver(x, y, apparentPiece))
+            continue;
+          const allSpecs = this.pieces(args.oppCol, i, j);
+          let stepSpec = allSpecs[this.getPieceType(i, j)];
+          if (stepSpec.moveas)
+            stepSpec = allSpecs[stepSpec.moveas];
           const attacks = stepSpec.attack || stepSpec.moves;
           for (let a of attacks) {
             for (let s of a.steps) {
@@ -1754,8 +1770,15 @@ export default class ChessRules {
       s.y == e.y &&
       Math.abs(s.x - e.x) == 2 &&
       // Next conditions for variants like Atomic or Rifle, Recycle...
-      (move.appear.length > 0 && move.appear[0].p == "p") &&
-      (move.vanish.length > 0 && move.vanish[0].p == "p")
+      (
+        move.appear.length > 0 &&
+        this.getPieceType(0, 0, move.appear[0].p) == "p"
+      )
+      &&
+      (
+        move.vanish.length > 0 &&
+        this.getPieceType(0, 0, move.vanish[0].p) == "p"
+      )
     ) {
       return {
         x: (s.x + e.x) / 2,
@@ -1945,12 +1968,12 @@ export default class ChessRules {
         let square = kingPos,
             res = true; //a priori valid
         if (m.vanish.some(v => {
-          return C.CannibalKings[v.p] && v.c == color;
+          return this.isKing(v.p) && v.c == color;
         })) {
           // Search king in appear array:
           const newKingIdx =
             m.appear.findIndex(a => {
-              return C.CannibalKings[a.p] && a.c == color;
+              return this.isKing(a.p) && a.c == color;
             });
           if (newKingIdx >= 0)
             square = [m.appear[newKingIdx].x, m.appear[newKingIdx].y];

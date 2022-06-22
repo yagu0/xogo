@@ -81,15 +81,14 @@ export default class AlapoRules extends ChessRules {
     );
   }
 
+  // Triangles are rotated from opponent viewpoint (=> suffix "_inv")
   pieces(color, x, y) {
+    const allSpecs = super.pieces(color, x, y);
     return {
-      'r': super.pieces(color, x, y)['r'],
-      'q': super.pieces(color, x, y)['q'],
-      'b': {
-        // Triangle is rotated from opponent viewpoint
-        "class": "bishop" + (this.playerColor != color ? "_inv" : ""),
-        moves: [ { steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]] } ]
-      },
+      'r': allSpecs['r'],
+      'q': allSpecs['q'],
+      'b': Object.assign({}, allSpecs['b'],
+        {"class": "bishop" + (this.playerColor != color ? "_inv" : "")}),
       's': { //"square"
         "class": "babyrook",
         moves: [

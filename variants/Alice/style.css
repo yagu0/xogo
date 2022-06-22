@@ -1,46 +1,39 @@
 @import url("/base_pieces.css");
 
-piece.white.target {
-  background-image: url('/pieces/Ambiguous/yellow_target.svg');
-}
-piece.black.target {
-  background-image: url('/pieces/Ambiguous/red_target.svg');
-}
-
-piece.white.target-pawn {
+piece.white.alice-pawn {
   background-image: url('/pieces/yellow_pawn.svg');
 }
-piece.white.target-rook {
+piece.white.alice-rook {
   background-image: url('/pieces/yellow_rook.svg');
 }
-piece.white.target-knight {
+piece.white.alice-knight {
   background-image: url('/pieces/yellow_knight.svg');
 }
-piece.white.target-bishop {
+piece.white.alice-bishop {
   background-image: url('/pieces/yellow_bishop.svg');
 }
-piece.white.target-queen {
+piece.white.alice-queen {
   background-image: url('/pieces/yellow_queen.svg');
 }
-piece.white.target-king {
+piece.white.alice-king {
   background-image: url('/pieces/yellow_king.svg');
 }
 
-piece.black.target-pawn {
+piece.black.alice-pawn {
   background-image: url('/pieces/red_pawn.svg');
 }
-piece.black.target-rook {
+piece.black.alice-rook {
   background-image: url('/pieces/red_rook.svg');
 }
-piece.black.target-knight {
+piece.black.alice-knight {
   background-image: url('/pieces/red_knight.svg');
 }
-piece.black.target-bishop {
+piece.black.alice-bishop {
   background-image: url('/pieces/red_bishop.svg');
 }
-piece.black.target-queen {
+piece.black.alice-queen {
   background-image: url('/pieces/red_queen.svg');
 }
-piece.black.target-king {
+piece.black.alice-king {
   background-image: url('/pieces/red_king.svg');
 }
