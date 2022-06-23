@@ -252,7 +252,7 @@ export default class ChessRules {
       parts.push(`"flags":"${flags}"`);
     if (this.hasEnpassant)
       parts.push('"enpassant":"-"');
-    if (this.hasReserve)
+    if (this.hasReserveFen)
       parts.push('"reserve":"000000000000"');
     if (this.options["crazyhouse"])
       parts.push('"ispawn":"-"');

@@ -133,8 +133,12 @@ export default class ChakartRules extends ChessRules {
   genRandInitFen(seed) {
     const options = Object.assign({mode: "suicide"}, this.options);
     const gr = new GiveawayRules({options: options, genFenOnly: true});
-    // Add Peach + mario flags
-    return gr.genRandInitFen(seed).slice(0, -17) + '{"flags":"1111"}';
+    const baseFen = gr.genRandInitFen(seed);
+    const fenParts = baseFen.split(" ");
+    let others = JSON.parse(fenParts[3]);
+    delete others["enpassant"];
+    others["flags"] = "1111"; //Peach + Mario flags
+    return fenParts.slice(0, 3).join(" ") + " " + JSON.stringify(others);
   }
 
   fen2board(f) {
@@ -645,19 +649,25 @@ export default class ChakartRules extends ChessRules {
   }
 
   getMushroomEffect(move) {
-    if (typeof move.start.x == "string") //drop move (toadette)
+    if (
+      typeof move.start.x == "string" || //drop move (toadette)
+      ['b', 'r', 'q'].includes(move.vanish[0].p) //slider
+    ) {
       return null;
-    let step = [move.end.x - move.start.x, move.end.y - move.start.y];
-    if ([0, 1].some(i => Math.abs(step[i]) >= 2 && Math.abs(step[1-i]) != 1)) {
-      // Slider, multi-squares: normalize step
-      for (let j of [0, 1])
-        step[j] = step[j] / Math.abs(step[j]) || 0;
     }
+    let step = [move.end.x - move.start.x, move.end.y - move.start.y];
+    if (Math.abs(step[0]) == 2 && Math.abs(step[1]) == 0)
+      // Pawn initial 2-squares move: normalize step
+      step[0] /= 2;
     const nextSquare = [move.end.x + step[0], move.end.y + step[1]];
-    const afterSquare =
-      [nextSquare[0] + step[0], nextSquare[1] + step[1]];
     let nextMove = null;
-    if (this.onBoard(nextSquare[0], nextSquare[1])) {
+    if (
+      this.onBoard(nextSquare[0], nextSquare[1]) &&
+      (
+        this.board[nextSquare[0]][nextSquare[1]] == "" ||
+        this.getColor(nextSquare[0], nextSquare[1]) == 'a'
+      )
+    ) {
       this.playOnBoard(move); //HACK for getBasicMove()
       nextMove = this.getBasicMove([move.end.x, move.end.y], nextSquare);
       this.undoOnBoard(move);

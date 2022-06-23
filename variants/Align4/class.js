@@ -26,22 +26,19 @@ export default class Align4Rules extends ChessRules {
 
   genRandInitFen(seed) {
     const baseFen = super.genRandInitFen(seed);
-    return "4k3/8" + baseFen.substring(17, 50) + " -"; //TODO: + flags 1188
+    const fen = baseFen.replace("rnbqkbnr/pppppppp", "4k3/8");
+    const fenParts = baseFen.split(" ");
+    let others = JSON.parse(fenParts[3]);
+    others["flags"] = others["flags"].substr(0, 2) + "88";
+    return fenParts.slice(0, 3).join(" ") + " " + JSON.stringify(others);
   }
 
-  setOtherVariables(fenParsed) {
-    super.setOtherVariables(fenParsed);
+  initReserves() {
     this.reserve = { b: { p: 1 } };
   }
 
   // Just do not update any reserve (infinite supply)
   updateReserve() {}
-
-  getCastleMoves([x, y]) {
-    if (this.GetColor(x, y) == 'b')
-      return [];
-    return super.getCastleMoves([x, y]);
-  }
 
   getCurrentScore(move) {
     const score = super.getCurrentScore(move);
