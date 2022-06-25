@@ -18,9 +18,6 @@ export default class AllmateRules extends ChessRules {
   get hasEnpassant() {
     return false;
   }
-  get hasMoveStack() {
-    return true;
-  }
 
   setOtherVariables(fenParsed) {
     super.setOtherVariables(fenParsed);

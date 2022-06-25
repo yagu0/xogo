@@ -111,10 +111,6 @@ export default class ChessRules {
     return !!this.options["dark"];
   }
 
-  get hasMoveStack() {
-    return false;
-  }
-
   // Some variants use click infos:
   doClick(coords) {
     if (typeof coords.x != "number")
@@ -955,7 +951,7 @@ export default class ChessRules {
       if (cd) {
         const move = this.doClick(cd);
         if (move)
-          this.playPlusVisual(move);
+          this.buildMoveStack(move, r);
         else {
           const [x, y] = Object.values(cd);
           if (typeof x != "number")
@@ -1009,7 +1005,7 @@ export default class ChessRules {
         if (moves.length >= 2)
           this.showChoices(moves, r);
         else if (moves.length == 1)
-          this.playPlusVisual(moves[0], r);
+          this.buildMoveStack(moves[0], r);
       }
       curPiece.remove();
     };
@@ -1050,7 +1046,7 @@ export default class ChessRules {
     const callback = (m) => {
       chessboard.style.opacity = "1";
       container.removeChild(choices);
-      this.playPlusVisual(m, r);
+      this.buildMoveStack(m, r);
     }
     for (let i=0; i < moves.length; i++) {
       let choice = document.createElement("div");
@@ -1338,7 +1334,7 @@ export default class ChessRules {
       moves = this.capturePostProcess(moves, oppCol);
 
     if (this.options["atomic"])
-      this.atomicPostProcess(moves, oppCol);
+      this.atomicPostProcess(moves, color, oppCol);
 
     if (
       moves.length > 0 &&
@@ -1369,7 +1365,7 @@ export default class ChessRules {
     });
   }
 
-  atomicPostProcess(moves, oppCol) {
+  atomicPostProcess(moves, color, oppCol) {
     moves.forEach(m => {
       if (
         this.board[m.end.x][m.end.y] != "" &&
@@ -1386,15 +1382,22 @@ export default class ChessRules {
           [1, 0],
           [1, 1]
         ];
+        let mNext = new Move({
+          start: m.end,
+          end: m.end,
+          appear: [],
+          vanish: []
+        });
         for (let step of steps) {
           let x = m.end.x + step[0];
           let y = this.getY(m.end.y + step[1]);
           if (
             this.onBoard(x, y) &&
             this.board[x][y] != "" &&
+            (x != m.start.x || y != m.start.y) &&
             this.getPieceType(x, y) != "p"
           ) {
-            m.vanish.push(
+            mNext.vanish.push(
               new PiPo({
                 p: this.getPiece(x, y),
                 c: this.getColor(x, y),
@@ -1404,8 +1407,18 @@ export default class ChessRules {
             );
           }
         }
-        if (!this.options["rifle"])
-          m.appear.pop(); //nothing appears
+        if (!this.options["rifle"]) {
+          // The moving piece also vanish
+          mNext.vanish.unshift(
+            new PiPo({
+              x: m.end.x,
+              y: m.end.y,
+              c: color,
+              p: this.getPiece(m.start.x, m.start.y)
+            })
+          );
+        }
+        m.next = mNext;
       }
     });
   }
@@ -2154,12 +2167,16 @@ export default class ChessRules {
       this.captured = null;
     }
     if (
+      !move.next &&
       (
-        this.options["doublemove"] &&
-        this.movesCount >= 1 &&
-        this.subTurn == 1
-      ) ||
-      (this.options["progressive"] && this.subTurn <= this.movesCount)
+        (
+          this.options["doublemove"] &&
+          this.movesCount >= 1 &&
+          this.subTurn == 1
+        )
+        ||
+        (this.options["progressive"] && this.subTurn <= this.movesCount)
+      )
     ) {
       const oppKingPos = this.searchKingPos(oppCol);
       if (
@@ -2260,34 +2277,24 @@ export default class ChessRules {
       this.graphUpdateEnlightened();
   }
 
-  playPlusVisual(move, r) {
-    if (this.hasMoveStack)
-      this.buildMoveStack(move);
-    else {
-      this.play(move);
-      this.playVisual(move, r);
-      this.afterPlay(move, this.turn, {send: true, res: true}); //user method
-    }
-  }
-
   // TODO: send stack receive stack, or allow incremental? (good/bad points)
-  buildMoveStack(move) {
+  buildMoveStack(move, r) {
     this.moveStack.push(move);
     this.computeNextMove(move);
     this.play(move);
     const newTurn = this.turn;
-    if (this.moveStack.length == 1) {
-      this.playVisual(move);
+    if (this.moveStack.length == 1)
+      this.playVisual(move, r);
+    if (move.next) {
       this.gameState = {
         fen: this.getFen(),
         board: JSON.parse(JSON.stringify(this.board)) //easier
       };
+      this.buildMoveStack(move.next, r);
     }
-    if (move.next)
-      this.buildMoveStack(move.next);
     else {
-      // Send, animate + play until here
       if (this.moveStack.length == 1) {
+        // Usual case (one normal move)
         this.afterPlay(this.moveStack, newTurn, {send: true, res: true});
         this.moveStack = []
       }
@@ -2400,7 +2407,8 @@ export default class ChessRules {
     }
     if (move.vanish.length > move.appear.length) {
       const arr = move.vanish.slice(move.appear.length)
-                    .filter(v => v.x != move.end.x || v.y != move.end.y);
+        // Ignore disappearing pieces hidden by some appearing ones:
+        .filter(v => move.appear.every(a => a.x != v.x || a.y != v.y));
       if (arr.length > 0) {
         targetObj.target++;
         this.animateFading(arr, () => targetObj.increment());

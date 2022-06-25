@@ -169,7 +169,7 @@ export default class HexRules extends ChessRules {
       if (cd) {
         const move = this.doClick(cd);
         if (move)
-          this.playPlusVisual(move);
+          this.buildMoveStack(move);
       }
     };
 

@@ -41,9 +41,6 @@ export default class ChakartRules extends ChessRules {
   get hasReserveFen() {
     return false;
   }
-  get hasMoveStack() {
-    return true;
-  }
 
   static get IMMOBILIZE_CODE() {
     return {
