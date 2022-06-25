@@ -41,6 +41,9 @@ export default class ChakartRules extends ChessRules {
   get hasReserveFen() {
     return false;
   }
+  get hasMoveStack() {
+    return true;
+  }
 
   static get IMMOBILIZE_CODE() {
     return {
@@ -178,13 +181,15 @@ export default class ChakartRules extends ChessRules {
   }
 
   setOtherVariables(fenParsed) {
-    this.setFlags(fenParsed.flags);
-    this.reserve = {}; //to be filled later
+    super.setOtherVariables(fenParsed);
     this.egg = null;
-    this.moveStack = [];
     // Change seed (after FEN generation!!)
     // so that further calls differ between players:
     Random.setSeed(Math.floor(19840 * Math.random()));
+  }
+
+  initReserves() {
+    this.reserve = {}; //to be filled later
   }
 
   // For Toadette bonus
@@ -415,57 +420,11 @@ export default class ChakartRules extends ChessRules {
       super.showChoices(moves);
       return false;
     }
-    if (!move.nextComputed) {
-      // Set potential random effects, so that play() is deterministic
-      // from opponent viewpoint:
-      const endPiece = this.getPiece(move.end.x, move.end.y);
-      switch (endPiece) {
-        case V.EGG:
-          move.egg = Random.sample(V.EGG_SURPRISE);
-          move.next = this.getEggEffect(move);
-          break;
-        case V.MUSHROOM:
-          move.next = this.getMushroomEffect(move);
-          break;
-        case V.BANANA:
-        case V.BOMB:
-          move.next = this.getBombBananaEffect(move, endPiece);
-          break;
-      }
-      if (!move.next && move.appear.length > 0 && !move.kingboo) {
-        const movingPiece = move.appear[0].p;
-        if (['b', 'r'].includes(movingPiece)) {
-          // Drop a banana or bomb:
-          const bs =
-            this.getRandomSquare([move.end.x, move.end.y],
-              movingPiece == 'r'
-                ? [[1, 1], [1, -1], [-1, 1], [-1, -1]]
-                : [[1, 0], [-1, 0], [0, 1], [0, -1]],
-              "freeSquare");
-          if (bs) {
-            move.appear.push(
-              new PiPo({
-                x: bs[0],
-                y: bs[1],
-                c: 'a',
-                p: movingPiece == 'r' ? 'd' : 'w'
-              })
-            );
-            if (this.board[bs[0]][bs[1]] != "") {
-              move.vanish.push(
-                new PiPo({
-                  x: bs[0],
-                  y: bs[1],
-                  c: this.getColor(bs[0], bs[1]),
-                  p: this.getPiece(bs[0], bs[1])
-                })
-              );
-            }
-          }
-        }
-      }
-      move.nextComputed = true;
-    }
+    this.postPlay(move, color, oppCol);
+    return true;
+  }
+
+  postPlay(move, color, oppCol) {
     this.egg = move.egg;
     if (move.egg == "toadette") {
       this.reserve = { w: {}, b: {} };
@@ -526,15 +485,73 @@ export default class ChakartRules extends ChessRules {
         }
       }
     }
-    if (!move.next && !["daisy", "toadette", "kingboo"].includes(move.egg)) {
-      this.turn = oppCol;
-      this.movesCount++;
-    }
+    this.playOnBoard(move);
+    super.postPlay(move);
+  }
+
+  playVisual(move, r) {
+    super.playVisual(move, r);
     if (move.egg)
       this.displayBonus(move);
-    this.playOnBoard(move);
-    this.nextMove = move.next;
-    return true;
+  }
+
+  computeNextMove(move) {
+    // Set potential random effects, so that play() is deterministic
+    // from opponent viewpoint:
+    const endPiece = this.getPiece(move.end.x, move.end.y);
+    switch (endPiece) {
+      case V.EGG:
+        move.egg = Random.sample(V.EGG_SURPRISE);
+        move.next = this.getEggEffect(move);
+        break;
+      case V.MUSHROOM:
+        move.next = this.getMushroomEffect(move);
+        break;
+      case V.BANANA:
+      case V.BOMB:
+        move.next = this.getBombBananaEffect(move, endPiece);
+        break;
+    }
+    // NOTE: Chakart has also some side-effects:
+    if (
+      !move.next && move.appear.length > 0 &&
+      !move.kingboo && !move.luigiEffect
+    ) {
+      const movingPiece = move.appear[0].p;
+      if (['b', 'r'].includes(movingPiece)) {
+        // Drop a banana or bomb:
+        const bs =
+          this.getRandomSquare([move.end.x, move.end.y],
+            movingPiece == 'r'
+              ? [[1, 1], [1, -1], [-1, 1], [-1, -1]]
+              : [[1, 0], [-1, 0], [0, 1], [0, -1]],
+            "freeSquare");
+        if (bs) {
+          move.appear.push(
+            new PiPo({
+              x: bs[0],
+              y: bs[1],
+              c: 'a',
+              p: movingPiece == 'r' ? 'd' : 'w'
+            })
+          );
+          if (this.board[bs[0]][bs[1]] != "") {
+            move.vanish.push(
+              new PiPo({
+                x: bs[0],
+                y: bs[1],
+                c: this.getColor(bs[0], bs[1]),
+                p: this.getPiece(bs[0], bs[1])
+              })
+            );
+          }
+        }
+      }
+    }
+  }
+
+  isLastMove(move) {
+    return !move.next && !["daisy", "toadette", "kingboo"].includes(move.egg);
   }
 
   // Helper to set and apply banana/bomb effect
@@ -584,6 +601,7 @@ export default class ChakartRules extends ChessRules {
               new PiPo({x: coords[0], y: coords[1], c: oldColor, p: piece})
             ]
           });
+          em.luigiEffect = true; //avoid dropping bomb/banana by mistake
         }
         break;
       case "bowser":
@@ -703,23 +721,13 @@ export default class ChakartRules extends ChessRules {
     return moves;
   }
 
-  playPlusVisual(move, r) {
-    const nextLines = () => {
-      if (!this.play(move))
-        return;
-      this.moveStack.push(move);
-      this.playVisual(move, r);
-      if (this.nextMove)
-        this.playPlusVisual(this.nextMove, r);
-      else {
-        this.afterPlay(this.moveStack);
-        this.moveStack = [];
-      }
-    };
-    if (this.moveStack.length == 0)
-      nextLines();
-    else
-      this.animate(move, nextLines);
+  // Kingboo bonus can be animated better:
+  customAnimate(move, segments, cb) {
+    if (!move.kingboo)
+      return 0;
+    super.animateMoving(move.end, move.start, null,
+                        segments.reverse().map(s => s.reverse()), cb);
+    return 1;
   }
 
 };

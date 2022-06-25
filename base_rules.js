@@ -3,6 +3,21 @@ import { ArrayFun } from "/utils/array.js";
 import PiPo from "/utils/PiPo.js";
 import Move from "/utils/Move.js";
 
+// Helper class for move animation
+class TargetObj {
+
+  constructor(callOnComplete) {
+    this.value = 0;
+    this.target = 0;
+    this.callOnComplete = callOnComplete;
+  }
+  increment() {
+    if (++this.value == this.target)
+      this.callOnComplete();
+  }
+
+};
+
 // NOTE: x coords: top to bottom (white perspective); y: left to right
 // NOTE: ChessRules is aliased as window.C, and variants as window.V
 export default class ChessRules {
@@ -94,6 +109,10 @@ export default class ChessRules {
 
   get noAnimate() {
     return !!this.options["dark"];
+  }
+
+  get hasMoveStack() {
+    return false;
   }
 
   // Some variants use click infos:
@@ -391,15 +410,19 @@ export default class ChessRules {
     // Fen string fully describes the game state
     if (!o.fen)
       o.fen = this.genRandInitFen(o.seed);
-    const fenParsed = this.parseFen(o.fen);
-    this.board = this.getBoard(fenParsed.position);
-    this.turn = fenParsed.turn;
-    this.movesCount = parseInt(fenParsed.movesCount, 10);
-    this.setOtherVariables(fenParsed);
+    this.re_initFromFen(o.fen);
 
     // Graphical (can use variables defined above)
     this.containerId = o.element;
     this.graphicalInit();
+  }
+
+  re_initFromFen(fen, oldBoard) {
+    const fenParsed = this.parseFen(fen);
+    this.board = oldBoard || this.getBoard(fenParsed.position);
+    this.turn = fenParsed.turn;
+    this.movesCount = parseInt(fenParsed.movesCount, 10);
+    this.setOtherVariables(fenParsed);
   }
 
   // Turn position fen into double array ["wb","wp","bk",...]
@@ -433,7 +456,6 @@ export default class ChessRules {
       this.initReserves(fenParsed.reserve);
     if (this.options["crazyhouse"])
       this.initIspawn(fenParsed.ispawn);
-    this.subTurn = 1; //may be unused
     if (this.options["teleport"]) {
       this.subTurnTeleport = 1;
       this.captured = null;
@@ -443,6 +465,9 @@ export default class ChessRules {
       this.enlightened = ArrayFun.init(this.size.x, this.size.y, false);
       this.updateEnlightened();
     }
+    this.subTurn = 1; //may be unused
+    if (!this.moveStack) //avoid resetting (unwanted)
+      this.moveStack = [];
   }
 
   updateEnlightened() {
@@ -2128,35 +2153,38 @@ export default class ChessRules {
       this.subTurnTeleport = 1;
       this.captured = null;
     }
-    if (this.options["balance"]) {
-      if (![1, 3].includes(this.movesCount))
-        this.turn = oppCol;
-    }
-    else {
+    if (
+      (
+        this.options["doublemove"] &&
+        this.movesCount >= 1 &&
+        this.subTurn == 1
+      ) ||
+      (this.options["progressive"] && this.subTurn <= this.movesCount)
+    ) {
+      const oppKingPos = this.searchKingPos(oppCol);
       if (
+        oppKingPos[0] >= 0 &&
         (
-          this.options["doublemove"] &&
-          this.movesCount >= 1 &&
-          this.subTurn == 1
-        ) ||
-        (this.options["progressive"] && this.subTurn <= this.movesCount)
+          this.options["taking"] ||
+          !this.underCheck(oppKingPos, color)
+        )
       ) {
-        const oppKingPos = this.searchKingPos(oppCol);
-        if (
-          oppKingPos[0] >= 0 &&
-          (
-            this.options["taking"] ||
-            !this.underCheck(oppKingPos, color)
-          )
-        ) {
-          this.subTurn++;
-          return;
-        }
+        this.subTurn++;
+        return;
       }
-      this.turn = oppCol;
     }
-    this.movesCount++;
-    this.subTurn = 1;
+    if (this.isLastMove(move)) {
+      this.turn = oppCol;
+      this.movesCount++;
+      this.subTurn = 1;
+    }
+  }
+
+  isLastMove(move) {
+    return (
+      (this.options["balance"] && ![1, 3].includes(this.movesCount)) ||
+      !move.next
+    );
   }
 
   // "Stop at the first move found"
@@ -2233,10 +2261,49 @@ export default class ChessRules {
   }
 
   playPlusVisual(move, r) {
-    this.play(move);
-    this.playVisual(move, r);
-    this.afterPlay(move); //user method
+    if (this.hasMoveStack)
+      this.buildMoveStack(move);
+    else {
+      this.play(move);
+      this.playVisual(move, r);
+      this.afterPlay(move, this.turn, {send: true, res: true}); //user method
+    }
   }
+
+  // TODO: send stack receive stack, or allow incremental? (good/bad points)
+  buildMoveStack(move) {
+    this.moveStack.push(move);
+    this.computeNextMove(move);
+    this.play(move);
+    const newTurn = this.turn;
+    if (this.moveStack.length == 1) {
+      this.playVisual(move);
+      this.gameState = {
+        fen: this.getFen(),
+        board: JSON.parse(JSON.stringify(this.board)) //easier
+      };
+    }
+    if (move.next)
+      this.buildMoveStack(move.next);
+    else {
+      // Send, animate + play until here
+      if (this.moveStack.length == 1) {
+        this.afterPlay(this.moveStack, newTurn, {send: true, res: true});
+        this.moveStack = []
+      }
+      else {
+        this.afterPlay(this.moveStack, newTurn, {send: true, res: false});
+        this.re_initFromFen(this.gameState.fen, this.gameState.board);
+        this.playReceivedMove(this.moveStack.slice(1), () => {
+          this.afterPlay(this.moveStack, newTurn, {send: false, res: true});
+          this.moveStack = []
+        });
+      }
+    }
+  }
+
+  // Implemented in variants using (automatic) moveStack
+  computeNextMove(move) {}
 
   getMaxDistance(r) {
     // Works for all rectangular boards:
@@ -2247,41 +2314,37 @@ export default class ChessRules {
     return (typeof x == "string" ? this.r_pieces : this.g_pieces)[x][y];
   }
 
-  animate(move, callback) {
-    if (this.noAnimate || move.noAnimate) {
-      callback();
-      return;
-    }
-    let initPiece = this.getDomPiece(move.start.x, move.start.y);
-    // NOTE: cloning generally not required, but light enough, and simpler
+  animateMoving(start, end, drag, segments, cb) {
+    let initPiece = this.getDomPiece(start.x, start.y);
+    // NOTE: cloning often not required, but light enough, and simpler
     let movingPiece = initPiece.cloneNode();
     initPiece.style.opacity = "0";
     let container =
       document.getElementById(this.containerId)
     const r = container.querySelector(".chessboard").getBoundingClientRect();
-    if (typeof move.start.x == "string") {
+    if (typeof start.x == "string") {
       // Need to bound width/height (was 100% for reserve pieces)
       const pieceWidth = this.getPieceWidth(r.width);
       movingPiece.style.width = pieceWidth + "px";
       movingPiece.style.height = pieceWidth + "px";
     }
     const maxDist = this.getMaxDistance(r);
-    const apparentColor = this.getColor(move.start.x, move.start.y);
-    const pieces = this.pieces(apparentColor, move.start.x, move.start.y);
-    if (move.drag) {
-      const startCode = this.getPiece(move.start.x, move.start.y);
+    const apparentColor = this.getColor(start.x, start.y);
+    const pieces = this.pieces(apparentColor, start.x, start.y);
+    if (drag) {
+      const startCode = this.getPiece(start.x, start.y);
       C.RemoveClass_es(movingPiece, pieces[startCode]["class"]);
-      C.AddClass_es(movingPiece, pieces[move.drag.p]["class"]);
-      if (apparentColor != move.drag.c) {
+      C.AddClass_es(movingPiece, pieces[drag.p]["class"]);
+      if (apparentColor != drag.c) {
         movingPiece.classList.remove(C.GetColorClass(apparentColor));
-        movingPiece.classList.add(C.GetColorClass(move.drag.c));
+        movingPiece.classList.add(C.GetColorClass(drag.c));
       }
     }
     container.appendChild(movingPiece);
     const animateSegment = (index, cb) => {
       // NOTE: move.drag could be generalized per-segment (usage?)
-      const [i1, j1] = move.segments[index][0];
-      const [i2, j2] = move.segments[index][1];
+      const [i1, j1] = segments[index][0];
+      const [i2, j2] = segments[index][1];
       const dep = this.getPixelPosition(i1, j1, r);
       const arr = this.getPixelPosition(i2, j2, r);
       movingPiece.style.transitionDuration = "0s";
@@ -2297,22 +2360,61 @@ export default class ChessRules {
         setTimeout(cb, duration * 1000);
       }, 50);
     };
-    if (!move.segments) {
-      move.segments = [
-        [[move.start.x, move.start.y], [move.end.x, move.end.y]]
-      ];
-    }
     let index = 0;
     const animateSegmentCallback = () => {
-      if (index < move.segments.length)
+      if (index < segments.length)
         animateSegment(index++, animateSegmentCallback);
       else {
         movingPiece.remove();
         initPiece.style.opacity = "1";
-        callback();
+        cb();
       }
     };
     animateSegmentCallback();
+  }
+
+  // Input array of objects with at least fields x,y (e.g. PiPo)
+  animateFading(arr, cb) {
+    const animLength = 350; //TODO: 350ms? More? Less?
+    arr.forEach(v => {
+      let fadingPiece = this.getDomPiece(v.x, v.y);
+      fadingPiece.style.transitionDuration = (animLength / 1000) + "s";
+      fadingPiece.style.opacity = "0";
+    });
+    setTimeout(cb, animLength);
+  }
+
+  animate(move, callback) {
+    if (this.noAnimate || move.noAnimate) {
+      callback();
+      return;
+    }
+    let segments = move.segments;
+    if (!segments)
+      segments = [ [[move.start.x, move.start.y], [move.end.x, move.end.y]] ];
+    let targetObj = new TargetObj(callback);
+    if (move.start.x != move.end.x || move.start.y != move.end.y) {
+      targetObj.target++;
+      this.animateMoving(move.start, move.end, move.drag, segments,
+                         () => targetObj.increment());
+    }
+    if (move.vanish.length > move.appear.length) {
+      const arr = move.vanish.slice(move.appear.length)
+                    .filter(v => v.x != move.end.x || v.y != move.end.y);
+      if (arr.length > 0) {
+        targetObj.target++;
+        this.animateFading(arr, () => targetObj.increment());
+      }
+    }
+    targetObj.target +=
+      this.customAnimate(move, segments, () => targetObj.increment());
+    if (targetObj.target == 0)
+      callback();
+  }
+
+  // Potential other animations (e.g. for Suction variant)
+  customAnimate(move, segments, cb) {
+    return 0; //nb of targets
   }
 
   playReceivedMove(moves, callback) {

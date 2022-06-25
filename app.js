@@ -456,9 +456,28 @@ function notifyMe(code) {
 
 let curMoves = [],
     lastFen;
-const afterPlay = (move_s) => {
-  const callbackAfterSend = () => {
-    curMoves = [];
+const afterPlay = (move_s, newTurn, ops) => {
+  if (ops.send) {
+    // Pack into one moves array, then send (if turn changed)
+    if (Array.isArray(move_s))
+      // Array of simple moves (e.g. Chakart)
+      Array.prototype.push.apply(curMoves, move_s);
+    else
+      // Usual case
+      curMoves.push(move_s);
+    if (newTurn != playerColor) {
+      send("newmove",
+           {gid: gid, moves: curMoves, fen: vr.getFen()},
+           {
+             retry: true,
+             success: () => curMoves = [],
+             error: () => alert("Move not sent: reload page")
+           }
+      );
+    }
+  }
+  if (ops.res && newTurn != playerColor) {
+    toggleTurnIndicator(false); //now all moves are sent and animated
     const result = vr.getCurrentScore(move_s);
     if (result != "*") {
       setTimeout(() => {
@@ -466,23 +485,6 @@ const afterPlay = (move_s) => {
         send("gameover", {gid: gid});
       }, 2000);
     }
-  };
-  // Pack into one moves array, then send
-  if (Array.isArray(move_s))
-    // Array of simple moves (e.g. Chakart)
-    Array.prototype.push.apply(curMoves, move_s);
-  else
-    // Usual case
-    curMoves.push(move_s);
-  if (vr.turn != playerColor) {
-    toggleTurnIndicator(false);
-    send("newmove",
-         {gid: gid, moves: curMoves, fen: vr.getFen()},
-         {
-           retry: true,
-           success: callbackAfterSend,
-           error: () => alert("Move not sent: reload page")
-         });
   }
 };
 
@@ -532,8 +534,9 @@ function initializeGame(obj) {
       afterPlay: afterPlay,
       options: options
     });
-    if (!obj.fen) {
-      // Game creation: both players set FEN, in case of one is offline
+    const gameCreation = !obj.fen;
+    if (gameCreation) {
+      // Both players set FEN, in case of one is offline
       send("setfen", {gid: obj.gid, fen: vr.getFen()});
       localStorage.setItem("gid", obj.gid);
     }
@@ -547,7 +550,7 @@ function initializeGame(obj) {
     }
     const playerIndex = (playerColor == "w" ? 0 : 1);
     fillGameInfos(obj, 1 - playerIndex);
-    if (obj.players[playerIndex].randvar)
+    if (obj.players[playerIndex].randvar && gameCreation)
       toggleVisible("gameInfos");
     else
       toggleVisible("boardContainer");

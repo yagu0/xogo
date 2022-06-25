@@ -110,4 +110,13 @@ export default class SuctionRules extends ChessRules {
     return "*";
   }
 
+  // Better animation for swaps
+  customAnimate(move, segments, cb) {
+    if (move.vanish.length < 2)
+      return 0;
+    super.animateMoving(move.end, move.start, null,
+                        segments.reverse().map(s => s.reverse()), cb);
+    return 1;
+  }
+
 };
