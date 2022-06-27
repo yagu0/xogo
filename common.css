@@ -41,7 +41,7 @@ main > div {
 }
 
 @media(max-height: 800px) {
-  main > div {
+  #newGameForm, #gameInfos {
     margin-top: 30px;
   }
 }

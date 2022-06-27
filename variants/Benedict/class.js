@@ -43,52 +43,26 @@ export default class BenedictRules extends ChessRules {
     );
   }
 
-  // Find potential captures from a square
-  // follow steps from x,y until something is met.
-  findAttacks([x, y]) {
-    const [color, piece] = [this.getColor(x, y), this.getPiece(x, y)];
-    const oppCol = C.GetOppCol(color);
-    let squares = {};
-    const specs = this.pieces(color, x, y)[piece];
-    const attacks = specs.attack || specs.moves;
-    for (let a of attacks) {
-      outerLoop: for (let step of a.steps) {
-        let [i, j] = [x + step[0], this.getY(y + step[1])];
-        let nbSteps = 1;
-        while (this.onBoard(i, j) && this.board[i][j] == "") {
-          if (a.range <= nbSteps++)
-            continue outerLoop;
-          i += step[0];
-          j = this.getY(j + step[1]);
-        }
-        if (
-          this.onBoard(i, j) && this.getColor(i, j) == oppCol &&
-          (!this.options["zen"] || this.getPieceType(i, j) == "k")
-        ) {
-          squares[C.CoordsToSquare({x: i, y: j})] = true;
-        }
-      }
-    }
-    return Object.keys(squares);
-  }
-
   postProcessPotentialMoves(moves) {
     moves.forEach(m => {
       m.flips = [];
       if (!this.options["cleopatra"] || m.vanish[0].p == 'q') {
         super.playOnBoard(m);
-        let attacks = this.findAttacks([m.end.x, m.end.y])
+        let attacks = super.findDestSquares(
+          [m.end.x, m.end.y],
+          {attackOnly: true, segments: false},
+          ([x, y] => this.canTake([m.end.x, m.end.y], [x, y]))
+        );
         if (this.options["zen"]) {
-          let endSquares = {};
-          super.findCapturesOn([m.end.x, m.end.y], {zen: true}).forEach(c => {
-            endSquares[C.CoordsToSquare(c.end)] = true;
-          });
-          Array.prototype.push.apply(attacks, Object.keys(endSquares));
+          const zenAttacks = super.findCapturesOn(
+            [m.end.x, m.end.y],
+            {segments: false},
+            ([x, y] => this.canTake([m.end.x, m.end.y], [x, y]))
+          );
+          Array.prototype.push.apply(attacks, zenAttacks);
         }
         super.undoOnBoard(m);
-        attacks.map(C.SquareToCoords).forEach(a => {
-          m.flips.push({x: a.x, y: a.y});
-        });
+        attacks.forEach(a => m.flips.push({x: a.sq[0], y: a.sq[1]}));
       }
     });
     return moves;
@@ -108,20 +82,6 @@ export default class BenedictRules extends ChessRules {
       const newColor = C.GetOppCol(this.getColor(xy.x, xy.y));
       this.board[xy.x][xy.y] = newColor + this.board[xy.x][xy.y][1];
     }
-  }
-
-  postPlay(move) {
-    if (this.options["balance"] && [1, 3].includes(this.movesCount)) {
-      // If enemy king is flipped: game over
-      const oppCol = C.GetOppCol(move.vanish[0].c);
-      const oppKingPos = this.searchKingPos(oppCol);
-      if (oppKingPos[0] < 0) {
-        this.turn = oppCol;
-        this.movesCount++;
-        return;
-      }
-    }
-    super.postPlay(move);
   }
 
   // Moves cannot flip our king's color, so all are valid

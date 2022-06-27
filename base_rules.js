@@ -1114,11 +1114,6 @@ export default class ChessRules {
     return (color == "w" ? "b" : "w");
   }
 
-  // Can thing on square1 capture (enemy) thing on square2?
-  canTake([x1, y1], [x2, y2]) {
-    return (this.getColor(x1, y1) !== this.getColor(x2, y2));
-  }
-
   // Is (x,y) on the chessboard?
   onBoard(x, y) {
     return (x >= 0 && x < this.size.x &&
@@ -1214,8 +1209,31 @@ export default class ChessRules {
     };
   }
 
-  ////////////////////
-  // MOVES GENERATION
+  // NOTE: using special symbols to not interfere with variants' pieces codes
+  static get CannibalKings() {
+    return {
+      "!": "p",
+      "#": "r",
+      "$": "n",
+      "%": "b",
+      "*": "q",
+      "k": "k"
+    };
+  }
+
+  static get CannibalKingCode() {
+    return {
+      "p": "!",
+      "r": "#",
+      "n": "$",
+      "b": "%",
+      "q": "*",
+      "k": "k"
+    };
+  }
+
+  //////////////////////////
+  // MOVES GENERATION UTILS
 
   // For Cylinder: get Y coordinate
   getY(y) {
@@ -1227,44 +1245,114 @@ export default class ChessRules {
     return res;
   }
 
+  // Can thing on square1 capture thing on square2?
+  canTake([x1, y1], [x2, y2]) {
+    return this.getColor(x1, y1) !== this.getColor(x2, y2);
+  }
+
+  canStepOver(i, j, p) {
+    // In some variants, objects on boards don't stop movement (Chakart)
+    return this.board[i][j] == "";
+  }
+
+  // For Madrasi:
+  // (redefined in Baroque etc, where Madrasi condition doesn't make sense)
+  isImmobilized([x, y]) {
+    if (!this.options["madrasi"])
+      return false;
+    const color = this.getColor(x, y);
+    const oppCol = C.GetOppCol(color);
+    const piece = this.getPieceType(x, y); //ok not cannibal king
+    const stepSpec = this.getStepSpec(color, x, y);
+    const attacks = stepSpec.attack || stepSpec.moves;
+    for (let a of attacks) {
+      outerLoop: for (let step of a.steps) {
+        let [i, j] = [x + step[0], y + step[1]];
+        let stepCounter = 1;
+        while (this.onBoard(i, j) && this.board[i][j] == "") {
+          if (a.range <= stepCounter++)
+            continue outerLoop;
+          i += step[0];
+          j = this.getY(j + step[1]);
+        }
+        if (
+          this.onBoard(i, j) &&
+          this.getColor(i, j) == oppCol &&
+          this.getPieceType(i, j) == piece
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   // Stop at the first capture found
   atLeastOneCapture(color) {
-    color = color || this.turn;
     const oppCol = C.GetOppCol(color);
-    for (let i = 0; i < this.size.x; i++) {
-      for (let j = 0; j < this.size.y; j++) {
-        if (this.board[i][j] != "" && this.getColor(i, j) == color) {
-          const allSpecs = this.pieces(color, i, j)
-          let specs = allSpecs[this.getPieceType(i, j)];
-          if (specs.moveas)
-            specs = allSpecs[specs.moveas];
-          const attacks = specs.attack || specs.moves;
-          for (let a of attacks) {
-            outerLoop: for (let step of a.steps) {
-              let [ii, jj] = [i + step[0], this.getY(j + step[1])];
-              let stepCounter = 1;
-              while (this.onBoard(ii, jj) && this.board[ii][jj] == "") {
-                if (a.range <= stepCounter++)
-                  continue outerLoop;
-                ii += step[0];
-                jj = this.getY(jj + step[1]);
-              }
-              if (
-                this.onBoard(ii, jj) &&
-                this.getColor(ii, jj) == oppCol &&
-                this.filterValid(
-                  [this.getBasicMove([i, j], [ii, jj])]
-                ).length >= 1
-              ) {
-                return true;
-              }
-            }
+    const allowed = ([x, y]) => {
+      this.getColor(x, y) == oppCol &&
+      this.filterValid([this.getBasicMove([i, j], [x, y])]).length >= 1
+    };
+    for (let i=0; i<this.size.x; i++) {
+      for (let j=0; j<this.size.y; j++) {
+        if (this.getColor(i, j) == color) {
+          if (
+            (!this.options["zen"] && this.findDestSquares(
+              [i, j], {attackOnly: true, one: true}, allowed).length == 1) ||
+            (this.options["zen"] && this.findCapturesOn(
+              [i, j], {one: true}, allowed).length == 1)
+          ) {
+            return true;
           }
         }
       }
     }
     return false;
   }
+
+  getSegments(curSeg, segStart, segEnd) {
+    if (curSeg.length == 0)
+      return undefined;
+    let segments = JSON.parse(JSON.stringify(curSeg)); //not altering
+    segments.push([[segStart[0], segStart[1]], [segEnd[0], segEnd[1]]]);
+    return segments;
+  }
+
+  getStepSpec(color, x, y) {
+    const allSpecs = this.pieces(color, x, y);
+    let stepSpec = allSpecs[piece];
+    if (stepSpec.moveas)
+      stepSpec = allSpecs[stepSpec.moveas];
+    return stepSpec;
+  }
+
+  compatibleStep([x1, y1], [x2, y2], step, range) {
+    let shifts = [0];
+    if (this.options["cylinder"])
+      Array.prototype.push.apply(shifts, [-this.size.y, this.size.y]);
+    for (let sh of shifts) {
+      const rx = (x2 - x1) / step[0],
+            ry = (y2 + sh - y1) / step[1];
+      if (
+        (!Number.isFinite(rx) && !Number.isNaN(rx)) ||
+        (!Number.isFinite(ry) && !Number.isNaN(ry))
+      ) {
+        continue;
+      }
+      let distance = (Number.isNaN(rx) ? ry : rx);
+      // TODO: 1e-7 here is totally arbitrary
+      if (Math.abs(distance - Math.round(distance)) > 1e-7)
+        continue;
+      distance = Math.round(distance); //in case of (numerical...)
+      if (range >= distance)
+        return true;
+    }
+    return false;
+  }
+
+  ////////////////////
+  // MOVES GENERATION
 
   getDropMovesFrom([c, p]) {
     // NOTE: by design, this.reserve[c][p] >= 1 on user click
@@ -1488,121 +1576,125 @@ export default class ChessRules {
     Array.prototype.push.apply(moves, newMoves);
   }
 
-  // NOTE: using special symbols to not interfere with variants' pieces codes
-  static get CannibalKings() {
-    return {
-      "!": "p",
-      "#": "r",
-      "$": "n",
-      "%": "b",
-      "*": "q",
-      "k": "k"
-    };
-  }
-
-  static get CannibalKingCode() {
-    return {
-      "p": "!",
-      "r": "#",
-      "n": "$",
-      "b": "%",
-      "q": "*",
-      "k": "k"
-    };
-  }
-
-  isKing(symbol) {
-    return !!C.CannibalKings[symbol];
-  }
-
-  // For Madrasi:
-  // (redefined in Baroque etc, where Madrasi condition doesn't make sense)
-  isImmobilized([x, y]) {
-    if (!this.options["madrasi"])
-      return false;
-    const color = this.getColor(x, y);
-    const oppCol = C.GetOppCol(color);
-    const piece = this.getPieceType(x, y); //ok not cannibal king
-    const allSpecs = this.pieces(color, x, y);
-    let stepSpec = allSpecs[piece];
-    if (stepSpec.moveas)
-      stepSpec = allSpecs[stepSpec.moveas];
-    const attacks = stepSpec.attack || stepSpec.moves;
-    for (let a of attacks) {
-      outerLoop: for (let step of a.steps) {
-        let [i, j] = [x + step[0], y + step[1]];
-        let stepCounter = 1;
-        while (this.onBoard(i, j) && this.board[i][j] == "") {
-          if (a.range <= stepCounter++)
-            continue outerLoop;
-          i += step[0];
-          j = this.getY(j + step[1]);
-        }
-        if (
-          this.onBoard(i, j) &&
-          this.getColor(i, j) == oppCol &&
-          this.getPieceType(i, j) == piece
-        ) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  canStepOver(i, j, p) {
-    // In some variants, objects on boards don't stop movement (Chakart)
-    return this.board[i][j] == "";
-  }
-
   // Generic method to find possible moves of "sliding or jumping" pieces
-  getPotentialMovesOf(piece, [x, y]) {
+  getPotentialMovesOf(piece, [x, y], color) {
     const color = this.getColor(x, y);
+    const specialAttack = !!this.getStepSpec(color, x, y).attack;
+    let squares = [];
+    if (specialAttack) {
+      squares = this.findDestSquares(
+        [x, y],
+        {
+          attackOnly: true,
+          segments: this.options["cylinder"]
+        },
+        ([i, j]) => {
+          return (
+            (!this.options["zen"] || this.getPieceType(i, j) == 'k') &&
+            this.canTake([x, y], [i, j])
+          );
+        }
+      );
+    }
+    const noSpecials = this.findDestSquares(
+      [x, y],
+      {
+        moveOnly: specialAttack || this.options["zen"],
+        segments: this.options["cylinder"]
+      },
+      ([i, j]) => this.board[i][j] == "" || this.canTake([x, y], [i, j])
+    );
+    Array.prototype.push.apply(squares, noSpecials);
+    if (this.options["zen"]) {
+      let zenCaptures = this.findCapturesOn(
+        [x, y],
+        {},
+        ([i, j]) => this.getPieceType(i, j) != 'k'
+      );
+      // Technical step: segments (if any) are reversed
+      if (this.options["cylinder"]) {
+        zenCaptures.forEach(z => {
+          if (z.segments)
+            z.segments = z.segments.reverse().map(s => s.reverse())
+        });
+      }
+      Array.prototype.push.apply(squares, zenCaptures);
+    }
+    if (
+      this.options["recycle"] ||
+      (this.options["teleport"] && this.subTurnTeleport == 1)
+    ) {
+      const selfCaptures = this.findDestSquares(
+        [x, y],
+        {
+          attackOnly: true,
+          segments: this.options["cylinder"]
+        },
+        ([i, j]) =>
+          this.getColor(i, j) == color && this.getPieceType(i, j) != 'k'
+      );
+      Array.prototype.push.apply(squares, selfCaptures);
+    }
+    return squares.map(s => {
+      let mv = this.getBasicMove([x, y], s.sq);
+      if (this.options["cylinder"] && s.segments.length >= 2)
+        mv.segments = s.segments;
+      return mv;
+    });
+  }
+
+  findDestSquares([x, y], o, allowed) {
+    if (!allowed)
+      allowed = () => true;
     const apparentPiece = this.getPiece(x, y); //how it looks
-    const allSpecs = this.pieces(color, x, y);
-    let stepSpec = allSpecs[piece];
-    if (stepSpec.moveas)
-      stepSpec = allSpecs[stepSpec.moveas];
-    let moves = [];
-    // Next 3 for Cylinder mode:
+    let res = [];
+    // Next 3 for Cylinder mode: (unused if !o.segments)
     let explored = {};
     let segments = [];
     let segStart = [];
-
-    const addMove = (start, end) => {
-      let newMove = this.getBasicMove(start, end);
-      if (segments.length > 0) {
-        newMove.segments = JSON.parse(JSON.stringify(segments));
-        newMove.segments.push([[segStart[0], segStart[1]], [end[0], end[1]]]);
-      }
-      moves.push(newMove);
+    const addSquare = ([i, j]) => {
+      let elt = {sq: [i, j]};
+      if (o.segments)
+        elt.segments = this.getSegments(segments, segStart, end);
+      res.push(elt);
     };
-
-    const findAddMoves = (type, stepArray) => {
+    const exploreSteps = (stepArray) => {
       for (let s of stepArray) {
         outerLoop: for (let step of s.steps) {
-          segments = [];
-          segStart = [x, y];
+          if (o.segments) {
+            segments = [];
+            segStart = [x, y];
+          }
           let [i, j] = [x, y];
           let stepCounter = 0;
           while (
             this.onBoard(i, j) &&
             ((i == x && j == y) || this.canStepOver(i, j, apparentPiece))
           ) {
-            if (
-              type != "attack" &&
-              !explored[i + "." + j] &&
-              (i != x || j != y)
-            ) {
+            if (!explored[i + "." + j] && (i != x || j != y))
+            {
               explored[i + "." + j] = true;
-              addMove([x, y], [i, j]);
+              if (
+                allowed([i, j]) &&
+                (
+                  !o.captureTarget ||
+                  (o.captureTarget[0] == i && o.captureTarget[1] == j)
+                )
+              ) {
+                if (o.one && !o.attackOnly)
+                  return true;
+                if (!o.attackOnly)
+                  addSquare(!o.captureTarget ? [i, j] : [x, y]);
+                if (o.captureTarget)
+                  return res[0];
+              }
             }
             if (s.range <= stepCounter++)
               continue outerLoop;
             const oldIJ = [i, j];
             i += step[0];
             j = this.getY(j + step[1]);
-            if (Math.abs(j - oldIJ[1]) > 1) {
+            if (o.segments && Math.abs(j - oldIJ[1]) > 1) {
               // Boundary between segments (cylinder mode)
               segments.push([[segStart[0], segStart[1]], oldIJ]);
               segStart = [i, j];
@@ -1611,112 +1703,84 @@ export default class ChessRules {
           if (!this.onBoard(i, j))
             continue;
           const pieceIJ = this.getPieceType(i, j);
-          if (
-            type != "moveonly" &&
-            !explored[i + "." + j] &&
-            (
-              !this.options["zen"] ||
-              pieceIJ == "k"
-            ) &&
-            (
-              this.canTake([x, y], [i, j]) ||
-              (
-                (this.options["recycle"] || this.options["teleport"]) &&
-                pieceIJ != "k"
-              )
-            )
-          ) {
+          if (!explored[i + "." + j]) {
             explored[i + "." + j] = true;
-            addMove([x, y], [i, j]);
+            if (allowed([i, j])) {
+              if (o.one && !o.moveOnly)
+                return true;
+              if (!o.moveOnly)
+                addSquare(!o.captureTarget ? [i, j] : [x, y]);
+              if (
+                o.captureTarget &&
+                o.captureTarget[0] == i && o.captureTarget[1] == j
+              ) {
+                return res[0];
+              }
+            }
           }
         }
       }
     };
-
-    const specialAttack = !!stepSpec.attack;
-    if (specialAttack)
-      findAddMoves("attack", stepSpec.attack);
-    findAddMoves(specialAttack ? "moveonly" : "all", stepSpec.moves);
-    if (this.options["zen"]) {
-      Array.prototype.push.apply(moves,
-                                 this.findCapturesOn([x, y], {zen: true}));
+    if (o.captureTarget)
+      exploreSteps(o.captureSteps)
+    else {
+      const stepSpec = this.getStepSpec(this.getColor(x, y), x, y);
+      if (!o.attackOnly || !stepSpec.attack)
+        exploreSteps(stepSpec.moves);
+      if (!o.moveOnly && !!stepSpec.attack)
+        exploreSteps(stepSpec.attack);
     }
-    return moves;
+    return o.captureTarget ? null : (o.one ? false : res);
   }
 
   // Search for enemy (or not) pieces attacking [x, y]
-  findCapturesOn([x, y], args) {
-    let moves = [];
-    if (!args.oppCol)
-      args.oppCol = C.GetOppCol(this.getColor(x, y) || this.turn);
+  findCapturesOn([x, y], o, allowed) {
+    if (!allowed)
+      allowed = () => true;
+    let res = [];
+    if (!o.byCol)
+      o.byCol = [C.GetOppCol(this.getColor(x, y) || this.turn)];
     for (let i=0; i<this.size.x; i++) {
       for (let j=0; j<this.size.y; j++) {
+        const colIJ = this.getColor(i, j);
         if (
           this.board[i][j] != "" &&
-          this.getColor(i, j) == args.oppCol &&
+          o.byCol.includes(colIJ) &&
           !this.isImmobilized([i, j])
         ) {
-          if (args.zen && this.isKing(this.getPiece(i, j)))
-            continue; //king not captured in this way
           const apparentPiece = this.getPiece(i, j);
           // Quick check: does this potential attacker target x,y ?
           if (this.canStepOver(x, y, apparentPiece))
             continue;
-          const allSpecs = this.pieces(args.oppCol, i, j);
-          let stepSpec = allSpecs[this.getPieceType(i, j)];
-          if (stepSpec.moveas)
-            stepSpec = allSpecs[stepSpec.moveas];
+          const stepSpec = this.getStepSpec(colIJ, i, j);
           const attacks = stepSpec.attack || stepSpec.moves;
           for (let a of attacks) {
             for (let s of a.steps) {
               // Quick check: if step isn't compatible, don't even try
-              if (!C.CompatibleStep([i, j], [x, y], s, a.range))
+              if (!this.compatibleStep([i, j], [x, y], s, a.range))
                 continue;
               // Finally verify that nothing stand in-between
-              let [ii, jj] = [i + s[0], this.getY(j + s[1])];
-              let stepCounter = 1;
-              while (
-                this.onBoard(ii, jj) &&
-                this.board[ii][jj] == "" &&
-                (ii != x || jj != y) //condition to attack empty squares too
-              ) {
-                ii += s[0];
-                jj = this.getY(jj + s[1]);
-              }
-              if (ii == x && jj == y) {
-                if (args.zen)
-                  // Reverse capture:
-                  moves.push(this.getBasicMove([x, y], [i, j]));
-                else
-                  moves.push(this.getBasicMove([i, j], [x, y]));
-                if (args.one)
-                  return moves; //test for underCheck
+              const newSquare = this.findDestSquares(
+                [i, j],
+                {
+                  captureTarget: [x, y],
+                  captureSteps: [{steps: [s], range: a.range}],
+                  segments: this.options["cylinder"],
+                  attackOnly: true
+                },
+                ([ii, jj]) => this.canTake([ii, jj], [x, y])
+              );
+              if (newSquare)
+                if (o.one)
+                  return true;
+                res.push(newSquare);
               }
             }
           }
         }
       }
     }
-    return moves;
-  }
-
-  static CompatibleStep([x1, y1], [x2, y2], step, range) {
-    const rx = (x2 - x1) / step[0],
-          ry = (y2 - y1) / step[1];
-    if (
-      (!Number.isFinite(rx) && !Number.isNaN(rx)) ||
-      (!Number.isFinite(ry) && !Number.isNaN(ry))
-    ) {
-      return false;
-    }
-    let distance = (Number.isNaN(rx) ? ry : rx);
-    // TODO: 1e-7 here is totally arbitrary
-    if (Math.abs(distance - Math.round(distance)) > 1e-7)
-      return false;
-    distance = Math.round(distance); //in case of (numerical...)
-    if (range < distance)
-      return false;
-    return true;
+    return (one ? false : res);
   }
 
   // Build a regular move from its initial and destination squares.
@@ -1765,7 +1829,7 @@ export default class ChessRules {
       if (this.options["cannibal"] && destColor != initColor) {
         const lastIdx = mv.vanish.length - 1;
         let trPiece = mv.vanish[lastIdx].p;
-        if (this.isKing(this.getPiece(sx, sy)))
+        if (this.getPieceType(sx, sy) == 'k')
           trPiece = C.CannibalKingCode[trPiece];
         if (mv.appear.length >= 1)
           mv.appear[0].p = trPiece;
@@ -1953,50 +2017,48 @@ export default class ChessRules {
   ////////////////////
   // MOVES VALIDATION
 
-  // Is (king at) given position under check by "oppCol" ?
+  // Is piece (or square) at given position attacked by "oppCol" ?
+  underAttack([x, y], oppCol) {
+    const king = this.getPieceType(x, y) == 'k';
+    return (
+      (
+        (!this.options["zen"] || king) &&
+        this.findCapturesOn([x, y],
+          {oppCol: oppCol, segments: this.options["cylinder"], one: true},
+          ([i, j]) => this.canTake([i, j], [x, y])).length == 1
+      )
+      ||
+      (
+        (this.options["zen"] && !king) &&
+        this.findDestSquares([x, y],
+          {attackOnly: true, segments: this.options["cylinder"], one: true},
+          ([i, j]) => this.canTake([i, j], [x, y])).length == 1
+      )
+    );
+  }
+
   underCheck([x, y], oppCol) {
     if (this.options["taking"] || this.options["dark"])
       return false;
-    return (
-      this.findCapturesOn([x, y], {oppCol: oppCol, one: true}).length >= 1
-    );
+    return this.underAttack([x, y], oppCol);
   }
 
   // Stop at first king found (TODO: multi-kings)
   searchKingPos(color) {
     for (let i=0; i < this.size.x; i++) {
       for (let j=0; j < this.size.y; j++) {
-        if (this.getColor(i, j) == color && this.isKing(this.getPiece(i, j)))
+        if (this.getColor(i, j) == color && this.getPieceType(i, j) == 'k')
           return [i, j];
       }
     }
     return [-1, -1]; //king not found
   }
 
-  // Some variants (e.g. Refusal) may need to check opponent moves too
+  // 'color' arg because some variants (e.g. Refusal) check opponent moves
   filterValid(moves, color) {
-    if (moves.length == 0)
-      return [];
     if (!color)
       color = this.turn;
     const oppCol = C.GetOppCol(color);
-    if (this.options["balance"] && [1, 3].includes(this.movesCount)) {
-      // Forbid moves either giving check or exploding opponent's king:
-      const oppKingPos = this.searchKingPos(oppCol);
-      moves = moves.filter(m => {
-        if (
-          m.vanish.some(v => v.c == oppCol && v.p == "k") &&
-          m.appear.every(a => a.c != oppCol || a.p != "k")
-        )
-          return false;
-        this.playOnBoard(m);
-        const res = !this.underCheck(oppKingPos, color);
-        this.undoOnBoard(m);
-        return res;
-      });
-    }
-    if (this.options["taking"] || this.options["dark"])
-      return moves;
     const kingPos = this.searchKingPos(color);
     let filtered = {}; //avoid re-checking similar moves (promotions...)
     return moves.filter(m => {
@@ -2006,12 +2068,12 @@ export default class ChessRules {
         let square = kingPos,
             res = true; //a priori valid
         if (m.vanish.some(v => {
-          return this.isKing(v.p) && v.c == color;
+          return this.getPieceType(0, 0, v.p) == 'k' && v.c == color;
         })) {
           // Search king in appear array:
           const newKingIdx =
             m.appear.findIndex(a => {
-              return this.isKing(a.p) && a.c == color;
+              return this.getPieceType(0, 0, a.p) == 'k' && a.c == color;
             });
           if (newKingIdx >= 0)
             square = [m.appear[newKingIdx].x, m.appear[newKingIdx].y];
@@ -2149,14 +2211,13 @@ export default class ChessRules {
 
   postPlay(move) {
     const color = this.turn;
-    const oppCol = C.GetOppCol(color);
     if (this.options["dark"])
       this.updateEnlightened();
     if (this.options["teleport"]) {
       if (
         this.subTurnTeleport == 1 &&
         move.vanish.length > move.appear.length &&
-        move.vanish[move.vanish.length - 1].c == color
+        move.vanish[1].c == color
       ) {
         const v = move.vanish[move.vanish.length - 1];
         this.captured = {x: v.x, y: v.y, c: v.c, p: v.p};
@@ -2166,41 +2227,39 @@ export default class ChessRules {
       this.subTurnTeleport = 1;
       this.captured = null;
     }
-    if (
-      !move.next &&
-      (
-        (
-          this.options["doublemove"] &&
-          this.movesCount >= 1 &&
-          this.subTurn == 1
-        )
-        ||
-        (this.options["progressive"] && this.subTurn <= this.movesCount)
-      )
-    ) {
-      const oppKingPos = this.searchKingPos(oppCol);
-      if (
-        oppKingPos[0] >= 0 &&
-        (
-          this.options["taking"] ||
-          !this.underCheck(oppKingPos, color)
-        )
-      ) {
-        this.subTurn++;
-        return;
-      }
-    }
     if (this.isLastMove(move)) {
       this.turn = oppCol;
       this.movesCount++;
       this.subTurn = 1;
     }
+    else if (!move.next)
+      this.subTurn++;
   }
 
   isLastMove(move) {
+    if (move.next)
+      return false;
+    const color = this.turn;
+    const oppCol = C.GetOppCol(color);
+    const oppKingPos = this.searchKingPos(oppCol);
+    if (oppKingPos[0] < 0 || this.underCheck(oppKingPos, color))
+      return true;
     return (
-      (this.options["balance"] && ![1, 3].includes(this.movesCount)) ||
-      !move.next
+      (
+        !this.options["balance"] ||
+        ![1, 3].includes(this.movesCount)
+      )
+      &&
+      (
+        !this.options["doublemove"] ||
+        this.movesCount == 0 ||
+        this.subTurn == 2
+      )
+      &&
+      (
+        !this.options["progressive"] ||
+        this.subTurn == this.movesCount + 1
+      )
     );
   }
 

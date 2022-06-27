@@ -59,7 +59,7 @@ export default class AllmateRules extends ChessRules {
   // is piece on square x,y mated by color?
   isMated(x, y, color) {
     const myColor = C.GetOppCol(color);
-    if (!this.underCheck([x, y], color))
+    if (!super.underAttack([x, y], color))
       return false;
     for (let i=0; i<this.size.x; i++) {
       for (let j=0; j<this.size.y; j++) {
@@ -71,7 +71,7 @@ export default class AllmateRules extends ChessRules {
             if (i == x && j == y) {
               // The mated-candidate has moved itself
               testSquare = [move.end.x, move.end.y]; }
-            const res = this.underCheck(testSquare, color);
+            const res = this.underAttack(testSquare, color);
             this.undoOnBoard(move);
             if (!res)
               return false;
@@ -82,9 +82,8 @@ export default class AllmateRules extends ChessRules {
     return true;
   }
 
-  // No "under check" conditions in castling
-  getCastleMoves(sq) {
-    return super.getCastleMoves(sq, null, "castleInCheck");
+  underCheck([x, y], oppCol) {
+    return false; //not relevant here
   }
 
   filterValid(moves) {
