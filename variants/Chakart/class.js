@@ -189,31 +189,24 @@ export default class ChakartRules extends ChessRules {
     this.reserve = {}; //to be filled later
   }
 
+  canStepOver(i, j) {
+    return (
+      this.board[i][j] == "" ||
+      ['i', V.EGG, V.MUSHROOM].includes(this.getPiece(i, j))
+    );
+  }
+
   // For Toadette bonus
-  getDropMovesFrom([c, p]) {
-    if (typeof c != "string" || this.reserve[c][p] == 0)
-      return [];
-    let moves = [];
-    const start = (c == 'w' && p == 'p' ? 1 : 0);
-    const end = (c == 'b' && p == 'p' ? 7 : 8);
-    for (let i = start; i < end; i++) {
-      for (let j = 0; j < this.size.y; j++) {
-        const pieceIJ = this.getPiece(i, j);
-        const colIJ = this.getColor(i, j);
-        if (this.board[i][j] == "" || colIJ == 'a' || pieceIJ == 'i') {
-          let m = new Move({
-            start: {x: c, y: p},
-            appear: [new PiPo({x: i, y: j, c: c, p: p})],
-            vanish: []
-          });
-          // A drop move may remove a bonus (or hidden queen!)
-          if (this.board[i][j] != "")
-            m.vanish.push(new PiPo({x: i, y: j, c: colIJ, p: pieceIJ}));
-          moves.push(m);
-        }
-      }
-    }
-    return moves;
+  canDrop([c, p], [i, j]) {
+    return (
+      (
+        this.board[i][j] == "" ||
+        this.getColor(i, j) == 'a' ||
+        this.getPiece(i, j) == 'i'
+      )
+      &&
+      (p != "p" || (c == 'w' && i < this.size.x - 1) || (c == 'b' && i > 0))
+    );
   }
 
   getPotentialMovesFrom([x, y]) {
@@ -281,13 +274,6 @@ export default class ChakartRules extends ChessRules {
       }
     }
     return moves;
-  }
-
-  canStepOver(i, j) {
-    return (
-      this.board[i][j] == "" ||
-      ['i', V.EGG, V.MUSHROOM].includes(this.getPiece(i, j))
-    );
   }
 
   getPawnMovesFrom([x, y]) {

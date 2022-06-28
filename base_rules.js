@@ -125,7 +125,7 @@ export default class ChessRules {
           new PiPo({
             x: coords.x,
             y: coords.y,
-            c: this.captured.c, //this.turn,
+            c: this.captured.c,
             p: this.captured.p
           })
         ],
@@ -466,46 +466,9 @@ export default class ChessRules {
       this.moveStack = [];
   }
 
-  updateEnlightened() {
-    this.oldEnlightened = this.enlightened;
-    this.enlightened = ArrayFun.init(this.size.x, this.size.y, false);
-    // Add pieces positions + all squares reachable by moves (includes Zen):
-    for (let x=0; x<this.size.x; x++) {
-      for (let y=0; y<this.size.y; y++) {
-        if (this.board[x][y] != "" && this.getColor(x, y) == this.playerColor)
-        {
-          this.enlightened[x][y] = true;
-          this.getPotentialMovesFrom([x, y]).forEach(m => {
-            this.enlightened[m.end.x][m.end.y] = true;
-          });
-        }
-      }
-    }
-    if (this.epSquare)
-      this.enlightEnpassant();
-  }
-
-  // Include square of the en-passant capturing square:
-  enlightEnpassant() {
-    // NOTE: shortcut, pawn has only one attack type, doesn't depend on square
-    const steps = this.pieces(this.playerColor)["p"].attack[0].steps;
-    for (let step of steps) {
-      const x = this.epSquare.x - step[0],
-            y = this.getY(this.epSquare.y - step[1]);
-      if (
-        this.onBoard(x, y) &&
-        this.getColor(x, y) == this.playerColor &&
-        this.getPieceType(x, y) == "p"
-      ) {
-        this.enlightened[x][this.epSquare.y] = true;
-        break;
-      }
-    }
-  }
-
-  // ordering as in pieces() p,r,n,b,q,k (+ count in base 30 if needed)
+  // ordering as in pieces() p,r,n,b,q,k
   initReserves(reserveStr) {
-    const counts = reserveStr.split("").map(c => parseInt(c, 30));
+    const counts = reserveStr.split("").map(c => parseInt(c, 36));
     this.reserve = { w: {}, b: {} };
     const pieceName = ['p', 'r', 'n', 'b', 'q', 'k'];
     const L = pieceName.length;
@@ -524,6 +487,22 @@ export default class ChessRules {
       this.ispawn = {};
   }
 
+  ////////////////
+  // VISUAL UTILS
+
+  getPieceWidth(rwidth) {
+    return (rwidth / this.size.y);
+  }
+
+  getReserveSquareSize(rwidth, nbR) {
+    const sqSize = this.getPieceWidth(rwidth);
+    return Math.min(sqSize, rwidth / nbR);
+  }
+
+  getReserveNumId(color, piece) {
+    return `${this.containerId}|rnum-${color}${piece}`;
+  }
+
   getNbReservePieces(color) {
     return (
       Object.values(this.reserve[color]).reduce(
@@ -537,22 +516,6 @@ export default class ChessRules {
     let toTest = pieces.slice(0, lastIndex);
     return toTest.reduce(
       (oldV,newV) => oldV + (this.reserve[c][newV] > 0 ? 1 : 0), 0);
-  }
-
-  //////////////
-  // VISUAL PART
-
-  getPieceWidth(rwidth) {
-    return (rwidth / this.size.y);
-  }
-
-  getReserveSquareSize(rwidth, nbR) {
-    const sqSize = this.getPieceWidth(rwidth);
-    return Math.min(sqSize, rwidth / nbR);
-  }
-
-  getReserveNumId(color, piece) {
-    return `${this.containerId}|rnum-${color}${piece}`;
   }
 
   static AddClass_es(piece, class_es) {
@@ -570,6 +533,23 @@ export default class ChessRules {
       piece.classList.remove(cl);
     });
   }
+
+  // Generally light square bottom-right
+  getSquareColorClass(x, y) {
+    return ((x+y) % 2 == 0 ? "light-square": "dark-square");
+  }
+
+  getMaxDistance(r) {
+    // Works for all rectangular boards:
+    return Math.sqrt(r.width ** 2 + r.height ** 2);
+  }
+
+  getDomPiece(x, y) {
+    return (typeof x == "string" ? this.r_pieces : this.g_pieces)[x][y];
+  }
+
+  //////////////////
+  // VISUAL METHODS
 
   graphicalInit() {
     // NOTE: not window.onresize = this.re_drawBoardElts because scope (this)
@@ -655,11 +635,6 @@ export default class ChessRules {
     }
     board += "</svg>";
     return board;
-  }
-
-  // Generally light square bottom-right
-  getSquareColorClass(x, y) {
-    return ((x+y) % 2 == 0 ? "light-square": "dark-square");
   }
 
   setupPieces(r) {
@@ -786,30 +761,6 @@ export default class ChessRules {
     else {
       const numId = this.getReserveNumId(color, piece);
       document.getElementById(numId).textContent = count;
-    }
-  }
-
-  // Apply diff this.enlightened --> oldEnlightened on board
-  graphUpdateEnlightened() {
-    let chessboard =
-      document.getElementById(this.containerId).querySelector(".chessboard");
-    const r = chessboard.getBoundingClientRect();
-    const pieceWidth = this.getPieceWidth(r.width);
-    for (let x=0; x<this.size.x; x++) {
-      for (let y=0; y<this.size.y; y++) {
-        if (!this.enlightened[x][y] && this.oldEnlightened[x][y]) {
-          let elt = document.getElementById(this.coordsToId({x: x, y: y}));
-          elt.classList.add("in-shadow");
-          if (this.g_pieces[x][y])
-            this.g_pieces[x][y].classList.add("hidden");
-        }
-        else if (this.enlightened[x][y] && !this.oldEnlightened[x][y]) {
-          let elt = document.getElementById(this.coordsToId({x: x, y: y}));
-          elt.classList.remove("in-shadow");
-          if (this.g_pieces[x][y])
-            this.g_pieces[x][y].classList.remove("hidden");
-        }
-      }
     }
   }
 
@@ -1069,6 +1020,70 @@ export default class ChessRules {
     }
   }
 
+  ////////////////
+  // DARK METHODS
+
+  updateEnlightened() {
+    this.oldEnlightened = this.enlightened;
+    this.enlightened = ArrayFun.init(this.size.x, this.size.y, false);
+    // Add pieces positions + all squares reachable by moves (includes Zen):
+    for (let x=0; x<this.size.x; x++) {
+      for (let y=0; y<this.size.y; y++) {
+        if (this.board[x][y] != "" && this.getColor(x, y) == this.playerColor)
+        {
+          this.enlightened[x][y] = true;
+          this.getPotentialMovesFrom([x, y]).forEach(m => {
+            this.enlightened[m.end.x][m.end.y] = true;
+          });
+        }
+      }
+    }
+    if (this.epSquare)
+      this.enlightEnpassant();
+  }
+
+  // Include square of the en-passant capturing square:
+  enlightEnpassant() {
+    // NOTE: shortcut, pawn has only one attack type, doesn't depend on square
+    const steps = this.pieces(this.playerColor)["p"].attack[0].steps;
+    for (let step of steps) {
+      const x = this.epSquare.x - step[0],
+            y = this.getY(this.epSquare.y - step[1]);
+      if (
+        this.onBoard(x, y) &&
+        this.getColor(x, y) == this.playerColor &&
+        this.getPieceType(x, y) == "p"
+      ) {
+        this.enlightened[x][this.epSquare.y] = true;
+        break;
+      }
+    }
+  }
+
+  // Apply diff this.enlightened --> oldEnlightened on board
+  graphUpdateEnlightened() {
+    let chessboard =
+      document.getElementById(this.containerId).querySelector(".chessboard");
+    const r = chessboard.getBoundingClientRect();
+    const pieceWidth = this.getPieceWidth(r.width);
+    for (let x=0; x<this.size.x; x++) {
+      for (let y=0; y<this.size.y; y++) {
+        if (!this.enlightened[x][y] && this.oldEnlightened[x][y]) {
+          let elt = document.getElementById(this.coordsToId({x: x, y: y}));
+          elt.classList.add("in-shadow");
+          if (this.g_pieces[x][y])
+            this.g_pieces[x][y].classList.add("hidden");
+        }
+        else if (this.enlightened[x][y] && !this.oldEnlightened[x][y]) {
+          let elt = document.getElementById(this.coordsToId({x: x, y: y}));
+          elt.classList.remove("in-shadow");
+          if (this.g_pieces[x][y])
+            this.g_pieces[x][y].classList.remove("hidden");
+        }
+      }
+    }
+  }
+
   //////////////
   // BASIC UTILS
 
@@ -1080,7 +1095,7 @@ export default class ChessRules {
     };
   }
 
-  // Color of thing on square (i,j). 'undefined' if square is empty
+  // Color of thing on square (i,j). '' if square is empty
   getColor(i, j) {
     if (typeof i == "string")
       return i; //reserves
@@ -1095,7 +1110,7 @@ export default class ChessRules {
     return "other-color"; //unidentified color
   }
 
-  // Assume square i,j isn't empty
+  // Piece on i,j. '' if square is empty
   getPiece(i, j) {
     if (typeof j == "string")
       return j; //reserves
@@ -1148,14 +1163,12 @@ export default class ChessRules {
           }
         ]
       },
-      // rook
       'r': {
         "class": "rook",
         moves: [
           {steps: [[0, 1], [0, -1], [1, 0], [-1, 0]]}
         ]
       },
-      // knight
       'n': {
         "class": "knight",
         moves: [
@@ -1168,14 +1181,12 @@ export default class ChessRules {
           }
         ]
       },
-      // bishop
       'b': {
         "class": "bishop",
         moves: [
           {steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]]}
         ]
       },
-      // queen
       'q': {
         "class": "queen",
         moves: [
@@ -1187,7 +1198,6 @@ export default class ChessRules {
           }
         ]
       },
-      // king
       'k': {
         "class": "king",
         moves: [
@@ -1245,6 +1255,22 @@ export default class ChessRules {
     return res;
   }
 
+  getSegments(curSeg, segStart, segEnd) {
+    if (curSeg.length == 0)
+      return undefined;
+    let segments = JSON.parse(JSON.stringify(curSeg)); //not altering
+    segments.push([[segStart[0], segStart[1]], [segEnd[0], segEnd[1]]]);
+    return segments;
+  }
+
+  getStepSpec(color, x, y) {
+    const allSpecs = this.pieces(color, x, y);
+    let stepSpec = allSpecs[piece];
+    if (stepSpec.moveas)
+      stepSpec = allSpecs[stepSpec.moveas];
+    return stepSpec;
+  }
+
   // Can thing on square1 capture thing on square2?
   canTake([x1, y1], [x2, y2]) {
     return this.getColor(x1, y1) !== this.getColor(x2, y2);
@@ -1253,6 +1279,18 @@ export default class ChessRules {
   canStepOver(i, j, p) {
     // In some variants, objects on boards don't stop movement (Chakart)
     return this.board[i][j] == "";
+  }
+
+  canDrop([c, p], [i, j]) {
+    return (
+      this.board[i][j] == "" &&
+      (!this.enlightened || this.enlightened[i][j]) &&
+      (
+        p != "p" ||
+        (c == 'w' && i < this.size.x - 1) ||
+        (c == 'b' && i > 0)
+      )
+    );
   }
 
   // For Madrasi:
@@ -1311,22 +1349,6 @@ export default class ChessRules {
     return false;
   }
 
-  getSegments(curSeg, segStart, segEnd) {
-    if (curSeg.length == 0)
-      return undefined;
-    let segments = JSON.parse(JSON.stringify(curSeg)); //not altering
-    segments.push([[segStart[0], segStart[1]], [segEnd[0], segEnd[1]]]);
-    return segments;
-  }
-
-  getStepSpec(color, x, y) {
-    const allSpecs = this.pieces(color, x, y);
-    let stepSpec = allSpecs[piece];
-    if (stepSpec.moveas)
-      stepSpec = allSpecs[stepSpec.moveas];
-    return stepSpec;
-  }
-
   compatibleStep([x1, y1], [x2, y2], step, range) {
     let shifts = [0];
     if (this.options["cylinder"])
@@ -1362,23 +1384,22 @@ export default class ChessRules {
     let moves = [];
     for (let i=0; i<this.size.x; i++) {
       for (let j=0; j<this.size.y; j++) {
-        if (
-          this.board[i][j] == "" &&
-          (!this.enlightened || this.enlightened[i][j]) &&
-          (
-            p != "p" ||
-            (c == 'w' && i < this.size.x - 1) ||
-            (c == 'b' && i > 0)
-          )
-        ) {
-          moves.push(
-            new Move({
-              start: {x: c, y: p},
-              end: {x: i, y: j},
-              appear: [new PiPo({x: i, y: j, c: c, p: p})],
-              vanish: []
-            })
-          );
+        if (this.canDrop([c, p], [i, j])) {
+          let mv = new Move({
+            start: {x: c, y: p},
+            end: {x: i, y: j},
+            appear: [new PiPo({x: i, y: j, c: c, p: p})],
+            vanish: []
+          });
+          if (this.board[i][j] != "") {
+            mv.vanish.push(new PiPo({
+              x: i,
+              y: j,
+              c: this.getColor(i, j),
+              p: this.getPiece(i, j)
+            }));
+          }
+          moves.push(mv);
         }
       }
     }
@@ -1386,28 +1407,22 @@ export default class ChessRules {
   }
 
   // All possible moves from selected square
-  getPotentialMovesFrom(sq, color) {
+  getPotentialMovesFrom([x, y], color) {
     if (this.subTurnTeleport == 2)
       return [];
-    if (typeof sq[0] == "string")
-      return this.getDropMovesFrom(sq);
-    if (this.isImmobilized(sq))
+    if (typeof x == "string")
+      return this.getDropMovesFrom([x, y]);
+    if (this.isImmobilized([x, y]))
       return [];
-    const piece = this.getPieceType(sq[0], sq[1]);
-    let moves = this.getPotentialMovesOf(piece, sq);
+    const piece = this.getPieceType(x, y);
+    let moves = this.getPotentialMovesOf(piece, [x, y]);
+    if (piece == "p" && this.hasEnpassant && this.epSquare)
+      Array.prototype.push.apply(moves, this.getEnpassantCaptures([x, y]));
     if (
-      piece == "p" &&
-      this.hasEnpassant &&
-      this.epSquare
-    ) {
-      Array.prototype.push.apply(moves, this.getEnpassantCaptures(sq));
-    }
-    if (
-      piece == "k" &&
-      this.hasCastle &&
+      piece == "k" && this.hasCastle &&
       this.castleFlags[color || this.turn].some(v => v < this.size.y)
     ) {
-      Array.prototype.push.apply(moves, this.getCastleMoves(sq));
+      Array.prototype.push.apply(moves, this.getCastleMoves([x, y]));
     }
     return this.postProcessPotentialMoves(moves);
   }
@@ -1614,8 +1629,7 @@ export default class ChessRules {
       // Technical step: segments (if any) are reversed
       if (this.options["cylinder"]) {
         zenCaptures.forEach(z => {
-          if (z.segments)
-            z.segments = z.segments.reverse().map(s => s.reverse())
+          z.segments = z.segments.reverse().map(s => s.reverse())
         });
       }
       Array.prototype.push.apply(squares, zenCaptures);
@@ -1737,9 +1751,9 @@ export default class ChessRules {
   findCapturesOn([x, y], o, allowed) {
     if (!allowed)
       allowed = () => true;
-    let res = [];
     if (!o.byCol)
       o.byCol = [C.GetOppCol(this.getColor(x, y) || this.turn)];
+    let res = [];
     for (let i=0; i<this.size.x; i++) {
       for (let j=0; j<this.size.y; j++) {
         const colIJ = this.getColor(i, j);
@@ -1770,7 +1784,7 @@ export default class ChessRules {
                 },
                 ([ii, jj]) => this.canTake([ii, jj], [x, y])
               );
-              if (newSquare)
+              if (newSquare) {
                 if (o.one)
                   return true;
                 res.push(newSquare);
@@ -1874,12 +1888,12 @@ export default class ChessRules {
       // Next conditions for variants like Atomic or Rifle, Recycle...
       (
         move.appear.length > 0 &&
-        this.getPieceType(0, 0, move.appear[0].p) == "p"
+        this.getPieceType(0, 0, move.appear[0].p) == 'p'
       )
       &&
       (
         move.vanish.length > 0 &&
-        this.getPieceType(0, 0, move.vanish[0].p) == "p"
+        this.getPieceType(0, 0, move.vanish[0].p) == 'p'
       )
     ) {
       return {
@@ -1895,25 +1909,26 @@ export default class ChessRules {
     const color = this.getColor(x, y);
     const shiftX = (color == 'w' ? -1 : 1);
     const oppCol = C.GetOppCol(color);
-    let enpassantMove = null;
     if (
-      !!this.epSquare &&
+      this.epSquare &&
       this.epSquare.x == x + shiftX &&
       Math.abs(this.getY(this.epSquare.y - y)) == 1 &&
-      this.getColor(x, this.epSquare.y) == oppCol //Doublemove guard...
+      // Doublemove (and Progressive?) guards:
+      this.board[this.epSquare.x][this.epSquare.y] == "" &&
+      this.getColor(x, this.epSquare.y) == oppCol
     ) {
       const [epx, epy] = [this.epSquare.x, this.epSquare.y];
-      this.board[epx][epy] = oppCol + "p";
-      enpassantMove = this.getBasicMove([x, y], [epx, epy]);
+      this.board[epx][epy] = oppCol + 'p';
+      let enpassantMove = this.getBasicMove([x, y], [epx, epy]);
       this.board[epx][epy] = "";
       const lastIdx = enpassantMove.vanish.length - 1; //think Rifle
       enpassantMove.vanish[lastIdx].x = x;
+      return [enpassantMove];
     }
-    return !!enpassantMove ? [enpassantMove] : [];
+    return [];
   }
 
-  // "castleInCheck" arg to let some variants castle under check
-  getCastleMoves([x, y], finalSquares, castleInCheck, castleWith) {
+  getCastleMoves([x, y], finalSquares, castleWith) {
     const c = this.getColor(x, y);
 
     // Castling ?
@@ -1938,7 +1953,7 @@ export default class ChessRules {
       if (
         this.board[x][rookPos] == "" ||
         this.getColor(x, rookPos) != c ||
-        (!!castleWith && !castleWith.includes(castlingPiece))
+        (castleWith && !castleWith.includes(castlingPiece))
       ) {
         // Rook is not here, or changed color (see Benedict)
         continue;
@@ -1949,7 +1964,13 @@ export default class ChessRules {
       let i = y;
       do {
         if (
-          (!castleInCheck && this.underCheck([x, i], oppCol)) ||
+          // NOTE: next weird test because underCheck() verification
+          // will be executed in filterValid() later.
+          (
+            i != finalSquares[castleSide][0] &&
+            this.underCheck([x, i], oppCol)
+          )
+          ||
           (
             this.board[x][i] != "" &&
             // NOTE: next check is enough, because of chessboard constraints
@@ -1981,7 +2002,7 @@ export default class ChessRules {
         }
       }
 
-      // If this code is reached, castle is valid
+      // If this code is reached, castle is potentially valid
       moves.push(
         new Move({
           appear: [
@@ -2024,15 +2045,15 @@ export default class ChessRules {
       (
         (!this.options["zen"] || king) &&
         this.findCapturesOn([x, y],
-          {oppCol: oppCol, segments: this.options["cylinder"], one: true},
-          ([i, j]) => this.canTake([i, j], [x, y])).length == 1
+          {byCol: [oppCol], segments: this.options["cylinder"], one: true},
+          ([i, j]) => this.canTake([i, j], [x, y]))
       )
       ||
       (
         (this.options["zen"] && !king) &&
         this.findDestSquares([x, y],
           {attackOnly: true, segments: this.options["cylinder"], one: true},
-          ([i, j]) => this.canTake([i, j], [x, y])).length == 1
+          ([i, j]) => this.canTake([i, j], [x, y]))
       )
     );
   }
@@ -2092,16 +2113,6 @@ export default class ChessRules {
   /////////////////
   // MOVES PLAYING
 
-  // Aggregate flags into one object
-  aggregateFlags() {
-    return this.castleFlags;
-  }
-
-  // Reverse operation
-  disaggregateFlags(flags) {
-    this.castleFlags = flags;
-  }
-
   // Apply a move on board
   playOnBoard(move) {
     for (let psq of move.vanish)
@@ -2144,8 +2155,8 @@ export default class ChessRules {
     if (
       this.hasCastle &&
       // If flags already off, no need to re-check:
-      Object.keys(this.castleFlags).some(c => {
-        return this.castleFlags[c].some(val => val < this.size.y)})
+      Object.values(this.castleFlags).some(cvals =>
+        cvals.some(val => val < this.size.y))
     ) {
       this.updateCastleFlags(move);
     }
@@ -2161,7 +2172,7 @@ export default class ChessRules {
         const destSquare = C.CoordsToSquare(move.end);
         if (
           this.ispawn[initSquare] ||
-          (move.vanish[0].p == "p" && move.appear[0].p != "p")
+          (move.vanish[0].p == 'p' && move.appear[0].p != 'p')
         ) {
           this.ispawn[destSquare] = true;
         }
@@ -2169,7 +2180,7 @@ export default class ChessRules {
           this.ispawn[destSquare] &&
           this.getColor(move.end.x, move.end.y) != move.vanish[0].c
         ) {
-          move.vanish[1].p = "p";
+          move.vanish[1].p = 'p';
           delete this.ispawn[destSquare];
         }
       }
@@ -2370,15 +2381,6 @@ export default class ChessRules {
 
   // Implemented in variants using (automatic) moveStack
   computeNextMove(move) {}
-
-  getMaxDistance(r) {
-    // Works for all rectangular boards:
-    return Math.sqrt(r.width ** 2 + r.height ** 2);
-  }
-
-  getDomPiece(x, y) {
-    return (typeof x == "string" ? this.r_pieces : this.g_pieces)[x][y];
-  }
 
   animateMoving(start, end, drag, segments, cb) {
     let initPiece = this.getDomPiece(start.x, start.y);

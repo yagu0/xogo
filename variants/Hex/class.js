@@ -32,7 +32,6 @@ export default class HexRules extends ChessRules {
   get hasReserve() {
     return false;
   }
-
   get noAnimate() {
     return true;
   }
@@ -159,27 +158,6 @@ export default class HexRules extends ChessRules {
         }
       }
     }
-  }
-
-  initMouseEvents() {
-    const mousedown = (e) => {
-      if (e.touches && e.touches.length > 1)
-        e.preventDefault();
-      const cd = this.idToCoords(e.target.id);
-      if (cd) {
-        const move = this.doClick(cd);
-        if (move)
-          this.buildMoveStack(move);
-      }
-    };
-
-    if ('onmousedown' in window) {
-      document.addEventListener("mousedown", mousedown);
-      document.addEventListener("wheel",
-        (e) => this.rescale(e.deltaY < 0 ? "up" : "down"));
-    }
-    if ('ontouchstart' in window)
-      document.addEventListener("touchstart", mousedown, {passive: false});
   }
 
   get size() {
