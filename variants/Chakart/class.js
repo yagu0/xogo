@@ -127,7 +127,8 @@ export default class ChakartRules extends ChessRules {
           ]
         }
       },
-      specials, bowsered, super.pieces(color, x, y));
+      specials, bowsered, super.pieces(color, x, y)
+    );
   }
 
   genRandInitFen(seed) {
@@ -269,7 +270,7 @@ export default class ChakartRules extends ChessRules {
         case 'b':
         case 'r':
           // Explicitely listing types to avoid moving immobilized piece
-          moves = this.getPotentialMovesOf(piece, [x, y]);
+          moves = super.getPotentialMovesOf(piece, [x, y]);
           break;
       }
     }
@@ -341,14 +342,14 @@ export default class ChakartRules extends ChessRules {
 
   getKnightMovesFrom([x, y]) {
     // Add egg on initial square:
-    return this.getPotentialMovesOf('n', [x, y]).map(m => {
+    return super.getPotentialMovesOf('n', [x, y]).map(m => {
       m.appear.push(new PiPo({p: "e", c: "a", x: x, y: y}));
       return m;
     });
   }
 
   getQueenMovesFrom(sq) {
-    const normalMoves = this.getPotentialMovesOf('q', sq);
+    const normalMoves = super.getPotentialMovesOf('q', sq);
     // If flag allows it, add 'invisible movements'
     let invisibleMoves = [];
     if (this.powerFlags[this.turn]['q']) {
@@ -370,10 +371,10 @@ export default class ChakartRules extends ChessRules {
   }
 
   getKingMovesFrom([x, y]) {
-    let moves = this.getPotentialMovesOf('k', [x, y]);
+    let moves = super.getPotentialMovesOf('k', [x, y]);
     // If flag allows it, add 'remote shell captures'
     if (this.powerFlags[this.turn]['k']) {
-      let shellCaptures = this.getPotentialMovesOf('y', [x, y]);
+      let shellCaptures = super.getPotentialMovesOf('y', [x, y]);
       shellCaptures.forEach(sc => {
         sc.shell = true; //easier play()
         sc.choice = 'z'; //to display in showChoices()
@@ -458,7 +459,11 @@ export default class ChakartRules extends ChessRules {
             this.getColor(i, j) == oppCol
           ) {
             const pieceIJ = this.getPiece(i, j);
-            if (pieceIJ == 'i') {
+            if (
+              pieceIJ == 'i' &&
+              // Ensure that current move doesn't erase invisible queen
+              move.appear.every(a => a.x != i || a.y != j)
+            ) {
               move.vanish.push(new PiPo({x: i, y: j, c: oppCol, p: 'i'}));
               move.appear.push(new PiPo({x: i, y: j, c: oppCol, p: 'q'}));
             }

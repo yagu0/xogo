@@ -35,6 +35,9 @@ export default class HexRules extends ChessRules {
   get noAnimate() {
     return true;
   }
+  get clickOnly() {
+    return true;
+  }
 
   doClick(coords) {
     if (

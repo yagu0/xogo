@@ -41,20 +41,20 @@ export default class AliceRules extends ChessRules {
     };
   }
 
-  getPieceType(x, y, p) {
+  isKing(x, y, p) {
     if (!p)
-      p = super.getPiece(x, y);
-    return V.ALICE_PIECES[p] || p;
+      p = this.getPiece(x, y);
+    return ['k', 'l'].includes(p);
   }
 
   pieces(color, x, y) {
     let alices = {
-      's': {"class": "alice-pawn", "moveas": "p"},
-      'u': {"class": "alice-rook", "moveas": "r"},
-      'o': {"class": "alice-knight", "moveas": "n"},
-      'c': {"class": "alice-bishop", "moveas": "b"},
-      't': {"class": "alice-queen", "moveas": "q"},
-      'l': {"class": "alice-king", "moveas": "k"}
+      's': {"class": "alice-pawn", moveas: 'p'},
+      'u': {"class": "alice-rook", moveas: 'r'},
+      'o': {"class": "alice-knight", moveas: 'n'},
+      'c': {"class": "alice-bishop", moveas: 'b'},
+      't': {"class": "alice-queen", moveas: 'q'},
+      'l': {"class": "alice-king", moveas: 'k'}
     };
     return Object.assign(alices, super.pieces(color, x, y));
   }
@@ -72,8 +72,6 @@ export default class AliceRules extends ChessRules {
       this.board[i][j] == "" || !this.fromSameWorld(this.getPiece(i, j), p));
   }
 
-  // NOTE: castle & enPassant
-  // https://www.chessvariants.com/other.dir/alice.html
   getPotentialMovesFrom([x, y]) {
     return super.getPotentialMovesFrom([x, y]).filter(m => {
       // Remove moves landing on occupied square on other board
@@ -93,34 +91,40 @@ export default class AliceRules extends ChessRules {
     });
   }
 
-  isKing(symbol) {
-    return ['k', 'l'].includes(symbol);
+  // helper for filterValid
+  toggleWorld(x, y) {
+    const piece = this.getPiece(x, y);
+    if (V.ALICE_PIECES[piece])
+      // From the other side of the mirror
+      this.board[x][y] = this.getColor(x, y) + V.ALICE_PIECES[piece];
+    else
+      // From the other other side :)
+      this.board[x][y] = this.getColor(x, y) + V.ALICE_CODES[piece];
   }
 
-  getCurrentScore() {
+  filterValid(moves) {
     const color = this.turn;
-    const inCheck = this.underCheck(this.searchKingPos(color));
-    let someLegalMove = false;
-    // Search for legal moves: if any is found and
-    // does not change king world (if under check), then game not over.
-    for (let i=0; i<this.size.x; i++) {
-      for (let j=0; j<this.size.y; j++) {
-        if (this.getColor(i, j) == color) {
-          const moves = this.filterValid(this.getPotentialMovesFrom([i, j]));
-          if (
-            moves.length >= 1 &&
-            (
-              !inCheck ||
-              moves.some(m => m.vanish.every(v => !this.isKing(v.p)))
-            )
-          ) {
-            return "*";
-          }
-        }
+    const oppCol = C.GetOppCol(color);
+    const kingPos = this.searchKingPos(color);
+    const kingPiece = this.getPiece(kingPos[0], kingPos[1]);
+    return super.filterValid(moves).filter(m => {
+      // A move must also be legal on the board it is played:
+      // Shortcut if the moving piece and king are on different sides
+      if (
+        !this.isKing(0, 0, m.vanish[0].p) &&
+        !this.fromSameWorld(kingPiece, m.vanish[0].p)
+      ) {
+        return true;
       }
-    }
-    // Couldn't find any legal move
-    return (inCheck ? "1/2" : (color == 'w' ? "0-1" : "1-0"));
+      this.playOnBoard(m);
+      m.appear.forEach(a => this.toggleWorld(a.x, a.y));
+      const kingAppear = m.appear.find(a => this.isKing(0, 0, a.p));
+      const target = kingAppear ? [kingAppear.x, kingAppear.y] : kingPos;
+      const res = this.underCheck(target, oppCol);
+      m.appear.forEach(a => this.toggleWorld(a.x, a.y));
+      this.undoOnBoard(m);
+      return !res;
+    });
   }
 
 };

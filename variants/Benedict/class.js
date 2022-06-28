@@ -44,20 +44,34 @@ export default class BenedictRules extends ChessRules {
   }
 
   postProcessPotentialMoves(moves) {
-    moves.forEach(m => {
+    const oppCol = C.GetOppCol(this.turn);
+    let bMoves = super.postProcessPotentialMoves(moves);
+    bMoves.forEach(m => {
       m.flips = [];
       if (!this.options["cleopatra"] || m.vanish[0].p == 'q') {
         super.playOnBoard(m);
         let attacks = super.findDestSquares(
           [m.end.x, m.end.y],
-          {attackOnly: true, segments: false},
-          ([x, y] => this.canTake([m.end.x, m.end.y], [x, y]))
+          {
+            attackOnly: true,
+            segments: this.options["cylinder"]
+          },
+          ([i1, j1], [i2, j2]) => {
+            return (
+              super.canTake([i1, j1], [i2, j2]) &&
+              (!this.options["zen"] || this.getPiece(i2, j2) == 'k')
+            );
+          }
         );
         if (this.options["zen"]) {
           const zenAttacks = super.findCapturesOn(
             [m.end.x, m.end.y],
-            {segments: false},
-            ([x, y] => this.canTake([m.end.x, m.end.y], [x, y]))
+            {
+              byCol: [oppCol],
+              segments: this.options["cylinder"]
+            },
+            ([i1, j1], [i2, j2]) =>
+              this.getPiece(i1, j1) != 'k' && super.canTake([i2, j2], [i1, j1])
           );
           Array.prototype.push.apply(attacks, zenAttacks);
         }
@@ -65,7 +79,7 @@ export default class BenedictRules extends ChessRules {
         attacks.forEach(a => m.flips.push({x: a.sq[0], y: a.sq[1]}));
       }
     });
-    return moves;
+    return bMoves;
   }
 
   playOnBoard(move) {

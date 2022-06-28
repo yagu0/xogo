@@ -4,6 +4,13 @@ import { Random } from "/utils/alea.js";
 
 export default class AlapoRules extends ChessRules {
 
+  static get Options() {
+    return {
+      select: C.Options.select,
+      styles: C.Options.styles.filter(s => s != "teleport")
+    };
+  }
+
   get hasFlags() {
     return false;
   }
@@ -142,8 +149,14 @@ export default class AlapoRules extends ChessRules {
       won[c] = this.board[goal].some((b,j) => {
         return (
           this.getColor(goal, j) == c &&
-          this.findCapturesOn(
-            [goal, j], {one: true, oppCol: oppCol}).length == 0
+          !this.findCapturesOn(
+            [goal, j],
+            {
+              one: true,
+              oppCol: oppCol,
+              segments: this.options["cylinder"]
+            }
+          )
         );
       });
     }
