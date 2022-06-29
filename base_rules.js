@@ -415,6 +415,7 @@ export default class ChessRules {
 
     // Graphical (can use variables defined above)
     this.containerId = o.element;
+    this.isDiagram = o.diagram;
     this.graphicalInit();
   }
 
@@ -561,7 +562,8 @@ export default class ChessRules {
     window.onresize = () => this.re_drawBoardElements();
     const g_init = () => {
       this.re_drawBoardElements();
-      this.initMouseEvents();
+      if (!this.isDiagram)
+        this.initMouseEvents();
     };
     let container = document.getElementById(this.containerId);
     if (container.getBoundingClientRect().width == 0) {
@@ -655,6 +657,7 @@ export default class ChessRules {
   }
 
   setupPieces(r) {
+    // TODO: d_pieces : only markers (for diagrams) / also in rescale()
     if (this.g_pieces) {
       // Refreshing: delete old pieces first
       for (let i=0; i<this.size.x; i++) {
@@ -1007,6 +1010,8 @@ export default class ChessRules {
   }
 
   removeListeners() {
+    if (this.isDiagram)
+      return; //no listeners in this case
     if ('onmousedown' in window) {
       this.mouseListeners.forEach(ml => {
         document.removeEventListener(ml.type, ml.listener);

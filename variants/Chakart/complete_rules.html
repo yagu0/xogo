@@ -1,1 +1,143 @@
-<p>TODO</p>
+<html>
+<head>
+  <title>Chakart Rules</title>
+  <link href="/common.css" rel="stylesheet"/>
+  <link href="/variants/Chakart/style.css" rel="stylesheet"/>
+</head>
+<body>
+
+<div class="full-rules">
+
+<h1>Chakart Rules</h1>
+
+<div>
+  <p>
+    Pieces move as usual, but they all hide a special "power" inspired by
+    Mario Kart:
+  </p>
+  <ul>
+    <li>
+      The pawn (Toad) leaves a "turbo" mushroom on its initial square, or on
+      the intermediate one in case of a two squares move.
+    </li>
+    <li>
+      The knight (Yoshi) let a surprise egg on its initial square. See about
+      egg effect below.
+    </li>
+    <li>
+      The rook (Donkey) put a banana on a square diagonally adjacent to the
+      arrival one, at random, if possible.
+    </li>
+    <li>
+      The bishop (Wario) put a bomb on a square orthogonally adjacent to the
+      arrival one, at random, if possible.
+    </li>
+    <li>
+      The queen (Mario) can play a stealth move once in the game: the opponent
+      will only know that a queen moved - to an empty square.
+      A promoted queen also has this power if not already used.
+    </li>
+    <li>
+      The king (Peach) can "throw a shell" on an enemy reachable by a queen,
+      once in the game. A promoted king also has this power, if not already
+      used. The capture is done remotely without moving.
+    </li>
+  </ul>
+  <p>The king cannot castle, and pawns don't capture en passant.</p>
+  <figure>
+    <div class="diag"
+      data-fen='qbbrrnek/pppppppp/5n2/8/1BwP4/3m4/PPP1PPPP/QBNN1KRR b 3 {"flags":"1111"}'>
+    </div>
+    <figcaption>After 1.d4 Nf6 2.Bb4 (put a bomb on c4).</figcaption>
+  </figure>
+</div>
+
+<div>
+  <p>
+    So the goal is to capture Peach :) If pawns promoted into king, then all
+    of them must be captured. Since it still looked too easy, the 4 mentioned
+    objects alter the move played, generally at random:
+  </p>
+  <ul>
+    <li>
+      A king or a pawn arriving on a mushroom advance one square further,
+      while a knight jump another time in the same direction, if possible.
+      Pawns can "eat" objects diagonally too.
+    </li>
+    <li>
+      A piece arriving on a banana (resp. bomb) is redirected at random by one
+      square in an orthogonal (resp. diagonal) direction. If a piece (of any
+      color!) stands on that square, then it is captured.
+    </li>
+    <li>
+      The effects can cumulate, as illustrated on the diagram: the bishop
+      "captures" the banana on e4, and is then redirected twoard e5: mushroom,
+      it jumps over the black pawn to ends on the bomb on e7, which sends it
+      on d6 (f6 and f8 were possible too). A bomb is finally put on c6 which
+      is the only eligible square. A piece may ends on its initial square,
+      move back, and so on. That being said, a given object can only be used
+      once on the path.
+    </li>
+  </ul>
+  <!-- TODO: class for left/right + adapt diagrams for new rules -->
+  <figure>
+    <div class="diag left"
+      data-fen='rn1b2qk/pbppwppp/1w2p3/1p1Rm3/3PdnPr/4P1d1/PPP1mP1P/NNB1KRQB b 1 {"flags":"1111"}'>
+    </div>
+    <div class="diag right"
+      data-fen='rn1b2qk/pbpp1ppp/1wwBp3/1p1R4/3P1nPr/4P1d1/PPP1mP1P/NNB1KRQ1 w 2 {"flags":"1111"}'>
+    </div>
+    <figcaption>Left: before 1.Bxe4. Right: after the move, ending on d6.</figcaption>
+  </figure>
+</div>
+
+<div>
+  <p>
+    The egg case is more complex: a move ending on an egg triggers an effect
+    chosen at random, positive or negative. There are four bonus and four
+    penalties. They are introduced in a dual form: first the positive, then
+    the negative.
+  </p>
+  <ul>
+    <li>
+      King Boo (*B) let you exchange the position of any pair of pieces on the
+      board.
+    </li>
+    <li>Koopa (*K) drives the piece back onto its initial square.</li>
+    <li>
+      Toadette (*T) allows to place a new &mdash; random &mdash; piece on the
+      board. If the piece is dropped on an egg, banana or bomb, its effects
+      are applied.
+    </li>
+    <li>
+      Chomp (*C) eats the piece, which is thus captured. If it's Peach, then
+      bad luck, game over :)
+    </li>
+    <li>Daisy (*D) allows to play again with any of your pieces.</li>
+    <li>
+      Bowser (*M) immobilizes the piece (which is surrounded by a light green
+      halo). It won't be allowed to move on the next turn.
+    </li>
+    <li>Luigi (*L) changes the color of a random enemy piece.</li>
+    <li>Waluigi (*W) changes the color of one of your pieces (at random).</li>
+  </ul>
+  <figure>
+    <div class="diag left"
+         data-fen='erk2rq1/1m2e1m1/mppmne1m/p1BpppPp/mm1P1QbP/1Nmnw1dm/e1mP2d1/1BwR1RKN b 1 {"flags":"1111"}'>
+    </div>
+    <div class="diag right"
+      data-fen='erk3Q1/1m2e1d1/mppmnr1m/p1BpppPp/mm1P1QbP/1Nmnw1dm/e1mP2d1/1BwR1RKN w 2 {"flags":"1111"}'>
+    </div>
+    <figcaption>
+      1...Rxf6*W: Waluigi turns the g8 queen into white.
+      This last can then capture the king. Bad luck :(
+    </figcaption>
+  </figure>
+</div>
+
+</div>
+
+</body>
+<script src="/utils/drawDiagrams.js"></script>
+<script>fenToDiag("Chakart");</script>
+</html>

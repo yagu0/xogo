@@ -165,7 +165,9 @@ export default class HexRules extends ChessRules {
 
   get size() {
     const baseRatio = 1.6191907514450865; //2801.2 / 1730, "widescreen"
-    const rotate = window.innerWidth < window.innerHeight; //"vertical screen"
+    const rc =
+      document.getElementById(this.containerid).getBoundingClientRect();
+    const rotate = rc.width < rc.height; //"vertical screen"
     return {
       x: this.options["bsize"],
       y: this.options["bsize"],

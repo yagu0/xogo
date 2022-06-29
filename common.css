@@ -14,7 +14,6 @@
 html {
   height: 100%;
 }
-
 body {
   height: 100%;
   margin: 0;
@@ -23,7 +22,6 @@ body {
   /* https://stackoverflow.com/a/24392249/12660887 */
   position: relative;
 }
-
 main {
   display: flex;
   flex-direction: column;
@@ -32,45 +30,6 @@ main {
   flex-wrap: nowrap;
   font-size: 1.25rem;
 }
-
-main > div {
-  margin-top: 25vh;
-  min-height: 500px;
-  min-width: 320px;
-}
-
-#gameInfos {
-  max-width: 800px;
-}
-
-@media(max-height: 800px) {
-  #newGameForm, #gameInfos {
-    margin-top: 30px;
-  }
-}
-
-@media(max-width: 767px) {
-  main > div {
-    padding: 0 10px;
-  }
-}
-
-.author {
-  color: darkblue;
-  font-style: italic;
-}
-
-#boardContainer {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  left: 0;
-  top: 0;
-  margin: 0;
-  padding: 0;
-  border: none;
-}
-
 h1 {
   font-size: 2rem;
   font-weight: bold;
@@ -78,7 +37,6 @@ h1 {
   display: block;
   margin: 10px 0;
 }
-
 h4 {
   font-size: 1.5rem;
   font-weight: bold;
@@ -87,91 +45,12 @@ h4 {
   margin: 10px 0;
   color: darkgreen;
 }
-
-#gameInfos,
-#boardContainer,
-#gameStopped,
-#pendingSeek,
-#pendingRematch,
-#newGameForm {
-  display: none;
+a {
+  text-decoration: none;
 }
-
 .bold {
   font-weight: bold;
 }
-
-#gameInfos > .players-info {
-  text-align: center;
-}
-
-#gameInfos > .options-info {
-  text-align: center;
-  color: #757575;
-  margin-bottom: 15px;
-}
-
-#gameInfos > div {
-  margin: 10px 0;
-}
-
-#gameInfos > .rules {
-  color: #732E6C;
-}
-
-#gameInfos > .rules > p,
-#gameInfos > .rules > ul,
-#gameInfos > .rules > ol {
-  margin: 10px 0;
-}
-
-#gameInfos > .rules > ul {
-  list-style-type: square;
-  padding-left: 30px;
-}
-#gameInfos > .rules > ol {
-  list-style-type: numeric;
-  padding-left: 30px;
-}
-
-#gameInfos > .rules > a {
-  padding-bottom: 1px;
-  border-bottom: 1px dotted black;
-}
-
-#gameStopped > h1 {
-  margin-bottom: 10px;
-}
-
-/* "Sticky footer" */
-#footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 50px;
-  text-align: center;
-}
-
-@media(max-height: 399px) {
-  #footer {
-    display: none;
-  }
-}
-
-a.left-link {
-  margin-right: 25px;
-}
-a.right-link {
-  margin-left: 25px;
-}
-
-#footer a > img {
-  height: 1.2em;
-  display: inline-block;
-  transform: translateY(3px);
-}
-
 button {
   background-color: #757575;
   border: none;
@@ -185,11 +64,9 @@ button {
   border-radius: 20%;
   margin: 15px 0;
 }
-
 button:hover, button.block-btn:hover {
   background-color: #b11adc;
 }
-
 button.block-btn {
   display: block;
   background-color: #01786F;
@@ -197,7 +74,6 @@ button.block-btn {
   font-size: 2rem;
   padding: 15px 32px;
 }
-
 button.cancel-something {
   background-color: darkred;
   display: block;
@@ -205,38 +81,184 @@ button.cancel-something {
   margin-right: auto;
 }
 
-#upLeftInfos {
+/* "Sticky footer" */
+#footer {
   position: absolute;
+  bottom: 0;
   left: 0;
-  top: 0;
+  right: 0;
+  height: 50px;
+  text-align: center;
+}
+@media(max-height: 399px) {
+  #footer {
+    display: none;
+  }
+}
+a.left-link {
+  margin-right: 25px;
+}
+a.right-link {
+  margin-left: 25px;
+}
+#footer a > img {
+  height: 1.2em;
+  display: inline-block;
+  transform: translateY(3px);
 }
 
-#upRightStop {
-  position: absolute;
-  left: calc(100% - 25px);
-  top: 0;
+main > div {
+  margin-top: 25vh;
+  min-height: 500px;
+  min-width: 320px;
 }
-#upLeftInfos > svg, #upRightStop > svg {
-  width: 25px;
-  cursor: pointer;
+#gameInfos {
+  max-width: 800px;
 }
-
+@media(max-height: 800px) {
+  #newGameForm, #gameInfos {
+    margin-top: 30px;
+  }
+}
 @media(max-width: 767px) {
-  #upRightStop {
-    left: calc(100% - 35px);
-  }
-  #upLeftInfos > svg, #upRightStop > svg {
-    width: 35px;
-  }
-  #upLeftInfos > svg path, #upRightStop > svg path {
-    fill: #999;
+  main > div {
+    padding: 0 10px;
   }
 }
+#gameInfos,
+#boardContainer,
+#gameStopped,
+#pendingSeek,
+#pendingRematch,
+#newGameForm {
+  display: none;
+}
+#gameStopped > h1 {
+  margin-bottom: 10px;
+}
+
+#gameInfos > .players-info {
+  text-align: center;
+}
+#gameInfos > .options-info {
+  text-align: center;
+  color: #757575;
+  margin-bottom: 15px;
+}
+#gameInfos > div {
+  margin: 10px 0;
+}
+#gameInfos > .rules {
+  color: #732E6C;
+}
+#gameInfos > .rules p,
+#gameInfos > .rules ul,
+#gameInfos > .rules ol {
+  margin: 10px 0;
+}
+#gameInfos > .rules ul {
+  list-style-type: square;
+  padding-left: 30px;
+}
+#gameInfos > .rules ol {
+  list-style-type: numeric;
+  padding-left: 30px;
+}
+#gameInfos > .rules a {
+  padding-bottom: 1px;
+  border-bottom: 1px dotted black;
+}
+#gameInfos > .rules .author {
+  color: darkblue;
+  font-style: italic;
+}
+
+/* Complete rules (separate page) */
+.full-rules {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 0 10px;
+}
+.full-rules h2, .full-rules h3, .full-rules h4 {
+  font-weight: bold;
+  display: block;
+}
+.full-rules h2 {
+  color: darkred;
+  font-size: 2.5em;
+  margin: 10px 0;
+}
+.full-rules h3 {
+  color: darkviolet;
+  font-size: 2em;
+  margin: 10px 0;
+}
+.full-rules h4 {
+  color: darkgreen;
+  font-size: 1.5em;
+  margin: 5px 0;
+  text-align: center;
+}
+.full-rules .diag {
+  position: relative;
+  margin: -30px auto 0 auto;
+}
+.full-rules figcaption {
+  display: block;
+  text-align: center;
+  margin-top: -50px;
+  margin-bottom: 30px;
+}
+/* TODO: use same CSS for rules and full-rules? */
+.full-rules p, .full-rules ul, .full-rules ol {
+  margin: 10px 0;
+}
+.full-rules ul {
+  list-style-type: square;
+  padding-left: 30px;
+}
+.full-rules ol {
+  list-style-type: numeric;
+  padding-left: 30px;
+}
+/* From vchess to adapt: */
+/*
+figure.diagram-container
+  margin: 15px 0 15px 0
+  text-align: center
+  width: 100%
+  display: block
+  .diagram
+    display: block
+    width: 50%
+    margin-left: auto
+    margin-right: auto
+    @media screen and (max-width: 630px)
+      width: 75%
+  .diag12
+    float: left
+    width: 42%
+    margin: 0 2% 0 6%
+    @media screen and (max-width: 630px)
+      width: 49%
+      margin: 0 1% 0 0
+  .diag22
+    float: left
+    width: 42%
+    margin: 0 6% 0 2%
+    @media screen and (max-width: 630px)
+      width: 49%
+      margin: 0 0 0 1%
+  figcaption
+    display: block
+    clear: both
+    padding-top: 5px
+    font-size: 0.8em
+*/
 
 #ng-select {
   margin-bottom: 20px;
 }
-
 /* Options when starting custom game */
 .words {
   line-height: 0.9em;
@@ -254,24 +276,19 @@ button.cancel-something {
 .highlight-word {
   background-color: lightblue;
 }
-
 #gameOptions {
   text-align: center;
 }
-
 .option-select, .option-input {
   margin: 15px 0 0 0;
 }
-
 .option-input {
   display: inline-block;
   margin-right: 10px;
 }
-
 .option-input input[type=number] {
   width: 64px;
 }
-
 .btn-wrap {
   text-align: center;
 }
@@ -280,35 +297,63 @@ button.cancel-something {
   width: inherit;
   text-align: center;
 }
-
-a {
-  text-decoration: none;
-}
-
 /* Game link div + custom game "button" */
 #gameLink span, #gameLink a, #footer a {
   padding-bottom: 1px;
   border-bottom: 1px dotted darkgrey;
   color: darkred;
 }
-
 #gameLink span {
   display: inline-box;
   cursor: pointer;
 }
-
 #gameLink > p {
   margin: 10px 0;
 }
 
-/* Board container (without reserves) */
+/* Board container (with reserves) */
+#boardContainer {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+#upLeftInfos {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+#upRightStop {
+  position: absolute;
+  left: calc(100% - 25px);
+  top: 0;
+}
+#upLeftInfos > svg, #upRightStop > svg {
+  width: 25px;
+  cursor: pointer;
+}
+@media(max-width: 767px) {
+  #upRightStop {
+    left: calc(100% - 35px);
+  }
+  #upLeftInfos > svg, #upRightStop > svg {
+    width: 35px;
+  }
+  #upLeftInfos > svg path, #upRightStop > svg path {
+    fill: #999;
+  }
+}
+/* Playing board (without reserves) */
 .chessboard {
   position: absolute;
   cursor: pointer;
   min-width: 200px;
   min-height: 200px;
 }
-
 piece {
   position: absolute;
   top: 0;
@@ -318,17 +363,14 @@ piece {
   will-change: transform;
   pointer-events: none;
 }
-
 piece.hidden {
   display: none;
 }
-
 /* Drawing of the board */
 .chessboard_SVG {
   width: 100%;
   height: 100%;
 }
-
 /* Default squares colors (can be overriden or unused) */
 .dark-square {
   fill: #b58863;
@@ -336,38 +378,31 @@ piece.hidden {
 .light-square {
   fill: #f0d9b5;
 }
-
 .in-shadow {
   filter: brightness(50%);
 }
-
 .reserves {
   position: absolute;
   display: block;
   cursor: pointer;
 }
-
 .reserve-cell {
   position: relative;
   display: block;
   float: left;
 }
-
 /* Pieces' counter for reserves */
 .reserve-num {
   color: red;
   position: absolute;
   display: block;
   font-weight: bold;
-  /*z-index: 10;*/
 }
-
-/* Choices div after a promotion (TODO: do not hide board) */
+/* Choices div after a promotion */
 #choices, .choice {
   position: absolute;
   cursor: pointer;
 }
-
 
 /* https://moderncss.dev/custom-select-styles-with-pure-css/ */
 :root {
@@ -375,7 +410,6 @@ piece.hidden {
   --select-focus: #b11adc;
   --select-arrow: var(--select-border);
 }
-
 select {
   appearance: none;
   background-color: transparent;
@@ -390,7 +424,6 @@ select {
   z-index: 1;
   outline: none;
 }
-
 .select {
   display: grid;
   grid-template-areas: "select";
@@ -409,11 +442,9 @@ select {
   width: 100%;
   margin: auto;
 }
-
 select, .select::after {
   grid-area: select;
 }
-
 .select::after {
   content: "";
   justify-self: end;
@@ -422,7 +453,6 @@ select, .select::after {
   background-color: var(--select-arrow);
   clip-path: polygon(100% 0%, 0 0%, 50% 100%);
 }
-
 select:focus + .focus {
   position: absolute;
   top: -1px;
@@ -432,7 +462,6 @@ select:focus + .focus {
   border: 2px solid var(--select-focus);
   border-radius: inherit;
 }
-
 
 /* https://auralinna.blog/post/2018/how-to-create-material-design-like-form-text-fields/ */
 .form-field {
@@ -498,7 +527,6 @@ select:focus + .focus {
   width: 100%;
 }
 
-
 /* https://dev.to/kallmanation/styling-a-checkbox-with-only-css-3o3p */
 label.checkbox > input[type="checkbox"] {
   display: none;
@@ -515,7 +543,6 @@ label.checkbox > input[type="checkbox"] + *::before {
   border-width: 0.1rem;
   border-color: gray;
 }
-
 label.checkbox > input[type="checkbox"]:checked + *::before {
   content: "✓";
   font-size: 1.1rem;
@@ -528,15 +555,10 @@ label.checkbox > input[type="checkbox"]:checked + *::before {
 label.checkbox > input[type="checkbox"]:checked + * {
   color: teal;
 }
-
-/*label.checkbox {
-  color: teal;
-}*/
 label.checkbox > span.spacer {
   width: 10px;
   content: " ";
 }
-
 
 /* https://theanam.github.io/css-only-loaders/ ("hour-glass") */
 :root{
@@ -553,7 +575,6 @@ label.checkbox > span.spacer {
   flex-grow: 0;
   flex-shrink: 0;
 }
-
 @keyframes slide {
   0% {
     transform: translateY(0%);
@@ -571,7 +592,6 @@ label.checkbox > span.spacer {
     transform: translateY(0%);
   }
 }
-
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -589,7 +609,6 @@ label.checkbox > span.spacer {
     transform: rotate(360deg);
   }
 }
-
 .loader.hour-glass {
   position: relative;
   width: var(--loader-width, 100px);
@@ -601,7 +620,6 @@ label.checkbox > span.spacer {
   animation: spin var(--animation-duration, 4s) infinite ease-in-out;
   margin: 20px auto;
 }
-
 .hour-glass:before {
   content: "";
   position: absolute;
