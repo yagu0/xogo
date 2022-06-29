@@ -966,20 +966,45 @@ export default class ChessRules {
       curPiece.remove();
     };
 
+    const resize = (e) => this.rescale(e.deltaY < 0 ? "up" : "down");
+
     if ('onmousedown' in window) {
-      document.addEventListener("mousedown", mousedown);
-      document.addEventListener("mousemove", mousemove);
-      document.addEventListener("mouseup", mouseup);
-      document.addEventListener("wheel",
-        (e) => this.rescale(e.deltaY < 0 ? "up" : "down"));
+      this.mouseListeners = [
+        {type: "mousedown", listener: mousedown},
+        {type: "mousemove", listener: mousemove},
+        {type: "mouseup", listener: mouseup},
+        {type: "wheel", listener: resize}
+      ];
+      this.mouseListeners.forEach(ml => {
+        document.addEventListener(ml.type, ml.listener);
+      });
     }
     if ('ontouchstart' in window) {
-      // https://stackoverflow.com/a/42509310/12660887
-      document.addEventListener("touchstart", mousedown, {passive: false});
-      document.addEventListener("touchmove", mousemove, {passive: false});
-      document.addEventListener("touchend", mouseup, {passive: false});
+      this.touchListeners = [
+        {type: "touchstart", listener: mousedown},
+        {type: "touchmove", listener: mousemove},
+        {type: "touchend", listener: mouseup}
+      ];
+      this.touchListeners.forEach(tl => {
+        // https://stackoverflow.com/a/42509310/12660887
+        document.addEventListener(tl.type, tl.listener, {passive: false});
+      });
     }
     // TODO: onpointerdown/move/up ? See reveal.js /controllers/touch.js
+  }
+
+  removeListeners() {
+    if ('onmousedown' in window) {
+      this.mouseListeners.forEach(ml => {
+        document.removeEventListener(ml.type, ml.listener);
+      });
+    }
+    if ('ontouchstart' in window) {
+      this.touchListeners.forEach(tl => {
+        // https://stackoverflow.com/a/42509310/12660887
+        document.removeEventListener(tl.type, tl.listener);
+      });
+    }
   }
 
   showChoices(moves, r) {

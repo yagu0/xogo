@@ -488,21 +488,22 @@ const afterPlay = (move_s, newTurn, ops) => {
   }
 };
 
-let vr, playerColor;
+let vr = null, playerColor, lastVname = undefined;
 function initializeGame(obj) {
   const options = obj.options || {};
   import(`/variants/${obj.vname}/class.js`).then(module => {
     window.V = module.default;
     for (const [k, v] of Object.entries(V.Aliases))
       window[k] = v;
-    // Load CSS. Avoid loading twice the same stylesheet:
-    const allIds = [].slice.call($.styleSheets).map(s => s.id);
-    const newId = obj.vname + "_css";
-    if (!allIds.includes(newId)) {
+    if (lastVname != obj.vname) {
+      // Load CSS + unload potential previous one.
+      if (lastVname)
+        document.getElementById(lastVname + "_css").remove();
       $.getElementsByTagName("head")[0].insertAdjacentHTML(
         "beforeend",
-        `<link id="${newId}" rel="stylesheet"
+        `<link id="${obj.vname + '_css'}" rel="stylesheet"
                href="/variants/${obj.vname}/style.css"/>`);
+      lastVname = obj.vname;
     }
     playerColor = (sid == obj.players[0].sid ? "w" : "b");
     // Init + remove potential extra DOM elements from a previous game:
@@ -526,6 +527,9 @@ function initializeGame(obj) {
         </svg>
       </div>
       <div class="chessboard"></div>`;
+    if (vr)
+      // Avoid interferences:
+      vr.removeListeners();
     vr = new V({
       seed: obj.seed, //may be null if FEN already exists (running game)
       fen: obj.fen,
