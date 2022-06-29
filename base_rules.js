@@ -568,38 +568,39 @@ export default class ChessRules {
   re_drawBoardElements() {
     const board = this.getSvgChessboard();
     const oppCol = C.GetOppCol(this.playerColor);
-    let chessboard =
-      document.getElementById(this.containerId).querySelector(".chessboard");
+    const container = document.getElementById(this.containerId);
+    const rc = container.getBoundingClientRect();
+    let chessboard = container.querySelector(".chessboard");
     chessboard.innerHTML = "";
     chessboard.insertAdjacentHTML('beforeend', board);
     // Compare window ratio width / height to aspectRatio:
-    const windowRatio = window.innerWidth / window.innerHeight;
+    const windowRatio = rc.width / rc.height;
     let cbWidth, cbHeight;
     const vRatio = this.size.ratio || 1;
     if (windowRatio <= vRatio) {
       // Limiting dimension is width:
-      cbWidth = Math.min(window.innerWidth, 767);
+      cbWidth = Math.min(rc.width, 767);
       cbHeight = cbWidth / vRatio;
     }
     else {
       // Limiting dimension is height:
-      cbHeight = Math.min(window.innerHeight, 767);
+      cbHeight = Math.min(rc.height, 767);
       cbWidth = cbHeight * vRatio;
     }
     if (this.hasReserve) {
       const sqSize = cbWidth / this.size.y;
       // NOTE: allocate space for reserves (up/down) even if they are empty
       // Cannot use getReserveSquareSize() here, but sqSize is an upper bound.
-      if ((window.innerHeight - cbHeight) / 2 < sqSize + 5) {
-        cbHeight = window.innerHeight - 2 * (sqSize + 5);
+      if ((rc.height - cbHeight) / 2 < sqSize + 5) {
+        cbHeight = rc.height - 2 * (sqSize + 5);
         cbWidth = cbHeight * vRatio;
       }
     }
     chessboard.style.width = cbWidth + "px";
     chessboard.style.height = cbHeight + "px";
     // Center chessboard:
-    const spaceLeft = (window.innerWidth - cbWidth) / 2,
-          spaceTop = (window.innerHeight - cbHeight) / 2;
+    const spaceLeft = (rc.width - cbWidth) / 2,
+          spaceTop = (rc.height - cbHeight) / 2;
     chessboard.style.left = spaceLeft + "px";
     chessboard.style.top = spaceTop + "px";
     // Give sizes instead of recomputing them,
@@ -771,26 +772,27 @@ export default class ChessRules {
 
   // Resize board: no need to destroy/recreate pieces
   rescale(mode) {
-    let chessboard =
-      document.getElementById(this.containerId).querySelector(".chessboard");
-    const r = chessboard.getBoundingClientRect();
+    const container = document.getElementById(this.containerId);
+    let chessboard = container.querySelector(".chessboard");
+    const rc = container.getBoundingClientRect(),
+          r = chessboard.getBoundingClientRect();
     const multFact = (mode == "up" ? 1.05 : 0.95);
     let [newWidth, newHeight] = [multFact * r.width, multFact * r.height];
     // Stay in window:
     const vRatio = this.size.ratio || 1;
-    if (newWidth > window.innerWidth) {
-      newWidth = window.innerWidth;
+    if (newWidth > rc.width) {
+      newWidth = rc.width;
       newHeight = newWidth / vRatio;
     }
-    if (newHeight > window.innerHeight) {
-      newHeight = window.innerHeight;
+    if (newHeight > rc.height) {
+      newHeight = rc.height;
       newWidth = newHeight * vRatio;
     }
     chessboard.style.width = newWidth + "px";
     chessboard.style.height = newHeight + "px";
-    const newX = (window.innerWidth - newWidth) / 2;
+    const newX = (rc.width - newWidth) / 2;
     chessboard.style.left = newX + "px";
-    const newY = (window.innerHeight - newHeight) / 2;
+    const newY = (rc.height - newHeight) / 2;
     chessboard.style.top = newY + "px";
     const newR = {x: newX, y: newY, width: newWidth, height: newHeight};
     const pieceWidth = this.getPieceWidth(newWidth);
