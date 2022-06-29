@@ -559,10 +559,21 @@ export default class ChessRules {
   graphicalInit() {
     // NOTE: not window.onresize = this.re_drawBoardElts because scope (this)
     window.onresize = () => this.re_drawBoardElements();
-    this.re_drawBoardElements();
-    this.initMouseEvents();
-    const chessboard =
-      document.getElementById(this.containerId).querySelector(".chessboard");
+    const g_init = () => {
+      this.re_drawBoardElements();
+      this.initMouseEvents();
+    };
+    let container = document.getElementById(this.containerId);
+    if (container.getBoundingClientRect().width == 0) {
+      // Element not ready yet
+      let ro = new ResizeObserver(() => {
+        ro.unobserve(container);
+        g_init();
+      });
+      ro.observe(container);
+    }
+    else
+      g_init();
   }
 
   re_drawBoardElements() {
