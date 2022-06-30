@@ -42,6 +42,9 @@ function re_drawDiagrams() {
       vr[i] = new V({
         element: "diag_" + i,
         fen: diagrams[i].dataset.fen,
+        marks: diagrams[i].dataset.mks
+                 ? JSON.parse('[' + diagrams[i].dataset.mks + ']')
+                 : undefined,
         color: diagrams[i].dataset.col || 'w',
         options: {},
         diagram: true

@@ -203,12 +203,18 @@ main > div {
   margin: 5px 0;
   text-align: center;
 }
+piece.mark {
+  background-image: url('/pieces/mark.svg');
+}
+piece.mark.transparent {
+  opacity: 0.65;
+}
 .full-rules figure {
   display: block;
   overflow: visible;
   margin-top: 20px;
 }
-.full-rules figure:after {
+.full-rules figure::after {
   content: '';
   display: block;
   clear: both;

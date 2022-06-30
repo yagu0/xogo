@@ -416,6 +416,7 @@ export default class ChessRules {
     // Graphical (can use variables defined above)
     this.containerId = o.element;
     this.isDiagram = o.diagram;
+    this.marks = o.marks;
     this.graphicalInit();
   }
 
@@ -647,43 +648,58 @@ export default class ChessRules {
   }
 
   setupPieces(r) {
-    // TODO: d_pieces : only markers (for diagrams) / also in rescale()
-    if (this.g_pieces) {
-      // Refreshing: delete old pieces first
-      for (let i=0; i<this.size.x; i++) {
-        for (let j=0; j<this.size.y; j++) {
-          if (this.g_pieces[i][j]) {
-            this.g_pieces[i][j].remove();
-            this.g_pieces[i][j] = null;
-          }
-        }
-      }
-    }
-    else
-      this.g_pieces = ArrayFun.init(this.size.x, this.size.y, null);
     let chessboard =
       document.getElementById(this.containerId).querySelector(".chessboard");
     if (!r)
       r = chessboard.getBoundingClientRect();
     const pieceWidth = this.getPieceWidth(r.width);
+    const addPiece = (i, j, arrName, classes) => {
+      this[arrName][i][j] = document.createElement("piece");
+      C.AddClass_es(this[arrName][i][j], classes);
+      this[arrName][i][j].style.width = pieceWidth + "px";
+      this[arrName][i][j].style.height = pieceWidth + "px";
+      let [ip, jp] = this.getPixelPosition(i, j, r);
+      // Translate coordinates to use chessboard as reference:
+      this[arrName][i][j].style.transform =
+        `translate(${ip - r.x}px,${jp - r.y}px)`;
+      chessboard.appendChild(this[arrName][i][j]);
+    };
+    const conditionalReset = (arrName) => {
+      if (this[arrName]) {
+        // Refreshing: delete old pieces first. This isn't necessary,
+        // but simpler (this method isn't called many times)
+        for (let i=0; i<this.size.x; i++) {
+          for (let j=0; j<this.size.y; j++) {
+            if (this[arrName][i][j]) {
+              this[arrName][i][j].remove();
+              this[arrName][i][j] = null;
+            }
+          }
+        }
+      }
+      else
+        this[arrName] = ArrayFun.init(this.size.x, this.size.y, null);
+      if (arrName == "d_pieces")
+        this.marks.forEach(([i, j]) => addPiece(i, j, arrName, "mark"));
+    };
+    if (this.marks)
+      conditionalReset("d_pieces");
+    conditionalReset("g_pieces");
     for (let i=0; i < this.size.x; i++) {
       for (let j=0; j < this.size.y; j++) {
         if (this.board[i][j] != "") {
           const color = this.getColor(i, j);
           const piece = this.getPiece(i, j);
-          this.g_pieces[i][j] = document.createElement("piece");
-          C.AddClass_es(this.g_pieces[i][j],
-                        this.pieces(color, i, j)[piece]["class"]);
+          addPiece(i, j, "g_pieces", this.pieces(color, i, j)[piece]["class"]);
           this.g_pieces[i][j].classList.add(C.GetColorClass(color));
-          this.g_pieces[i][j].style.width = pieceWidth + "px";
-          this.g_pieces[i][j].style.height = pieceWidth + "px";
-          let [ip, jp] = this.getPixelPosition(i, j, r);
-          // Translate coordinates to use chessboard as reference:
-          this.g_pieces[i][j].style.transform =
-            `translate(${ip - r.x}px,${jp - r.y}px)`;
           if (this.enlightened && !this.enlightened[i][j])
             this.g_pieces[i][j].classList.add("hidden");
-          chessboard.appendChild(this.g_pieces[i][j]);
+        }
+        if (this.marks && this.d_pieces[i][j]) {
+          let classes = ["mark"];
+          if (this.board[i][j] != "")
+            classes.push("transparent");
+          addPiece(i, j, "d_pieces", classes);
         }
       }
     }
@@ -817,7 +833,7 @@ export default class ChessRules {
         }
       }
     }
-    if (this.hasReserve && !this.isDiagram)
+    if (this.hasReserve)
       this.rescaleReserve(newR);
   }
 
