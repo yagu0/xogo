@@ -454,7 +454,7 @@ export default class ChessRules {
       this.setFlags(fenParsed.flags);
     if (this.hasEnpassant)
       this.epSquare = this.getEpSquare(fenParsed.enpassant);
-    if (this.hasReserve)
+    if (this.hasReserve && !this.isDiagram)
       this.initReserves(fenParsed.reserve);
     if (this.options["crazyhouse"])
       this.initIspawn(fenParsed.ispawn);
@@ -558,24 +558,14 @@ export default class ChessRules {
   // VISUAL METHODS
 
   graphicalInit() {
-    // NOTE: not window.onresize = this.re_drawBoardElts because scope (this)
-    window.onresize = () => this.re_drawBoardElements();
     const g_init = () => {
       this.re_drawBoardElements();
-      if (!this.isDiagram)
+      if (!this.isDiagram && !this.mouseListeners && !this.touchListeners)
         this.initMouseEvents();
     };
     let container = document.getElementById(this.containerId);
-    if (container.getBoundingClientRect().width == 0) {
-      // Element not ready yet
-      let ro = new ResizeObserver(() => {
-        ro.unobserve(container);
-        g_init();
-      });
-      ro.observe(container);
-    }
-    else
-      g_init();
+    this.windowResizeObs = new ResizeObserver(g_init);
+    this.windowResizeObs.observe(container);
   }
 
   re_drawBoardElements() {
@@ -600,7 +590,7 @@ export default class ChessRules {
       cbHeight = Math.min(rc.height, 767);
       cbWidth = cbHeight * vRatio;
     }
-    if (this.hasReserve) {
+    if (this.hasReserve && !this.isDiagram) {
       const sqSize = cbWidth / this.size.y;
       // NOTE: allocate space for reserves (up/down) even if they are empty
       // Cannot use getReserveSquareSize() here, but sqSize is an upper bound.
@@ -697,7 +687,7 @@ export default class ChessRules {
         }
       }
     }
-    if (this.hasReserve)
+    if (this.hasReserve && !this.isDiagram)
       this.re_drawReserve(['w', 'b'], r);
   }
 
@@ -827,7 +817,7 @@ export default class ChessRules {
         }
       }
     }
-    if (this.hasReserve)
+    if (this.hasReserve && !this.isDiagram)
       this.rescaleReserve(newR);
   }
 
@@ -1010,6 +1000,8 @@ export default class ChessRules {
   }
 
   removeListeners() {
+    let container = document.getElementById(this.containerId);
+    this.windowResizeObs.unobserve(container);
     if (this.isDiagram)
       return; //no listeners in this case
     if ('onmousedown' in window) {

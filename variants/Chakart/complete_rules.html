@@ -12,17 +12,17 @@
 
 <div>
   <p>
-    Pieces move as usual, but they all hide a special "power" inspired by
-    Mario Kart:
+    Pieces move as usual, but they all hide a special "power"
+    inspired by Mario Kart:
   </p>
   <ul>
     <li>
-      The pawn (Toad) leaves a "turbo" mushroom on its initial square, or on
-      the intermediate one in case of a two squares move.
+      The pawn (Toad) leaves a "turbo" mushroom on its initial square,
+      or on the intermediate one in case of a two squares move.
     </li>
     <li>
-      The knight (Yoshi) let a surprise egg on its initial square. See about
-      egg effect below.
+      The knight (Yoshi) let a surprise egg on its initial square.
+      See about egg effect below.
     </li>
     <li>
       The rook (Donkey) put a banana on a square diagonally adjacent to the
@@ -33,8 +33,8 @@
       arrival one, at random, if possible.
     </li>
     <li>
-      The queen (Mario) can play a stealth move once in the game: the opponent
-      will only know that a queen moved - to an empty square.
+      The queen (Mario) can play a stealth move once in the game:
+      the opponent will only know that a queen moved - to an empty square.
       A promoted queen also has this power if not already used.
     </li>
     <li>
@@ -63,6 +63,7 @@
       A king or a pawn arriving on a mushroom advance one square further,
       while a knight jump another time in the same direction, if possible.
       Pawns can "eat" objects diagonally too.
+      Mushrooms have no effect on sliders (queen, rook, bishop).
     </li>
     <li>
       A piece arriving on a banana (resp. bomb) is redirected at random by one
@@ -70,24 +71,22 @@
       color!) stands on that square, then it is captured.
     </li>
     <li>
-      The effects can cumulate, as illustrated on the diagram: the bishop
-      "captures" the banana on e4, and is then redirected twoard e5: mushroom,
-      it jumps over the black pawn to ends on the bomb on e7, which sends it
-      on d6 (f6 and f8 were possible too). A bomb is finally put on c6 which
-      is the only eligible square. A piece may ends on its initial square,
-      move back, and so on. That being said, a given object can only be used
-      once on the path.
+      The effects can cumulate, as illustrated on the diagram: the pawn
+      "captures" the banana on e4, and is then redirected toward e5: mushroom,
+      it jumps to the next square, which sends it on d5 eating the white rook.
+      (We can imagine that the hope was to eat the black knight instead).
+      A piece may ends on its initial square, move back, and so on. That being
+      said, a given object can only be used once on the path.
     </li>
   </ul>
-  <!-- TODO: class for left/right + adapt diagrams for new rules -->
   <figure>
     <div class="diag left"
-      data-fen='rn1b2qk/pbppwppp/1w2p3/1p1Rm3/3PdnPr/4P1d1/PPP1mP1P/NNB1KRQB b 1 {"flags":"1111"}'>
+      data-fen='rn1b2qk/pbpp1ppp/1w2wp2/1p1Rm3/3PdnPr/4PPd1/PPP1m2P/NNB1KRQB b 1 {"flags":"1111"}'>
     </div>
     <div class="diag right"
-      data-fen='rn1b2qk/pbpp1ppp/1wwBp3/1p1R4/3P1nPr/4P1d1/PPP1mP1P/NNB1KRQ1 w 2 {"flags":"1111"}'>
+      data-fen='rn1b2qk/pbpp1ppp/1w3p2/1p1P4/3P1nPr/4P1d1/PPP1m2P/NNB1KRQB w 2 {"flags":"1111"}'>
     </div>
-    <figcaption>Left: before 1.Bxe4. Right: after the move, ending on d6.</figcaption>
+    <figcaption>Left: before 1.fxe4. Right: after the move, ending on d6.</figcaption>
   </figure>
 </div>
 

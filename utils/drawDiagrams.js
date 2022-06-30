@@ -3,35 +3,51 @@ function fenToDiag(vname) {
     window.V = module.default;
     for (const [k, v] of Object.entries(V.Aliases))
       window[k] = v;
-    drawDiagrams();
+    re_drawDiagrams();
   });
 }
 
 // TODO: heuristic to improve for ratio != 1 (how?)
-function getDiagSize() {
-  if (window.innerWidth > 1000)
-    return 500;
-  if (window.innerWidth < 800)
-    return window.innerWidth;
-  return window.innerWidth / 2;
+function getDiagSize(elt) {
+  const baseWidth = Math.min(window.innerWidth, 800);
+  let multFact = 1;
+  if (elt.classList.contains("left") || elt.classList.contains("right"))
+    multFact = 0.45;
+  else if (baseWidth > 630)
+    multFact = 0.5;
+  else
+    multFact = 0.7;
+  return multFact * baseWidth;
 }
 
-function drawDiagrams() {
+let vr = null;
+function re_drawDiagrams() {
   const diagrams = document.getElementsByClassName("diag");
+  if (diagrams.length == 0)
+    return;
+  const redrawing = !!vr;
+  if (!redrawing)
+    vr = new Array(diagrams.length);
   for (let i=0; i<diagrams.length; i++) {
-    let chessboard = document.createElement("div");
-    chessboard.classList.add("chessboard");
-    diagrams[i].appendChild(chessboard);
-    const diagSize = getDiagSize();
+    if (!redrawing) {
+      let chessboard = document.createElement("div");
+      chessboard.classList.add("chessboard");
+      diagrams[i].appendChild(chessboard);
+      diagrams[i].id = "diag_" + i;
+    }
+    const diagSize = getDiagSize(diagrams[i]);
     diagrams[i].style.width = diagSize + "px";
     diagrams[i].style.height = diagSize + "px";
-    diagrams[i].id = "diag_" + i;
-    const vr = new V({
-      element: "diag_" + i,
-      fen: diagrams[i].dataset.fen,
-      color: diagrams[i].dataset.col || 'w',
-      options: {},
-      diagram: true
-    });
+    if (!redrawing) {
+      vr[i] = new V({
+        element: "diag_" + i,
+        fen: diagrams[i].dataset.fen,
+        color: diagrams[i].dataset.col || 'w',
+        options: {},
+        diagram: true
+      });
+    }
   }
 }
+
+window.onresize = re_drawDiagrams;

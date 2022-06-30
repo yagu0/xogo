@@ -179,18 +179,22 @@ main > div {
   margin: 20px auto;
   padding: 0 10px;
 }
-.full-rules h2, .full-rules h3, .full-rules h4 {
+.full-rules h1, .full-rules h2, .full-rules h3, .full-rules h4 {
   font-weight: bold;
   display: block;
 }
+.full-rules h1 {
+  font-size: 2.5em;
+  margin: 10px 0 20px 0;
+}
 .full-rules h2 {
   color: darkred;
-  font-size: 2.5em;
+  font-size: 2em;
   margin: 10px 0;
 }
 .full-rules h3 {
   color: darkviolet;
-  font-size: 2em;
+  font-size: 1.8em;
   margin: 10px 0;
 }
 .full-rules h4 {
@@ -199,15 +203,34 @@ main > div {
   margin: 5px 0;
   text-align: center;
 }
+.full-rules figure {
+  display: block;
+  overflow: visible;
+  margin-top: 20px;
+}
+.full-rules figure:after {
+  content: '';
+  display: block;
+  clear: both;
+  margin-bottom: 20px;
+}
 .full-rules .diag {
   position: relative;
-  margin: -30px auto 0 auto;
+  margin: 0 auto;
+}
+.full-rules .left {
+  float: left;
+}
+.full-rules .right {
+  float: right;
 }
 .full-rules figcaption {
   display: block;
   text-align: center;
-  margin-top: -50px;
-  margin-bottom: 30px;
+  clear: both;
+  font-size: 0.9em;
+  color: #0D1C46;
+  font-weight: bold;
 }
 /* TODO: use same CSS for rules and full-rules? */
 .full-rules p, .full-rules ul, .full-rules ol {
@@ -221,40 +244,6 @@ main > div {
   list-style-type: numeric;
   padding-left: 30px;
 }
-/* From vchess to adapt: */
-/*
-figure.diagram-container
-  margin: 15px 0 15px 0
-  text-align: center
-  width: 100%
-  display: block
-  .diagram
-    display: block
-    width: 50%
-    margin-left: auto
-    margin-right: auto
-    @media screen and (max-width: 630px)
-      width: 75%
-  .diag12
-    float: left
-    width: 42%
-    margin: 0 2% 0 6%
-    @media screen and (max-width: 630px)
-      width: 49%
-      margin: 0 1% 0 0
-  .diag22
-    float: left
-    width: 42%
-    margin: 0 6% 0 2%
-    @media screen and (max-width: 630px)
-      width: 49%
-      margin: 0 0 0 1%
-  figcaption
-    display: block
-    clear: both
-    padding-top: 5px
-    font-size: 0.8em
-*/
 
 #ng-select {
   margin-bottom: 20px;
