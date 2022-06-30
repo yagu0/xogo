@@ -26,17 +26,9 @@ export default class AbstractAntikingRules extends ChessRules {
   }
 
   pieces(color, x, y) {
-    return Object.assign(
-      {
-        'a': {
-          // Move like a king, no attacks
-          "class": "antiking",
-          moves: super.pieces(color, x, y)['k'].moves,
-          attack: []
-        }
-      },
-      super.pieces(color, x, y)
-    );
+    let antikingSpec = super.pieces(color, x, y)['k'];
+    antikingSpec["class"] = "antiking";
+    return Object.assign({'a': antikingSpec}, super.pieces(color, x, y));
   }
 
   isKing(x, y, p) {
