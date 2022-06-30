@@ -1511,7 +1511,7 @@ export default class ChessRules {
     if (piece == "p" && this.hasEnpassant && this.epSquare)
       Array.prototype.push.apply(moves, this.getEnpassantCaptures([x, y]));
     if (
-      piece == "k" && this.hasCastle &&
+      this.isKing(0, 0, piece) && this.hasCastle &&
       this.castleFlags[color || this.turn].some(v => v < this.size.y)
     ) {
       Array.prototype.push.apply(moves, this.getCastleMoves([x, y]));
@@ -2162,21 +2162,24 @@ export default class ChessRules {
     );
   }
 
-  underCheck([x, y], oppCol) {
+  underCheck(square_s, oppCol) {
     if (this.options["taking"] || this.options["dark"])
       return false;
-    return this.underAttack([x, y], oppCol);
+    if (!Array.isArray(square_s))
+      square_s = [square_s];
+    return square_s.some(sq => this.underAttack(sq, oppCol));
   }
 
-  // Stop at first king found (TODO: multi-kings)
+  // Scan board for king(s)
   searchKingPos(color) {
+    let res = [];
     for (let i=0; i < this.size.x; i++) {
       for (let j=0; j < this.size.y; j++) {
         if (this.getColor(i, j) == color && this.isKing(i, j))
-          return [i, j];
+          res.push([i, j]);
       }
     }
-    return [-1, -1]; //king not found
+    return res;
   }
 
   // 'color' arg because some variants (e.g. Refusal) check opponent moves
@@ -2184,24 +2187,30 @@ export default class ChessRules {
     if (!color)
       color = this.turn;
     const oppCol = C.GetOppCol(color);
-    const kingPos = this.searchKingPos(color);
+    let kingPos = this.searchKingPos(color);
     let filtered = {}; //avoid re-checking similar moves (promotions...)
     return moves.filter(m => {
       const key = m.start.x + m.start.y + '.' + m.end.x + m.end.y;
       if (!filtered[key]) {
         this.playOnBoard(m);
-        let square = kingPos,
+        let newKingPP = null,
+            sqIdx = 0,
             res = true; //a priori valid
-        if (m.vanish.some(v => this.isKing(0, 0, v.p) && v.c == color)) {
+        const oldKingPP = m.vanish.find(v => this.isKing(0, 0, v.p) && v.c == color);
+        if (oldKingPP) {
           // Search king in appear array:
-          const newKingIdx =
-            m.appear.findIndex(a => this.isKing(0, 0, a.p) && a.c == color);
-          if (newKingIdx >= 0)
-            square = [m.appear[newKingIdx].x, m.appear[newKingIdx].y];
+          newKingPP =
+            m.appear.find(a => this.isKing(0, 0, a.p) && a.c == color);
+          if (newKingPP) {
+            sqIdx = kingPos.findIndex(kp => kp[0] == oldKingPP.x && kp[1] == oldKingPP[.y);
+            kingPos[sqIdx] = [newKingPP.x, newKingPP.y];
+          }
           else
-            res = false;
+            res = false; //king vanished
         }
-        res &&= !this.underCheck(square, oppCol);
+        res &&= !this.underCheck(square_s, oppCol);
+        if (oldKingPP && newKingPP)
+          kingPos[sqIdx] = [oldKingPP.x, oldKingPP.y];
         this.undoOnBoard(m);
         filtered[key] = res;
         return res;
@@ -2348,7 +2357,7 @@ export default class ChessRules {
       return false;
     const color = this.turn;
     const oppKingPos = this.searchKingPos(C.GetOppCol(color));
-    if (oppKingPos[0] < 0 || this.underCheck(oppKingPos, color))
+    if (oppKingPos.length == 0 || this.underCheck(oppKingPos, color))
       return true;
     return (
       (
@@ -2397,17 +2406,20 @@ export default class ChessRules {
   getCurrentScore(move) {
     const color = this.turn;
     const oppCol = C.GetOppCol(color);
-    const kingPos = [this.searchKingPos(color), this.searchKingPos(oppCol)];
-    if (kingPos[0][0] < 0 && kingPos[1][0] < 0)
+    const kingPos = {
+      [color]: this.searchKingPos(color),
+      [oppCol]: this.searchKingPos(oppCol)
+    };
+    if (kingPos[color].length == 0 && kingPos[oppCol].length == 0)
       return "1/2";
-    if (kingPos[0][0] < 0)
+    if (kingPos[color].length == 0)
       return (color == "w" ? "0-1" : "1-0");
-    if (kingPos[1][0] < 0)
+    if (kingPos[oppCol].length == 0)
       return (color == "w" ? "1-0" : "0-1");
     if (this.atLeastOneMove(color))
       return "*";
     // No valid move: stalemate or checkmate?
-    if (!this.underCheck(kingPos[0], oppCol))
+    if (!this.underCheck(kingPos[color], oppCol))
       return "1/2";
     // OK, checkmate
     return (color == "w" ? "0-1" : "1-0");
