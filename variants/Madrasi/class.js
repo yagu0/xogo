@@ -22,18 +22,16 @@ export default class MadrasiRules extends ChessRules {
     super(o);
   }
 
-  underCheck([x, y], color) {
-    if (this.options["rexincl"]) {
-      // If Rex Inclusive, kings do not check each other:
-      // we just replace it very temporarily.
-      const [ox, oy] = this.searchKingPos(color);
-      const saveOppKing = this.board[ox][oy];
-      this.board[ox][oy] = C.GetOppCol(color) + "q"; //arbitrary
-      const res = super.underCheck([x, y], color);
-      this.board[ox][oy] = saveOppKing;
-      return res;
-    }
-    return super.underCheck([x, y], color);
+  canTake([x1, y1], [x2, y2]) {
+    return (
+      (
+        !this.options["rexincl"] ||
+        this.getPiece(x1, y1) != 'k' ||
+        this.getPiece(x2, y2) != 'k'
+      )
+      &&
+      super.canTake([x1, y1], [x2, y2])
+    );
   }
 
 };

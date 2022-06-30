@@ -1,28 +1,12 @@
 import ChessRules from "/base_rules.js";
-import AbstractAntikingRules from "/variants/AbstractAntiking.js";
+import AbstractAntikingRules from "/variants/_Antiking/class.js";
 
-export class Antiking1Rules extends AbstractAntikingRules {
-
-  static get Options() {
-    return {
-      styles: [
-        "atomic",
-        "balance",
-        "cannibal",
-        "capture",
-        "crazyhouse",
-        "doublemove",
-        "madrasi",
-        "progressive",
-        "recycle",
-        "rifle",
-        "teleport",
-        "zen"
-      ]
-    };
-  }
+export default class Antiking1Rules extends AbstractAntikingRules {
 
   get hasCastle() {
+    return false;
+  }
+  get hasEnpassant() {
     return false;
   }
 
@@ -53,11 +37,11 @@ export class Antiking1Rules extends AbstractAntikingRules {
   }
 
   // (Anti)King flags at 1 (true) if they can knight-jump
-  setFlags(fenflags) {
+  setFlags(fenFlags) {
     this.kingFlags = { w: {}, b: {} };
     for (let i=0; i<fenFlags.length; i++) {
       const white = fenFlags.charCodeAt(i) <= 90;
-      const curChar = fenFlags.charCodeAt(i).toLowerCase();
+      const curChar = fenFlags.charAt(i).toLowerCase();
       this.kingFlags[white ? 'w' : 'b'][curChar] = true;
     }
   }
@@ -73,11 +57,11 @@ export class Antiking1Rules extends AbstractAntikingRules {
   getPotentialMovesFrom([x, y]) {
     const color = this.turn;
     let moves = super.getPotentialMovesFrom([x, y]);
-    if (this.kingFlags[color][piece]) {
+    if (this.kingFlags[color][this.getPiece(x, y)]) {
       // Allow knight jump (king or antiking)
       const knightMoves = super.getPotentialMovesOf('n', [x, y]);
       // Remove captures (TODO: could be done more efficiently...)
-      moves = moves.concat(knightJumps.filter(m => m.vanish.length == 1));
+      moves = moves.concat(knightMoves.filter(m => m.vanish.length == 1));
     }
     return moves;
   }

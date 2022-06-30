@@ -107,8 +107,8 @@ export default class SuctionRules extends ChessRules {
   getCurrentScore() {
     const color = this.turn;
     const kingPos = super.searchKingPos(color);
-    if (color == "w" && kingPos[0] == 0) return "0-1";
-    if (color == "b" && kingPos[0] == this.size.x - 1) return "1-0";
+    if (color == "w" && kingPos[0][0] == 0) return "0-1";
+    if (color == "b" && kingPos[0][0] == this.size.x - 1) return "1-0";
     // King is not on the opposite edge: game not over
     return "*";
   }

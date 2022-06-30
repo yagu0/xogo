@@ -149,15 +149,14 @@ export default class AmbiguousRules extends ChessRules {
   getCurrentScore() {
     // This function is only called at subTurn 1
     const color = C.GetOppCol(this.turn);
-    const kingPos = this.searchKingPos(color);
-    if (kingPos[0] < 0)
+    if (this.searchKingPos(color).length == 0)
       return (color == 'w' ? "0-1" : "1-0");
     return "*";
   }
 
   postPlay(move) {
     const color = this.turn;
-    if (this.subTurn == 2 || this.searchKingPos(color)[0] < 0) {
+    if (this.subTurn == 2 || this.searchKingPos(color).length == 0) {
       this.turn = C.GetOppCol(color);
       this.movesCount++;
     }

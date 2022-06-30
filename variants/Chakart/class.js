@@ -1,7 +1,7 @@
 import ChessRules from "/base_rules.js";
 import GiveawayRules from "/variants/Giveaway/class.js";
-import { ArrayFun } from "/utils/array.js";
-import { Random } from "/utils/alea.js";
+import {ArrayFun} from "/utils/array.js";
+import {Random} from "/utils/alea.js";
 import PiPo from "/utils/PiPo.js";
 import Move from "/utils/Move.js";
 

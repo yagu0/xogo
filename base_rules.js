@@ -2162,10 +2162,11 @@ export default class ChessRules {
     );
   }
 
+  // Argument is (very generally) an array of squares (= arrays)
   underCheck(square_s, oppCol) {
     if (this.options["taking"] || this.options["dark"])
       return false;
-    if (!Array.isArray(square_s))
+    if (!Array.isArray(square_s[0]))
       square_s = [square_s];
     return square_s.some(sq => this.underAttack(sq, oppCol));
   }
@@ -2196,19 +2197,21 @@ export default class ChessRules {
         let newKingPP = null,
             sqIdx = 0,
             res = true; //a priori valid
-        const oldKingPP = m.vanish.find(v => this.isKing(0, 0, v.p) && v.c == color);
+        const oldKingPP =
+          m.vanish.find(v => this.isKing(0, 0, v.p) && v.c == color);
         if (oldKingPP) {
           // Search king in appear array:
           newKingPP =
             m.appear.find(a => this.isKing(0, 0, a.p) && a.c == color);
           if (newKingPP) {
-            sqIdx = kingPos.findIndex(kp => kp[0] == oldKingPP.x && kp[1] == oldKingPP[.y);
+            sqIdx = kingPos.findIndex(kp =>
+              kp[0] == oldKingPP.x && kp[1] == oldKingPP.y);
             kingPos[sqIdx] = [newKingPP.x, newKingPP.y];
           }
           else
             res = false; //king vanished
         }
-        res &&= !this.underCheck(square_s, oppCol);
+        res &&= !this.underCheck(kingPos, oppCol);
         if (oldKingPP && newKingPP)
           kingPos[sqIdx] = [oldKingPP.x, oldKingPP.y];
         this.undoOnBoard(m);

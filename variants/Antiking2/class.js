@@ -1,15 +1,12 @@
 import ChessRules from "/base_rules.js";
-import AbstractAntikingRules from "/variants/AbstractAntiking.js";
-import { Random } from "/utils/alea.js";
+import AbstractAntikingRules from "/variants/_Antiking/class.js";
+import {Random} from "/utils/alea.js";
 
-export class Antiking2Rules extends AbstractAntikingRules {
-
-  static get Aliases() {
-    return Object.assign({'A': AbstractAntikingRules}, ChessRules.Aliases);
-  }
+export default class Antiking2Rules extends AbstractAntikingRules {
 
   static get Options() {
     return {
+      select: C.Options.select,
       styles: A.Options.styles.concat("cylinder")
     };
   }
@@ -25,9 +22,19 @@ export class Antiking2Rules extends AbstractAntikingRules {
       else
         akPos[1] = akPos[0];
     }
-    const whiteLine = (akPos[0] > 0 ? akPos[0] : "") + 'A' + (akPos < this.size.y - 1 ? ...);
-    const blackLine = ...
-    return baseFen.replace(...)
+    const antikingLine = (color) => {
+      const [idx, symbol] = (color == 'w' ? [0, 'a'] : [1, 'A']);
+      return (
+        (akPos[idx] > 0 ? akPos[idx] : "") + symbol +
+        (akPos[idx] < this.size.y - 1
+          ? C.FenEmptySquares(this.size.y - 1 - akPos[idx])
+          : "")
+      );
+    };
+    return (
+      baseFen.replace("p/8", "p/" + antikingLine('b'))
+             .replace("8/P", antikingLine('w') + "/P")
+    );
   }
 
 };

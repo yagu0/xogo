@@ -1,6 +1,6 @@
 import ChessRules from "/base_rules.js";
-import { ArrayFun } from "/utils/array.js";
-import { Random } from "/utils/alea.js";
+import {ArrayFun} from "/utils/array.js";
+import {Random} from "/utils/alea.js";
 
 export default class AlapoRules extends ChessRules {
 

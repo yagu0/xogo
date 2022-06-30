@@ -1,5 +1,5 @@
 import ChessRules from "/base_rules.js";
-import { ArrayFun } from "/utils/array.js";
+import {ArrayFun} from "/utils/array.js";
 
 export default class AliceRules extends ChessRules {
 
@@ -105,7 +105,7 @@ export default class AliceRules extends ChessRules {
   filterValid(moves) {
     const color = this.turn;
     const oppCol = C.GetOppCol(color);
-    const kingPos = this.searchKingPos(color);
+    const kingPos = this.searchKingPos(color)[0];
     const kingPiece = this.getPiece(kingPos[0], kingPos[1]);
     return super.filterValid(moves).filter(m => {
       // A move must also be legal on the board it is played:

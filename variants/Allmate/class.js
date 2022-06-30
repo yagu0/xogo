@@ -82,7 +82,7 @@ export default class AllmateRules extends ChessRules {
     return true;
   }
 
-  underCheck([x, y], oppCol) {
+  underCheck() {
     return false; //not relevant here
   }
 

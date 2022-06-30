@@ -1,6 +1,6 @@
 import ChessRules from "/base_rules.js";
-import { ArrayFun } from "/utils/array.js";
-import { Random } from "/utils/alea.js";
+import {ArrayFun} from "/utils/array.js";
+import {Random} from "/utils/alea.js";
 
 export default class GiveawayRules extends ChessRules {
 
@@ -84,10 +84,10 @@ export default class GiveawayRules extends ChessRules {
     super(o);
   }
 
-  underCheck([x, y], oppCol) {
+  underCheck(square, oppCol) {
     if (this.options["mode"] == "suicide")
       return false;
-    return super.underCheck([x, y], oppCol);
+    return super.underCheck(square, oppCol);
   }
 
   getCurrentScore() {
