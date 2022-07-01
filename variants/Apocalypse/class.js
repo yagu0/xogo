@@ -1,4 +1,5 @@
 import ChessRules from "/base_rules.js";
+import {ArrayFun} from "/utils/array.js";
 
 export class ApocalypseRules extends ChessRules {
 
@@ -12,6 +13,13 @@ export class ApocalypseRules extends ChessRules {
 
   get size() {
     return {x: 5, y: 5};
+  }
+
+  setOtherVariables(fenParsed) {
+    super.setOtherVariables(fenParsed);
+    this.whiteMove = fenParsed.whiteMove != "-"
+      ? JSON.parse(fenParsed.whiteMove)
+      : null;
   }
 
   genRandInitBaseFen() {
@@ -28,46 +36,21 @@ export class ApocalypseRules extends ChessRules {
   }
 
   getFlagsFen() {
-    return (
-      this.penaltyFlags['w'].toString() + this.penaltyFlags['b'].toString()
-    );
-  }
-
-  setOtherVariables(fen) {
-    const parsedFen = V.ParseFen(fen);
-    this.setFlags(parsedFen.flags);
-    // Also init whiteMove
-    this.whiteMove =
-      parsedFen.whiteMove != "-"
-        ? JSON.parse(parsedFen.whiteMove)
-        : null;
+    return Object.values(this.penaltyFlags).join("");
   }
 
   setFlags(fenflags) {
-    this.penaltyFlags = {
-      'w': parseInt(fenflags[0], 10),
-      'b': parseInt(fenflags[1], 10)
-    };
+    this.penaltyFlags = ArrayFun.toObject(
+      ['w', 'b'], [0, 1].map(i => parseInt(fenflags.charAt(i), 10)));
   }
 
-  // TODO: could be a stack of 2 (pawn promote + relocation)
   getWhitemoveFen() {
-    if (!this.whiteMove) return "-";
-    return JSON.stringify({
-      start: this.whiteMove.start,
-      end: this.whiteMove.end,
-      appear: this.whiteMove.appear,
-      vanish: this.whiteMove.vanish
-    });
+    return !this.whiteMove ? "-" : JSON.stringify(this.whiteMove);
   }
 
-  // allow pawns to move diagonally and capture vertically --> only purpose illegal
-  // allow capture self --> same purpose
-  // ---> MARK such moves : move.illegal = true
-
-  // simpler: allow all moves, including "capturing nothing"
-  // flag every pawn capture as "illegal" (potentially)
-
+  // Allow pawns to move diagonally and capture vertically,
+  // because some of these moves might be valid a posteriori.
+  // They will be flagged as 'illegal' in a first time, however.
   pieces(color, x, y) {
     const pawnShift = (color == "w" ? -1 : 1);
     return {
@@ -84,6 +67,8 @@ export class ApocalypseRules extends ChessRules {
     };
   }
 
+  // Allow self-captures, because they might be valid
+  // if opponent takes on the same square (luck...)
   canTake() {
     return true;
   }
@@ -132,6 +117,9 @@ export class ApocalypseRules extends ChessRules {
     return moves;
   }
 
+
+//TODO: from here
+
   // White and black (partial) moves were played: merge
   // + animate both at the same time !
   resolveSynchroneMove(move) {
@@ -139,7 +127,7 @@ export class ApocalypseRules extends ChessRules {
   }
 
   play(move) {
-    // Do not play on board (would reveal the move...)
+    if (this.subTurn...) //TODO: detect (mark?) if pawn move arriving on last rank (=> subTurn++)
     this.turn = V.GetOppCol(this.turn);
     this.movesCount++;
     this.postPlay(move);
@@ -156,21 +144,38 @@ export class ApocalypseRules extends ChessRules {
     }
     else {
       // A full turn just ended:
-      const smove = this.resolveSynchroneMove(move);
+      const [wMove, bMove] = this.resolveSynchroneMove(move);
       V.PlayOnBoard(this.board, smove); //----> ici : animate both !
       this.whiteMove = null;
     }
   }
 
-  atLeastOneLegalMove(...) {
-    // TODO
+//until here
+
+
+  atLeastOneLegalMove(color) {
+    for (let i=0; i<this.size.x; i++) {
+      for (let j=0; j<this.size.y; j++) {
+        if (
+          this.board[i][j] != "" &&
+          this.getColor(i, j) == color &&
+          this.getPotentialMoves([i, j]).some(m => !m.illegal)
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   getCurrentScore() {
-    if (this.turn == 'b')
-      // Turn (white + black) not over yet. Could be stalemate if black cannot move (legally)
-      // TODO: check. If so, return "1/2".
+    if (this.turn == 'b') {
+      // Turn (white + black) not over yet.
+      // Could be stalemate if black cannot move (legally):
+      if (!this.atLeastOneLegalMove('b'))
+        return "1/2";
       return "*";
+    }
     // Count footmen: if a side has none, it loses
     let fmCount = { 'w': 0, 'b': 0 };
     for (let i=0; i<5; i++) {
