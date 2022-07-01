@@ -24,13 +24,15 @@ export default class Align4Rules extends ChessRules {
     return false;
   }
 
-  genRandInitFen(seed) {
-    const baseFen = super.genRandInitFen(seed);
-    const fen = baseFen.replace("rnbqkbnr/pppppppp", "4k3/8");
-    const fenParts = fen.split(" ");
-    let others = JSON.parse(fenParts[3]);
-    others["flags"] = others["flags"].substr(0, 2) + "88";
-    return fenParts.slice(0, 3).join(" ") + " " + JSON.stringify(others);
+  genRandInitBaseFen() {
+    let baseFen = super.genRandInitBaseFen();
+    return { fen: baseFen.fen.replace("rnbqkbnr/pppppppp", "4k3/8"), o: {} };
+  }
+
+  getPartFen(o) {
+    let parts = super.getPartFen(o);
+    parts["flags"] = parts["flags"].substr(0, 2) + "88";
+    return parts;
   }
 
   initReserves() {

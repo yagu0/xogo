@@ -11,8 +11,8 @@ export default class Antiking2Rules extends AbstractAntikingRules {
     };
   }
 
-  genRandInitFen(seed) {
-    const baseFen = super.genRandInitFen(seed);
+  genRandInitBaseFen() {
+    const baseFen = super.genRandInitBaseFen();
     // Just add an antiking on 3rd ranks
     let akPos = [3, 3];
     if (this.options.randomness >= 1) {
@@ -31,10 +31,23 @@ export default class Antiking2Rules extends AbstractAntikingRules {
           : "")
       );
     };
-    return (
-      baseFen.replace("p/8", "p/" + antikingLine('b'))
-             .replace("8/P", antikingLine('w') + "/P")
-    );
+    return {
+      fen: baseFen.fen.replace("p/8", "p/" + antikingLine('b'))
+                      .replace("8/P", antikingLine('w') + "/P"),
+      o: baseFen.o
+    };
+  }
+
+  getCastleMoves([x, y]) {
+    if (this.getPiece(x, y) == 'a')
+      return [];
+    return super.getCastleMoves([x, y]);
+  }
+
+  updateCastleFlags(move) {
+    if (move.vanish.length > 0 && move.vanish[0].p == 'a')
+      return;
+    super.updateCastleFlags(move);
   }
 
 };

@@ -197,8 +197,19 @@ export default class ChessRules {
     return (f.charCodeAt(0) <= 90 ? "w" + f.toLowerCase() : "b" + f);
   }
 
-  // Setup the initial random-or-not (asymmetric-or-not) position
   genRandInitFen(seed) {
+    Random.setSeed(seed); //may be unused
+    let baseFen = this.genRandInitBaseFen();
+    baseFen.o = Object.assign({init: true}, baseFen.o);
+    const parts = this.getPartFen(baseFen.o);
+    return (
+      baseFen.fen +
+      (Object.keys(parts).length > 0 ? (" " + JSON.stringify(parts)) : "")
+    );
+  }
+
+  // Setup the initial random-or-not (asymmetric-or-not) position
+  genRandInitBaseFen() {
     let fen, flags = "0707";
     if (!this.options.randomness)
       // Deterministic:
@@ -206,7 +217,6 @@ export default class ChessRules {
 
     else {
       // Randomize
-      Random.setSeed(seed);
       let pieces = {w: new Array(8), b: new Array(8)};
       flags = "";
       // Shuffle pieces on first (and last rank if randomness == 2)
@@ -216,9 +226,7 @@ export default class ChessRules {
           flags += flags;
           break;
         }
-
         let positions = ArrayFun.range(8);
-
         // Get random squares for bishops
         let randIndex = 2 * Random.randInt(4);
         const bishop1Pos = positions[randIndex];
@@ -228,7 +236,6 @@ export default class ChessRules {
         // Remove chosen squares
         positions.splice(Math.max(randIndex, randIndex_tmp), 1);
         positions.splice(Math.min(randIndex, randIndex_tmp), 1);
-
         // Get random squares for knights
         randIndex = Random.randInt(6);
         const knight1Pos = positions[randIndex];
@@ -236,18 +243,15 @@ export default class ChessRules {
         randIndex = Random.randInt(5);
         const knight2Pos = positions[randIndex];
         positions.splice(randIndex, 1);
-
         // Get random square for queen
         randIndex = Random.randInt(4);
         const queenPos = positions[randIndex];
         positions.splice(randIndex, 1);
-
         // Rooks and king positions are now fixed,
         // because of the ordering rook-king-rook
         const rook1Pos = positions[0];
         const kingPos = positions[1];
         const rook2Pos = positions[2];
-
         // Finally put the shuffled pieces in the board array
         pieces[c][rook1Pos] = "r";
         pieces[c][knight1Pos] = "n";
@@ -266,19 +270,7 @@ export default class ChessRules {
         " w 0"
       );
     }
-    // Add turn + flags + enpassant (+ reserve)
-    let parts = [];
-    if (this.hasFlags)
-      parts.push(`"flags":"${flags}"`);
-    if (this.hasEnpassant)
-      parts.push('"enpassant":"-"');
-    if (this.hasReserveFen)
-      parts.push('"reserve":"000000000000"');
-    if (this.options["crazyhouse"])
-      parts.push('"ispawn":"-"');
-    if (parts.length >= 1)
-      fen += " {" + parts.join(",") + "}";
-    return fen;
+    return { fen: fen, o: {flags: flags} };
   }
 
   // "Parse" FEN: just return untransformed string data
@@ -296,23 +288,28 @@ export default class ChessRules {
 
   // Return current fen (game state)
   getFen() {
-    let fen = (
-      this.getPosition() + " " +
-      this.getTurnFen() + " " +
-      this.movesCount
+    const parts = this.getPartFen({});
+    return (
+      this.getBaseFen() +
+      (Object.keys(parts).length > 0 ? (" " + JSON.stringify(parts)) : "")
     );
-    let parts = [];
+  }
+
+  getBaseFen() {
+    return this.getPosition() + " " + this.turn + " " + this.movesCount;
+  }
+
+  getPartFen(o) {
+    let parts = {};
     if (this.hasFlags)
-      parts.push(`"flags":"${this.getFlagsFen()}"`);
+      parts["flags"] = o.init ? o.flags : this.getFlagsFen();
     if (this.hasEnpassant)
-      parts.push(`"enpassant":"${this.getEnpassantFen()}"`);
+      parts["enpassant"] = o.init ? "-" : this.getEnpassantFen();
     if (this.hasReserveFen)
-      parts.push(`"reserve":"${this.getReserveFen()}"`);
+      parts["reserve"] = this.getReserveFen(o);
     if (this.options["crazyhouse"])
-      parts.push(`"ispawn":"${this.getIspawnFen()}"`);
-    if (parts.length >= 1)
-      fen += " {" + parts.join(",") + "}";
-    return fen;
+      parts["ispawn"] = this.getIspawnFen(o);
+    return parts;
   }
 
   static FenEmptySquares(count) {
@@ -353,10 +350,6 @@ export default class ChessRules {
     return position;
   }
 
-  getTurnFen() {
-    return this.turn;
-  }
-
   // Flags part of the FEN string
   getFlagsFen() {
     return ["w", "b"].map(c => {
@@ -367,17 +360,22 @@ export default class ChessRules {
   // Enpassant part of the FEN string
   getEnpassantFen() {
     if (!this.epSquare)
-      return "-"; //no en-passant
+      return "-";
     return C.CoordsToSquare(this.epSquare);
   }
 
-  getReserveFen() {
+  getReserveFen(o) {
+    if (o.init)
+      return "000000000000";
     return (
       ["w","b"].map(c => Object.values(this.reserve[c]).join("")).join("")
     );
   }
 
-  getIspawnFen() {
+  getIspawnFen(o) {
+    if (o.init)
+      // NOTE: cannot merge because this.ispawn doesn't exist yet
+      return "-";
     const squares = Object.keys(this.ispawn);
     if (squares.length == 0)
       return "-";
@@ -405,18 +403,18 @@ export default class ChessRules {
     if (o.genFenOnly)
       // This object will be used only for initial FEN generation
       return;
+
+    // Some variables
     this.playerColor = o.color;
     this.afterPlay = o.afterPlay; //trigger some actions after playing a move
-
-    // Fen string fully describes the game state
-    if (!o.fen)
-      o.fen = this.genRandInitFen(o.seed);
-    this.re_initFromFen(o.fen);
-
-    // Graphical (can use variables defined above)
     this.containerId = o.element;
     this.isDiagram = o.diagram;
     this.marks = o.marks;
+
+    // Initializations
+    if (!o.fen)
+      o.fen = this.genRandInitFen(o.seed);
+    this.re_initFromFen(o.fen);
     this.graphicalInit();
   }
 

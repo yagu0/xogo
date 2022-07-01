@@ -28,20 +28,20 @@ export default class Antiking1Rules extends AbstractAntikingRules {
     return res;
   }
 
-  genRandInitFen() {
+  genRandInitBaseFen() {
     // Always deterministic setup
-    return (
-      '2prbkqA/2p1nnbr/2pppppp/8/8/PPPPPP2/RBNN1P2/aQKBRP2 w 0 ' +
-      '{"flags":"KAka"}'
-    );
+    return {
+      fen: "2prbkqA/2p1nnbr/2pppppp/8/8/PPPPPP2/RBNN1P2/aQKBRP2 w 0",
+      o: {"flags": "KAka"}
+    };
   }
 
   // (Anti)King flags at 1 (true) if they can knight-jump
-  setFlags(fenFlags) {
+  setFlags(fenflags) {
     this.kingFlags = { w: {}, b: {} };
-    for (let i=0; i<fenFlags.length; i++) {
-      const white = fenFlags.charCodeAt(i) <= 90;
-      const curChar = fenFlags.charAt(i).toLowerCase();
+    for (let i=0; i<fenflags.length; i++) {
+      const white = fenflags.charCodeAt(i) <= 90;
+      const curChar = fenflags.charAt(i).toLowerCase();
       this.kingFlags[white ? 'w' : 'b'][curChar] = true;
     }
   }
@@ -49,7 +49,10 @@ export default class Antiking1Rules extends AbstractAntikingRules {
   getFlagsFen() {
     return (
       Array.prototype.concat.apply(
-        ['w', 'b'].map(c => Object.keys(this.kingFlags[c]))
+        ['w', 'b'].map(c => {
+          const res = Object.keys(this.kingFlags[c]).join("");
+          return (c == 'w' ? res.toUpperCase() : res);
+        })
       ).join("")
     );
   }

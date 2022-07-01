@@ -74,10 +74,13 @@ export default class HexRules extends ChessRules {
     return res;
   }
 
-  genRandInitFen() {
+  genRandInitBaseFen() {
     // NOTE: size.x == size.y (square boards)
     const emptyCount = C.FenEmptySquares(this.size.x);
-    return (emptyCount + "/").repeat(this.size.x).slice(0, -1) + " w 0";
+    return {
+      fen: (emptyCount + "/").repeat(this.size.x).slice(0, -1) + " w 0",
+      o: {}
+    };
   }
 
   getSvgChessboard() {
@@ -166,7 +169,7 @@ export default class HexRules extends ChessRules {
   get size() {
     const baseRatio = 1.6191907514450865; //2801.2 / 1730, "widescreen"
     const rc =
-      document.getElementById(this.containerid).getBoundingClientRect();
+      document.getElementById(this.containerId).getBoundingClientRect();
     const rotate = rc.width < rc.height; //"vertical screen"
     return {
       x: this.options["bsize"],

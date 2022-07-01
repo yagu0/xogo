@@ -131,15 +131,12 @@ export default class ChakartRules extends ChessRules {
     );
   }
 
-  genRandInitFen(seed) {
+  genRandInitBaseFen() {
     const options = Object.assign({mode: "suicide"}, this.options);
     const gr = new GiveawayRules({options: options, genFenOnly: true});
-    const baseFen = gr.genRandInitFen(seed);
-    const fenParts = baseFen.split(" ");
-    let others = JSON.parse(fenParts[3]);
-    delete others["enpassant"];
-    others["flags"] = "1111"; //Peach + Mario flags
-    return fenParts.slice(0, 3).join(" ") + " " + JSON.stringify(others);
+    let res = gr.genRandInitBaseFen();
+    res.o["flags"] = "1111"; //Peach + Mario flags
+    return res;
   }
 
   fen2board(f) {

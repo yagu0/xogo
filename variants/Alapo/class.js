@@ -28,64 +28,58 @@ export default class AlapoRules extends ChessRules {
     return board;
   }
 
-  genRandInitFen(seed) {
+  genRandInitBaseFen() {
+    let fen = "";
     if (this.options["randomness"] == 0)
-      return "rbqqbr/tcssct/6/6/TCSSCT/RBQQBR w 0";
-
-    Random.setSeed(seed);
-
-    const piece2pawn = {
-      r: 't',
-      q: 's',
-      b: 'c'
-    };
-
-    let pieces = { w: new Array(6), b: new Array(6) };
-    // Shuffle pieces on first (and last rank if randomness == 2)
-    for (let c of ["w", "b"]) {
-      if (c == 'b' && this.options["randomness"] == 1) {
-        pieces['b'] = pieces['w'];
-        break;
+      fen = "rbqqbr/tcssct/6/6/TCSSCT/RBQQBR w 0";
+    else {
+      const piece2pawn = {
+        r: 't',
+        q: 's',
+        b: 'c'
+      };
+      let pieces = { w: new Array(6), b: new Array(6) };
+      // Shuffle pieces on first (and last rank if randomness == 2)
+      for (let c of ["w", "b"]) {
+        if (c == 'b' && this.options["randomness"] == 1) {
+          pieces['b'] = pieces['w'];
+          break;
+        }
+        let positions = ArrayFun.range(6);
+        // Get random squares for bishops
+        let randIndex = 2 * Random.randInt(3);
+        const bishop1Pos = positions[randIndex];
+        let randIndex_tmp = 2 * Random.randInt(3) + 1;
+        const bishop2Pos = positions[randIndex_tmp];
+        positions.splice(Math.max(randIndex, randIndex_tmp), 1);
+        positions.splice(Math.min(randIndex, randIndex_tmp), 1);
+        // Get random square for queens
+        randIndex = Random.randInt(4);
+        const queen1Pos = positions[randIndex];
+        positions.splice(randIndex, 1);
+        randIndex = Random.randInt(3);
+        const queen2Pos = positions[randIndex];
+        positions.splice(randIndex, 1);
+        // Rooks positions are now fixed,
+        const rook1Pos = positions[0];
+        const rook2Pos = positions[1];
+        pieces[c][rook1Pos] = "r";
+        pieces[c][bishop1Pos] = "b";
+        pieces[c][queen1Pos] = "q";
+        pieces[c][queen2Pos] = "q";
+        pieces[c][bishop2Pos] = "b";
+        pieces[c][rook2Pos] = "r";
       }
-
-      let positions = ArrayFun.range(6);
-
-      // Get random squares for bishops
-      let randIndex = 2 * Random.randInt(3);
-      const bishop1Pos = positions[randIndex];
-      let randIndex_tmp = 2 * Random.randInt(3) + 1;
-      const bishop2Pos = positions[randIndex_tmp];
-      positions.splice(Math.max(randIndex, randIndex_tmp), 1);
-      positions.splice(Math.min(randIndex, randIndex_tmp), 1);
-
-      // Get random square for queens
-      randIndex = Random.randInt(4);
-      const queen1Pos = positions[randIndex];
-      positions.splice(randIndex, 1);
-      randIndex = Random.randInt(3);
-      const queen2Pos = positions[randIndex];
-      positions.splice(randIndex, 1);
-
-      // Rooks positions are now fixed,
-      const rook1Pos = positions[0];
-      const rook2Pos = positions[1];
-
-      pieces[c][rook1Pos] = "r";
-      pieces[c][bishop1Pos] = "b";
-      pieces[c][queen1Pos] = "q";
-      pieces[c][queen2Pos] = "q";
-      pieces[c][bishop2Pos] = "b";
-      pieces[c][rook2Pos] = "r";
+      fen = (
+        pieces["b"].join("") + "/" +
+        pieces["b"].map(p => piece2pawn[p]).join("") +
+        "/6/6/" +
+        pieces["w"].map(p => piece2pawn[p].toUpperCase()).join("") + "/" +
+        pieces["w"].join("").toUpperCase() +
+        " w 0"
+      );
     }
-
-    return (
-      pieces["b"].join("") + "/" +
-      pieces["b"].map(p => piece2pawn[p]).join("") +
-      "/6/6/" +
-      pieces["w"].map(p => piece2pawn[p].toUpperCase()).join("") + "/" +
-      pieces["w"].join("").toUpperCase() +
-      " w 0"
-    );
+    return { fen: fen, o: {} };
   }
 
   // Triangles are rotated from opponent viewpoint (=> suffix "_inv")

@@ -21,14 +21,10 @@ export default class RefusalRules extends ChessRules {
     return false;
   }
 
-  genRandInitFen(seed) {
-    return super.genRandInitFen(seed).slice(0, -1)  + ',"lastmove":"null"}';
-  }
-
-  getFen() {
-    return (
-      super.getFen().slice(0, -1) + ',"lastmove":"' +
-        JSON.stringify(this.lastMove) + '"}');
+  getPartFen(o) {
+    let parts = super.getPartFen(o);
+    parts["lastmove"] = o.init ? null : this.lastMove;
+    return parts;
   }
 
   setOtherVariables(fenParsed) {
@@ -119,10 +115,10 @@ export default class RefusalRules extends ChessRules {
     super.postPlay(move);
   }
 
-  atLeastOneMove() {
+  atLeastOneMove(color) {
     if (!this.lastMove.noRef)
       return true;
-    return super.atLeastOneMove();
+    return super.atLeastOneMove(color);
   }
 
 };

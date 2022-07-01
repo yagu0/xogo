@@ -55,9 +55,11 @@ export default class AbstractAntikingRules extends ChessRules {
       m.vanish.length == 1 || m.vanish[1].p != 'a');
   }
 
-  underCheck(squares, color) {
+  underCheck(square_s, color) {
     let res = false;
-    squares.forEach(sq => {
+    if (!Array.isArray(square_s[0]))
+      square_s = [square_s];
+    square_s.forEach(sq => {
       switch (this.getPiece(sq[0], sq[1])) {
         case 'k':
           res ||= super.underAttack(sq, color);

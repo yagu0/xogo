@@ -22,10 +22,10 @@ export default class AmbiguousRules extends ChessRules {
       this.subTurn = 1;
   }
 
-  genRandInitFen(seed) {
+  genRandInitBaseFen() {
     const options = Object.assign({mode: "suicide"}, this.options);
     const gr = new GiveawayRules({options: options, genFenOnly: true});
-    return gr.genRandInitFen(seed);
+    return gr.genRandInitBaseFen();
   }
 
   canStepOver(x, y) {
@@ -57,15 +57,17 @@ export default class AmbiguousRules extends ChessRules {
         .map(m => {
           if (m.vanish.length == 1)
             m.appear[0].p = V.GOAL;
-          else
+          else {
             m.appear[0].p = V.TARGET_CODE[m.vanish[1].p];
+            m.appear[0].c = m.vanish[1].c;
+          }
           m.vanish.shift();
           return m;
         })
       );
     }
     // At subTurn == 1, play a targeted move for the opponent.
-    // Search for target (we could also have it in a stack...)
+    // Search for target:
     let target = {x: -1, y: -1};
     outerLoop: for (let i = 0; i < this.size.x; i++) {
       for (let j = 0; j < this.size.y; j++) {
@@ -142,8 +144,10 @@ export default class AmbiguousRules extends ChessRules {
     return moves;
   }
 
-  isKing(symbol) {
-    return ['k', 'l'].includes(symbol);
+  isKing(x, y, p) {
+    if (!p)
+      p = this.getPiece(x, y);
+    return ['k', 'l'].includes(p);
   }
 
   getCurrentScore() {
