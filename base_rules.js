@@ -1629,7 +1629,7 @@ export default class ChessRules {
         m.appear.shift();
         return;
       }
-      let finalPieces = ["p"];
+      let finalPieces;
       if (
         this.options["cannibal"] &&
         this.board[x2][y2] != "" &&
@@ -1643,12 +1643,9 @@ export default class ChessRules {
       if (initPiece == "!") //cannibal king-pawn
         m.appear[0].p = C.CannibalKingCode[finalPieces[0]];
       for (let i=1; i<finalPieces.length; i++) {
+        let newMove = JSON.parse(JSON.stringify(m));
         const piece = finalPieces[i];
-        const tr = {
-          c: color,
-          p: (initPiece != "!" ? piece : C.CannibalKingCode[piece])
-        };
-        let newMove = this.getBasicMove([x1, y1], [x2, y2], tr);
+        m.appear[0].p = (initPiece != "!" ? piece : C.CannibalKingCode[piece]);
         moreMoves.push(newMove);
       }
     });

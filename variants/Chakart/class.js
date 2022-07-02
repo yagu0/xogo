@@ -387,25 +387,6 @@ export default class ChakartRules extends ChessRules {
   play(move) {
     const color = this.turn;
     const oppCol = C.GetOppCol(color);
-    if (
-      move.appear.length > 0 &&
-      move.appear[0].p == 'p' &&
-      (
-        (color == 'w' && move.end.x == 0) ||
-        (color == 'b' && move.end.x == this.size.x - 1)
-      )
-    ) {
-      // "Forgotten" promotion, which occurred after some effect
-      let moves = [move];
-      super.pawnPostProcess(moves, color, oppCol);
-      super.showChoices(moves);
-      return false;
-    }
-    this.postPlay(move, color, oppCol);
-    return true;
-  }
-
-  postPlay(move, color, oppCol) {
     this.egg = move.egg;
     if (move.egg == "toadette") {
       this.reserve = { w: {}, b: {} };
@@ -478,6 +459,25 @@ export default class ChakartRules extends ChessRules {
     super.playVisual(move, r);
     if (move.egg)
       this.displayBonus(move);
+  }
+
+  buildMoveStack(move, r) {
+    const color = this.turn;
+    if (
+      move.appear.length > 0 &&
+      move.appear[0].p == 'p' &&
+      (
+        (color == 'w' && move.end.x == 0) ||
+        (color == 'b' && move.end.x == this.size.x - 1)
+      )
+    ) {
+      // "Forgotten" promotion, which occurred after some effect
+      let moves = [move];
+      super.pawnPostProcess(moves, color, C.GetOppCol(color));
+      super.showChoices(moves, r);
+    }
+    else
+      super.buildMoveStack(move, r);
   }
 
   computeNextMove(move) {
@@ -559,8 +559,17 @@ export default class ChakartRules extends ChessRules {
       let bagOfPieces = [];
       for (let i=0; i<this.size.x; i++) {
         for (let j=0; j<this.size.y; j++) {
-          if (this.getColor(i, j) == c && this.getPiece(i, j) != 'k')
+          const pieceIJ = this.getPiece(i, j);
+          if (
+            this.getColor(i, j) == c && pieceIJ != 'k' &&
+            (
+              // The color will change, so pawns on first rank are ineligible
+              pieceIJ != 'p' ||
+              (c == 'w' && i < this.size.x - 1) || (c == 'b' && i > 0)
+            )
+          ) {
             bagOfPieces.push([i, j]);
+          }
         }
       }
       if (bagOfPieces.length >= 1)
