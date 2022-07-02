@@ -2581,9 +2581,28 @@ export default class ChessRules {
       }
     }
     targetObj.target +=
+      this.tryAnimateCastle(move, () => targetObj.increment());
+    targetObj.target +=
       this.customAnimate(move, segments, () => targetObj.increment());
     if (targetObj.target == 0)
       callback();
+  }
+
+  tryAnimateCastle(move, cb) {
+    if (
+      this.hasCastle &&
+      move.vanish.length == 2 &&
+      move.appear.length == 2 &&
+      this.isKing(0, 0, move.vanish[0].p) &&
+      this.isKing(0, 0, move.appear[0].p)
+    ) {
+      const start = {x: move.vanish[1].x, y: move.vanish[1].y},
+            end = {x: move.appear[1].x, y: move.appear[1].y};
+      const segments = [ [[start.x, start.y], [end.x, end.y]] ];
+      this.animateMoving(start, end, null, segments, cb);
+      return 1;
+    }
+    return 0;
   }
 
   // Potential other animations (e.g. for Suction variant)
