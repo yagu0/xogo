@@ -1,10 +1,20 @@
 import ChessRules from "/base_rules.js";
 import {ArrayFun} from "/utils/array.js";
 
-export class ApocalypseRules extends ChessRules {
+export default class ApocalypseRules extends ChessRules {
 
   static get Options() {
     return {};
+  }
+
+  get hasFlags() {
+    return false;
+  }
+  get hasEnpassant() {
+    return false;
+  }
+  get hideMoves() {
+    return true;
   }
 
   get pawnPromotions() {
@@ -17,35 +27,37 @@ export class ApocalypseRules extends ChessRules {
 
   setOtherVariables(fenParsed) {
     super.setOtherVariables(fenParsed);
+    // Often a simple move, but sometimes an array (pawn relocation)
     this.whiteMove = fenParsed.whiteMove != "-"
       ? JSON.parse(fenParsed.whiteMove)
-      : null;
+      : [];
+    this.firstMove = null; //used if black turn pawn relocation
+    this.penalties = ArrayFun.toObject(
+      ['w', 'b'],
+      [0, 1].map(i => parseInt(fenParsed.penalties.charAt(i), 10))
+    );
   }
 
   genRandInitBaseFen() {
     return {
       fen: "npppn/p3p/5/P3P/NPPPN w 0",
-      o: {"flags":"00"}
+      o: {}
     };
   }
 
   getPartFen(o) {
-    let parts = super.getPartFen(o);
-    parts["whiteMove"] = this.whiteMove || "-";
-    return parts;
-  }
-
-  getFlagsFen() {
-    return Object.values(this.penaltyFlags).join("");
-  }
-
-  setFlags(fenflags) {
-    this.penaltyFlags = ArrayFun.toObject(
-      ['w', 'b'], [0, 1].map(i => parseInt(fenflags.charAt(i), 10)));
+    return {
+      whiteMove: (o.init || !this.whiteMove) ? "-" : this.whiteMove,
+      penalties: o.init ? "00" : Object.values(this.penalties).join("")
+    };
   }
 
   getWhitemoveFen() {
-    return !this.whiteMove ? "-" : JSON.stringify(this.whiteMove);
+    if (this.whiteMove.length == 0)
+      return "-";
+    if (this.whiteMove.length == 1)
+      return JSON.stringify(this.whiteMove[0]);
+    return JSON.stringify(this.whiteMove); //pawn relocation
   }
 
   // Allow pawns to move diagonally and capture vertically,
@@ -76,7 +88,7 @@ export class ApocalypseRules extends ChessRules {
   getPotentialMovesFrom([x, y]) {
     let moves = [];
     if (this.subTurn == 2) {
-      const start = this.moveStack[0].end;
+      const start = this.firstMove.end;
       if (x == start.x && y == start.y) {
         // Move the pawn to any empty square not on last rank (== x)
         for (let i=0; i<this.size.x; i++) {
@@ -90,7 +102,16 @@ export class ApocalypseRules extends ChessRules {
       }
     }
     else {
-      moves = super.getPotentialMovesFrom([x, y])
+      const oppCol = C.GetOppCol(this.getColor(x, y));
+      moves = super.getPotentialMovesFrom([x, y]).filter(m => {
+        // Remove pawn push toward own color (absurd)
+        return (
+          m.vanish[0].p != 'p' ||
+          m.end.y != m.start.y ||
+          m.vanish.length == 1 ||
+          m.vanish[1].c == oppCol
+        );
+      });
       // Flag a priori illegal moves
       moves.forEach(m => {
         if (
@@ -112,46 +133,218 @@ export class ApocalypseRules extends ChessRules {
     return moves;
   }
 
+  pawnPostProcess(moves, color, oppCol) {
+    let knightCount = 0;
+    for (let i=0; i<this.size.x; i++) {
+      for (let j=0; j<this.size.y; j++) {
+        if (
+          this.board[i][j] != "" &&
+          this.getColor(i, j) == color &&
+          this.getPiece(i, j) == 'n'
+        ) {
+          knightCount++;
+        }
+      }
+    }
+    return super.pawnPostProcess(moves, color, oppCol).filter(m => {
+      if (
+        m.vanish[0].p == 'p' &&
+        (
+          (color == 'w' && m.end.x == 0) ||
+          (color == 'b' && m.end.x == this.size.x - 1)
+        )
+      ) {
+        // Pawn promotion
+        if (knightCount <= 1 && m.appear[0].p == 'p')
+          return false; //knight promotion mandatory
+        if (knightCount == 2 && m.appear[0].p == 'n')
+          m.illegal = true; //will be legal only if one knight is captured
+      }
+      return true;
+    });
+  }
+
   filterValid(moves) {
     // No checks:
     return moves;
   }
 
-
-//TODO: from here
-
   // White and black (partial) moves were played: merge
-  // + animate both at the same time !
   resolveSynchroneMove(move) {
-    // TODO
+    const condensate = (mArr) => {
+      const illegal = (mArr.length == 1 && mArr[0].illegal) ||
+                      (!mArr[0] && mArr[1].illegal);
+      if (mArr.length == 1)
+        return Object.assign({illegal: illegal}, mArr[0]);
+      if (!mArr[0])
+        return Object.assign({illegal: illegal}, mArr[1]);
+      // Pawn relocation
+      return {
+        start: mArr[0].start,
+        end: mArr[1].end,
+        vanish: mArr[0].vanish,
+        appear: mArr[1].appear,
+        segments: [
+          [[mArr[0].start.x, mArr[0].start.y], [mArr[0].end.x, mArr[0].end.y]],
+          [[mArr[1].start.x, mArr[1].start.y], [mArr[1].end.x, mArr[1].end.y]]
+        ]
+      };
+    };
+    const compatible = (m1, m2) => {
+      if (m2.illegal)
+        return false;
+      // Knight promotion?
+      if (m1.appear[0].p != m1.vanish[0].p)
+        return m2.vanish.length == 2 && m2.vanish[1].p == 'n';
+      if (
+        // Self-capture attempt?
+        (m1.vanish.length == 2 && m1.vanish[1].c == m1.vanish[0].c) ||
+        // Pawn captures something by anticipation?
+        (
+          m1.vanish[0].p == 'p' &&
+          m1.vanish.length == 1 &&
+          m1.start.y != m1.end.y
+        )
+      ) {
+        return m2.end.x == m1.end.x && m2.end.y == m1.end.y;
+      }
+      // Pawn push toward an enemy piece?
+      if (
+        m1.vanish[0].p == 'p' &&
+        m1.vanish.length == 2 &&
+        m1.start.y == m1.end.y
+      ) {
+        return m2.start.x == m1.end.x && m2.start.y == m1.end.y;
+      }
+      return true;
+    };
+    const adjust = (res) => {
+      if (!res.wm || !res.bm)
+        return;
+      for (let c of ['w', 'b']) {
+        const myMove = res[c + 'm'], oppMove = res[C.GetOppCol(c) + 'm'];
+        if (
+          myMove.end.x == oppMove.start.x &&
+          myMove.end.y == oppMove.start.y
+        ) {
+          // Whatever was supposed to vanish, finally doesn't vanish
+          myMove.vanish.pop();
+        }
+      }
+      if (res.wm.end.y == res.bm.end.y && res.wm.end.x == res.bm.end.x) {
+        // Collision (necessarily on empty square)
+        if (!res.wm.illegal && !res.bm.illegal) {
+          if (res.wm.vanish[0].p != res.bm.vanish[0].p) {
+            const c = (res.wm.vanish[0].p == 'n' ? 'w' : 'b');
+            res[c + 'm'].vanish.push(res[C.GetOppCol(c) + 'm'].appear.shift());
+          }
+          else {
+            // Collision of two pieces of same nature: both disappear
+            res.wm.appear.shift();
+            res.bm.appear.shift();
+          }
+        }
+        else {
+          const c = (!res.wm.illegal ? 'w' : 'b');
+          // Illegal move wins:
+          res[c + 'm'].appear.shift();
+        }
+      }
+    };
+    // Clone moves to avoid altering them:
+    let whiteMove = JSON.parse(JSON.stringify(this.whiteMove)),
+        blackMove = JSON.parse(JSON.stringify([this.firstMove, move]));
+    [whiteMove, blackMove] = [condensate(whiteMove), condensate(blackMove)];
+    let res = {
+      wm: (
+        (!whiteMove.illegal || compatible(whiteMove, blackMove))
+          ? whiteMove
+          : null
+      ),
+      bm: (
+        (!blackMove.illegal || compatible(blackMove, whiteMove))
+          ? blackMove
+          : null
+      )
+    };
+    adjust(res);
+    return res;
   }
 
   play(move) {
-    if (this.subTurn...) //TODO: detect (mark?) if pawn move arriving on last rank (=> subTurn++)
-    this.turn = V.GetOppCol(this.turn);
+    const color = this.turn;
+    if (color == 'w')
+      this.whiteMove.push(move);
+    if (
+      move.vanish[0].p == 'p' && move.appear[0].p == 'p' &&
+      (
+        (color == 'w' && move.end.x == 0) ||
+        (color == 'b' && move.end.x == this.size.x - 1)
+      )
+    ) {
+      // Pawn on last rank : will relocate
+      this.subTurn = 2;
+      this.firstMove = move;
+      if (color == this.playerColor) {
+        this.playOnBoard(move);
+        this.playVisual(move);
+      }
+      return;
+    }
+    if (color == this.playerColor && this.firstMove) {
+      // The move was played on board: undo it
+      this.undoOnBoard(this.firstMove);
+      const revFirstMove = {
+        start: this.firstMove.end,
+        end: this.firstMove.start,
+        appear: this.firstMove.vanish,
+        vanish: this.firstMove.appear
+      };
+      this.playVisual(revFirstMove);
+    }
+    this.turn = C.GetOppCol(color);
     this.movesCount++;
-    this.postPlay(move);
+    this.subTurn = 1;
+    this.firstMove = null;
+    if (color == 'b') {
+      // A full turn just ended
+      const res = this.resolveSynchroneMove(move);
+      const callback = () => {
+        // start + end don't matter for playOnBoard() and playVisual().
+        // Merging is necessary because moves may overlap.
+        let toPlay = {appear: [], vanish: []};
+        for (let c of ['w', 'b']) {
+          if (res[c + 'm']) {
+            Array.prototype.push.apply(toPlay.vanish, res[c + 'm'].vanish);
+            Array.prototype.push.apply(toPlay.appear, res[c + 'm'].appear);
+          }
+        }
+        this.playOnBoard(toPlay);
+        this.playVisual(toPlay);
+      };
+      if (res.wm)
+        this.animate(res.wm, () => {if (!res.bm) callback();});
+      if (res.bm)
+        this.animate(res.bm, callback);
+      if (!res.wm && !res.bm) {
+        this.displayIllegalInfo("both illegal");
+        ['w', 'b'].forEach(c => this.penalties[c]++);
+      }
+      else if (!res.wm) {
+        this.displayIllegalInfo("white illegal");
+        this.penalties['w']++;
+      }
+      else if (!res.bm) {
+        this.displayIllegalInfo("black illegal");
+        this.penalties['b']++;
+      }
+      this.whiteMove = [];
+    }
   }
 
-  postPlay(move) {
-    if (pawn promotion into pawn) {
-      this.curMove move; //TODO: animate both move at same time + effects AFTER !
-      this.subTurn = 2
-    }
-    else if (this.turn == 'b')
-      // NOTE: whiteMove is used read-only, so no need to copy
-      this.whiteMove = move;
-    }
-    else {
-      // A full turn just ended:
-      const [wMove, bMove] = this.resolveSynchroneMove(move);
-      V.PlayOnBoard(this.board, smove); //----> ici : animate both !
-      this.whiteMove = null;
-    }
+  displayIllegalInfo(msg) {
+    super.displayMessage(null, msg, "illegal-text", 2000);
   }
-
-//until here
-
 
   atLeastOneLegalMove(color) {
     for (let i=0; i<this.size.x; i++) {
@@ -159,7 +352,7 @@ export class ApocalypseRules extends ChessRules {
         if (
           this.board[i][j] != "" &&
           this.getColor(i, j) == color &&
-          this.getPotentialMoves([i, j]).some(m => !m.illegal)
+          this.getPotentialMovesFrom([i, j]).some(m => !m.illegal)
         ) {
           return true;
         }
@@ -180,7 +373,7 @@ export class ApocalypseRules extends ChessRules {
     let fmCount = { 'w': 0, 'b': 0 };
     for (let i=0; i<5; i++) {
       for (let j=0; j<5; j++) {
-        if (this.board[i][j] != V.EMPTY && this.getPiece(i, j) == V.PAWN)
+        if (this.board[i][j] != "" && this.getPiece(i, j) == 'p')
           fmCount[this.getColor(i, j)]++;
       }
     }
@@ -192,9 +385,9 @@ export class ApocalypseRules extends ChessRules {
       return "1-0"; //fmCount['b'] == 0
     }
     // Check penaltyFlags: if a side has 2 or more, it loses
-    if (Object.values(this.penaltyFlags).every(v => v == 2)) return "1/2";
-    if (this.penaltyFlags['w'] == 2) return "0-1";
-    if (this.penaltyFlags['b'] == 2) return "1-0";
+    if (Object.values(this.penalties).every(v => v == 2)) return "1/2";
+    if (this.penalties['w'] == 2) return "0-1";
+    if (this.penalties['b'] == 2) return "1-0";
     if (!this.atLeastOneLegalMove('w') || !this.atLeastOneLegalMove('b'))
       // Stalemate (should be very rare)
       return "1/2";

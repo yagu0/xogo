@@ -699,12 +699,7 @@ export default class ChakartRules extends ChessRules {
   }
 
   displayBonus(move) {
-    let divBonus = document.createElement("div");
-    divBonus.classList.add("bonus-text");
-    divBonus.innerHTML = move.egg;
-    let container = document.getElementById(this.containerId);
-    container.appendChild(divBonus);
-    setTimeout(() => container.removeChild(divBonus), 2000);
+    super.displayMessage(null, move.egg, "bonus-text", 2000);
   }
 
   atLeastOneMove() {

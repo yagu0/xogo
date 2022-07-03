@@ -116,6 +116,11 @@ export default class ChessRules {
     return false;
   }
 
+  // Some variants reveal moves only after both players played
+  hideMoves() {
+    return false;
+  }
+
   // Some variants use click infos:
   doClick(coords) {
     if (typeof coords.x != "number")
@@ -1074,6 +1079,21 @@ export default class ChessRules {
     }
   }
 
+  displayMessage(elt, msg, classe_s, timeout) {
+    if (elt)
+      // Fixed element, e.g. for Dice Chess
+      elt.innerHTML = msg;
+    else {
+      // Temporary div (Chakart, Apocalypse...)
+      let divMsg = document.createElement("div");
+      C.AddClass_es(divMsg, classe_s);
+      divMsg.innerHTML = msg;
+      let container = document.getElementById(this.containerId);
+      container.appendChild(divMsg);
+      setTimeout(() => container.removeChild(divMsg), timeout);
+    }
+  }
+
   ////////////////
   // DARK METHODS
 
@@ -1527,18 +1547,18 @@ export default class ChessRules {
       moves = this.capturePostProcess(moves, oppCol);
 
     if (this.options["atomic"])
-      this.atomicPostProcess(moves, color, oppCol);
+      moves = this.atomicPostProcess(moves, color, oppCol);
 
     if (
       moves.length > 0 &&
       this.getPieceType(moves[0].start.x, moves[0].start.y) == "p"
     ) {
-      this.pawnPostProcess(moves, color, oppCol);
+      moves = this.pawnPostProcess(moves, color, oppCol);
     }
 
     if (this.options["cannibal"] && this.options["rifle"])
       // In this case a rifle-capture from last rank may promote a pawn
-      this.riflePromotePostProcess(moves, color);
+      moves = this.riflePromotePostProcess(moves, color);
 
     return moves;
   }
@@ -1610,6 +1630,7 @@ export default class ChessRules {
         m.next = mNext;
       }
     });
+    return moves;
   }
 
   pawnPostProcess(moves, color, oppCol) {
@@ -1649,7 +1670,7 @@ export default class ChessRules {
         moreMoves.push(newMove);
       }
     });
-    Array.prototype.push.apply(moves, moreMoves);
+    return moves.concat(moreMoves);
   }
 
   riflePromotePostProcess(moves, color) {
@@ -1671,7 +1692,7 @@ export default class ChessRules {
         }
       }
     });
-    Array.prototype.push.apply(moves, newMoves);
+    return moves.concat(newMoves);
   }
 
   // Generic method to find possible moves of "sliding or jumping" pieces
@@ -2458,7 +2479,7 @@ export default class ChessRules {
     this.computeNextMove(move);
     this.play(move);
     const newTurn = this.turn;
-    if (this.moveStack.length == 1)
+    if (this.moveStack.length == 1 && !this.hideMoves)
       this.playVisual(move, r);
     if (move.next) {
       this.gameState = {
@@ -2610,31 +2631,37 @@ export default class ChessRules {
     return 0; //nb of targets
   }
 
-  playReceivedMove(moves, callback) {
-    const launchAnimation = () => {
-      const r = container.querySelector(".chessboard").getBoundingClientRect();
-      const animateRec = i => {
-        this.animate(moves[i], () => {
-          this.play(moves[i]);
-          this.playVisual(moves[i], r);
-          if (i < moves.length - 1)
-            setTimeout(() => animateRec(i+1), 300);
-          else
-            callback();
-        });
-      };
-      animateRec(0);
+  launchAnimation(moves, callback) {
+    if (this.hideMoves) {
+      moves.forEach(m => this.play(m));
+      callback();
+      return;
+    }
+    const r = container.querySelector(".chessboard").getBoundingClientRect();
+    const animateRec = i => {
+      this.animate(moves[i], () => {
+        this.play(moves[i]);
+        this.playVisual(moves[i], r);
+        if (i < moves.length - 1)
+          setTimeout(() => animateRec(i+1), 300);
+        else
+          callback();
+      });
     };
+    animateRec(0);
+  }
+
+  playReceivedMove(moves, callback) {
     // Delay if user wasn't focused:
     const checkDisplayThenAnimate = (delay) => {
       if (container.style.display == "none") {
         alert("New move! Let's go back to game...");
         document.getElementById("gameInfos").style.display = "none";
         container.style.display = "block";
-        setTimeout(launchAnimation, 700);
+        setTimeout(() => this.launchAnimation(moves, callback), 700);
       }
       else
-        setTimeout(launchAnimation, delay || 0);
+        setTimeout(() => this.launchAnimation(moves, callback), delay || 0);
     };
     let container = document.getElementById(this.containerId);
     if (document.hidden) {
