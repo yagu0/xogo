@@ -117,7 +117,7 @@ export default class ChessRules {
   }
 
   // Some variants reveal moves only after both players played
-  hideMoves() {
+  get hideMoves() {
     return false;
   }
 
@@ -2631,7 +2631,7 @@ export default class ChessRules {
     return 0; //nb of targets
   }
 
-  launchAnimation(moves, callback) {
+  launchAnimation(moves, container, callback) {
     if (this.hideMoves) {
       moves.forEach(m => this.play(m));
       callback();
@@ -2658,10 +2658,17 @@ export default class ChessRules {
         alert("New move! Let's go back to game...");
         document.getElementById("gameInfos").style.display = "none";
         container.style.display = "block";
-        setTimeout(() => this.launchAnimation(moves, callback), 700);
+        setTimeout(
+          () => this.launchAnimation(moves, container, callback),
+          700
+        );
       }
-      else
-        setTimeout(() => this.launchAnimation(moves, callback), delay || 0);
+      else {
+        setTimeout(
+          () => this.launchAnimation(moves, container, callback),
+          delay || 0
+        );
+      }
     };
     let container = document.getElementById(this.containerId);
     if (document.hidden) {

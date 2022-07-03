@@ -1,0 +1,105 @@
+<html>
+<head>
+  <title>Apocalypse Rules</title>
+  <link href="/common.css" rel="stylesheet"/>
+  <link href="/variants/Apocalypse/style.css" rel="stylesheet"/>
+</head>
+<body>
+
+<div class="full-rules">
+<h1>Apocalypse Rules</h1>
+
+<div>
+  <p>
+    Both players play a move "at the same time".
+    The goal is to eliminate all enemy pawns.
+  </p>
+  <figure>
+    <div class="diag"
+         data-fen='npppn/p3p/5/P3P/NPPPN w 0 {"whiteMove":"-","penalties":"00"}'>
+    </div>
+    <figcaption>Initial position.</figcaption>
+  </figure>
+  <p>
+    This variant is inspired by the 
+    <a href="https://en.wikipedia.org/wiki/Four_Horsemen_of_the_Apocalypse">
+      Four Horsemen of the Apocalypse
+    </a>
+    mythology. Knights are horsemen, and pawns are footmen.
+    If all footmen of one color die, the other side wins.
+  </p>
+  <p>
+    At each turn you can decide either to play safely an apparently valid
+    move, or speculate on your opponent's move and choose a move valid only
+    conditionally on his choice. In this last case the move may end up not
+    being playable: you would get a penalty point. Two penalty points loses
+    the game. For example in the initial position, 1.(c1)c2 is safe while
+    1.axb3 will be valid only if black plays 1...Nb3.
+</div>
+
+<div>
+  <p>Resolving rules:</p>
+  <ul>
+    <li>
+      If both moves are illegal none are played.
+      If one is illegal, the other is played.
+    </li>
+    <li>
+      If a capture is intended but the target moved, the move is still played
+      without capturing anything.
+    </li>
+    <li>
+      If both moves arrive on the same square: the illegal move prevails
+      (if any), so the other piece vanishes (higher risk is rewarded).
+      If both moves are legal, then a horseman wins over a footman,
+      whereas two pieces of the same nature disappear.
+    </li>
+  </ul>
+  <figure>
+    <div class="diag"
+         data-fen='npppn/p4/4P/P2pP/NPP1N w 0 {"whiteMove":"-","penalties":"00"}'>
+    </div>
+    <figcaption>
+      After 1.d1d2 e4e3 2.dxe3 exd2, pawns placements are inversed.
+    </figcaption>
+  </figure>
+</div>
+
+<div>
+  <h3>Promotions</h3>
+  <p>
+    Pawns automatically promote in a knight, except if the player already
+    have two horsemen on the board. In this case the footman is relocated on
+    any free square which is not on last rank.
+    Even in this last case, pawn promotions may appear possible by
+    anticipation of a knight capture. This is risky but playable.
+  </p>
+  <h3>End of the game</h3>
+  <p>
+    As stated previously, losing all pawns lose the game, so promoting your
+    last pawn loses. It may be the only legal move.
+    If however both footmen armies vanish at the same time, it's a draw.
+    It can happen if the two last pawns decide to advance to the same square
+    for example.
+    Finally, if both sides get the second penalty point at the same time
+    it's also a draw.
+  </p>
+  <h3>Resources</h3>
+  <p>
+    <a href="https://www.chessvariants.com/rules/apocalypse">
+      Apocalypse chess
+    </a>
+    on chessvariants.com. This variant is playable at
+    <a href="http://apocalypsechess.online/">
+      apocalypsechess.online
+    </a>
+    without the promotion restriction.
+  </p>
+</div>
+
+</div>
+
+</body>
+<script src="/utils/drawDiagrams.js"></script>
+<script>fenToDiag("Apocalypse");</script>
+</html>

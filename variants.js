@@ -9,7 +9,7 @@ const variants = [
   {name: 'Antiking2', desc: 'Keep antiking in check', disp: 'Anti-King II'},
   {name: 'Antimatter', desc: 'Dangerous collisions'},
   {name: 'Apocalypse', desc: 'The end of the world'},
-//  {name: 'Arena', desc: 'Middle battle'},
+  {name: 'Arena', desc: 'Middle battle'},
 //  {name: 'Atarigo', desc: 'First capture wins', disp: 'Atari-Go'},
   {name: 'Atomic', desc: 'Explosive captures'},
 //  {name: 'Avalam', desc: 'Build towers'},

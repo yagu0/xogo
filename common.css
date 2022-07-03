@@ -178,6 +178,10 @@ main > div {
   max-width: 800px;
   margin: 20px auto;
   padding: 0 10px;
+  overflow: auto;
+}
+.full-rules > div {
+  margin-bottom: 20px;
 }
 .full-rules h1, .full-rules h2, .full-rules h3, .full-rules h4 {
   font-weight: bold;
