@@ -1,0 +1,11 @@
+.chessboard_SVG {
+  background-color: #BA8C63;
+}
+
+piece.white.stone {
+  background-image: url('/pieces/Atarigo/black_stone.svg');
+}
+
+piece.black.stone {
+  background-image: url('/pieces/Atarigo/white_stone.svg');
+}

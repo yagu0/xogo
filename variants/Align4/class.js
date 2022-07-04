@@ -42,8 +42,8 @@ export default class Align4Rules extends ChessRules {
   // Just do not update any reserve (infinite supply)
   updateReserve() {}
 
-  getCurrentScore(move) {
-    const score = super.getCurrentScore(move);
+  getCurrentScore(move_s) {
+    const score = super.getCurrentScore(move_s);
     if (score != "*")
       return score;
     // Check pawns connection:

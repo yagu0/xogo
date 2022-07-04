@@ -373,7 +373,7 @@ const messageCenter = (msg) => {
       if (document.hidden)
         notifyMe("move");
       vr.playReceivedMove(obj.moves, () => {
-        if (vr.getCurrentScore(obj.moves[obj.moves.length-1]) != "*") {
+        if (vr.getCurrentScore(obj.moves) != "*") {
           localStorage.removeItem("gid");
           setTimeout( () => toggleVisible("gameStopped"), 2000 );
         }
@@ -470,7 +470,6 @@ const afterPlay = (move_s, newTurn, ops) => {
            {gid: gid, moves: curMoves, fen: vr.getFen()},
            {
              retry: true,
-             success: () => curMoves = [],
              error: () => alert("Move not sent: reload page")
            }
       );
@@ -478,7 +477,8 @@ const afterPlay = (move_s, newTurn, ops) => {
   }
   if (ops.res && newTurn != playerColor) {
     toggleTurnIndicator(false); //now all moves are sent and animated
-    const result = vr.getCurrentScore(move_s);
+    const result = vr.getCurrentScore(curMoves);
+    curMoves = [];
     if (result != "*") {
       setTimeout(() => {
         toggleVisible("gameStopped");

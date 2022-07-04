@@ -171,7 +171,7 @@ export default class HexRules extends AbstractClickFillRules {
     this.turn = C.GetOppCol(this.turn);
   }
 
-  getCurrentScore(move) {
+  getCurrentScore() {
     const oppCol = C.GetOppCol(this.turn);
     // Search for connecting path of opp color:
     let explored = {}, component;
