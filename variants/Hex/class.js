@@ -1,8 +1,8 @@
-import ChessRules from "/base_rules.js";
+import AbstractClickFillRules from "/variants/_ClickFill/class.js";
 import PiPo from "/utils/PiPo.js";
 import Move from "/utils/Move.js";
 
-export default class HexRules extends ChessRules {
+export default class HexRules extends AbstractClickFillRules {
 
   static get Options() {
     return {
@@ -153,19 +153,6 @@ export default class HexRules extends ChessRules {
     return board;
   }
 
-  setupPieces() {
-    for (let i=0; i<this.size.x; i++) {
-      for (let j=0; j<this.size.y; j++) {
-        if (this.board[i][j] != "") {
-          const sqColor = (this.getColor(i, j) == 'w' ? "white" : "black");
-          const elt = document.getElementById(this.coordsToId({x: i, y: j}));
-          elt.classList.remove("neutral-square");
-          elt.classList.add("bg-" + sqColor);
-        }
-      }
-    }
-  }
-
   get size() {
     const baseRatio = 1.6191907514450865; //2801.2 / 1730, "widescreen"
     const rc =
@@ -226,17 +213,6 @@ export default class HexRules extends ChessRules {
       }
     }
     return "*";
-  }
-
-  playVisual(move) {
-    move.vanish.forEach(v => {
-      let elt = document.getElementById(this.coordsToId({x: v.x, y: v.y}));
-      elt.classList.remove("bg-" + (v.c == 'w' ? "white" : "black"));
-    });
-    move.appear.forEach(a => {
-      let elt = document.getElementById(this.coordsToId({x: a.x, y: a.y}));
-      elt.classList.add("bg-" + (a.c == 'w' ? "white" : "black"));
-    });
   }
 
 };
