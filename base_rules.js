@@ -2420,7 +2420,11 @@ export default class ChessRules {
   }
 
   // What is the score ? (Interesting if game is over)
-  getCurrentScore(move) {
+  getCurrentScore(move_s) {
+    const move = move_s[move_s.length - 1];
+    // Shortcut in case the score was computed before:
+    if (move.result)
+      return move.result;
     const color = this.turn;
     const oppCol = C.GetOppCol(color);
     const kingPos = {
