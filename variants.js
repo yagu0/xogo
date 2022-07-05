@@ -12,7 +12,7 @@ const variants = [
   {name: 'Arena', desc: 'Middle battle'},
   {name: 'Atarigo', desc: 'First capture wins', disp: 'Atari-Go'},
   {name: 'Atomic', desc: 'Explosive captures'},
-//  {name: 'Avalam', desc: 'Build towers'},
+  {name: 'Avalam', desc: 'Build towers'},
 //  {name: 'Avalanche', desc: 'Pawnfalls'},
 //  {name: 'Ball', desc: 'Score a goal'},
 //  {name: 'Balaklava', desc: 'Meet the Mammoth'},

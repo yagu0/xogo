@@ -1,5 +1,5 @@
-import { Random } from "/utils/alea.js";
-import { ArrayFun } from "/utils/array.js";
+import {Random} from "/utils/alea.js";
+import {ArrayFun} from "/utils/array.js";
 import PiPo from "/utils/PiPo.js";
 import Move from "/utils/Move.js";
 
@@ -528,20 +528,16 @@ export default class ChessRules {
       (oldV,newV) => oldV + (this.reserve[c][newV] > 0 ? 1 : 0), 0);
   }
 
-  static AddClass_es(piece, class_es) {
+  static AddClass_es(elt, class_es) {
     if (!Array.isArray(class_es))
       class_es = [class_es];
-    class_es.forEach(cl => {
-      piece.classList.add(cl);
-    });
+    class_es.forEach(cl => elt.classList.add(cl));
   }
 
-  static RemoveClass_es(piece, class_es) {
+  static RemoveClass_es(elt, class_es) {
     if (!Array.isArray(class_es))
       class_es = [class_es];
-    class_es.forEach(cl => {
-      piece.classList.remove(cl);
-    });
+    class_es.forEach(cl => elt.classList.remove(cl));
   }
 
   // Generally light square bottom-right
@@ -629,6 +625,8 @@ export default class ChessRules {
         class="chessboard_SVG">`;
     for (let i=0; i < this.size.x; i++) {
       for (let j=0; j < this.size.y; j++) {
+        if (!this.onBoard(i, j))
+          continue;
         const ii = (flipped ? this.size.x - 1 - i : i);
         const jj = (flipped ? this.size.y - 1 - j : j);
         let classes = this.getSquareColorClass(ii, jj);
@@ -1494,7 +1492,7 @@ export default class ChessRules {
     let moves = [];
     for (let i=0; i<this.size.x; i++) {
       for (let j=0; j<this.size.y; j++) {
-        if (this.canDrop([c, p], [i, j])) {
+        if (this.onBoard(i, j) && this.canDrop([c, p], [i, j])) {
           let mv = new Move({
             start: {x: c, y: p},
             end: {x: i, y: j},
