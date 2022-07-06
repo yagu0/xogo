@@ -42,7 +42,7 @@ export default class GiveawayRules extends ChessRules {
 
     let fen = "";
     if (this.options["randomness"] == 0)
-      fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0";
+      fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
     else {
       let pieces = { w: new Array(8), b: new Array(8) };
       for (let c of ["w", "b"]) {
@@ -69,8 +69,7 @@ export default class GiveawayRules extends ChessRules {
       fen = (
         pieces["b"].join("") +
         "/pppppppp/8/8/8/8/PPPPPPPP/" +
-        pieces["w"].join("").toUpperCase() +
-        " w 0"
+        pieces["w"].join("").toUpperCase()
       );
     }
     return { fen: fen, o: {} };

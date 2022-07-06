@@ -40,7 +40,7 @@ export default class ApocalypseRules extends ChessRules {
 
   genRandInitBaseFen() {
     return {
-      fen: "npppn/p3p/5/P3P/NPPPN w 0",
+      fen: "npppn/p3p/5/P3P/NPPPN",
       o: {}
     };
   }

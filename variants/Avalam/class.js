@@ -66,10 +66,10 @@ export default class AvalamRules extends ChessRules {
   genRandInitBaseFen() {
     let fen = "";
     if (this.freefill)
-      fen = "9/".repeat(8) + "9 w 0";
+      fen = "9/".repeat(8) + "9";
     else if (this.options["randomness"] == 0) {
       fen = "2Bb5/1BbBb4/1bBbBbB2/1BbBbBbBb/BbBb1bBbB/" +
-            "bBbBbBbB1/2BbBbBb1/4bBbB1/5bB2 w 0";
+            "bBbBbBbB1/2BbBbBb1/4bBbB1/5bB2";
     }
     else {
       const pieces = ('B'.repeat(24) + 'b'.repeat(24)).split("");
@@ -79,8 +79,7 @@ export default class AvalamRules extends ChessRules {
         "4/1" + a.substr(6, 6) + "2/1" + a.substr(12, 8) +
         "/" + a.substr(20, 4) + "1" + a.substr(24, 4) +
         "/" + a.substr(28, 8) + "1/2" + a.substr(36, 6) +
-        "1/4" + a.substr(42, 4) + "1/5" + a.substr(46, 2) +
-        "2 w 0"
+        "1/4" + a.substr(42, 4) + "1/5" + a.substr(46, 2) + "2"
       );
     }
     return { fen: fen, o: {} };

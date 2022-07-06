@@ -14,9 +14,8 @@ const variants = [
   {name: 'Atomic', desc: 'Explosive captures'},
   {name: 'Avalam', desc: 'Build towers'},
   {name: 'Avalanche', desc: 'Pawnfalls'},
-//  {name: 'Ball', desc: 'Score a goal'},
 //  {name: 'Balaklava', desc: 'Meet the Mammoth'},
-//  {name: 'Bario', desc: 'A quantum story'},
+  {name: 'Bario', desc: 'A quantum story'},
   {name: "Balanced", desc: "balanced chess"},
 //  {name: 'Baroque', desc: 'Exotic captures'},*/
   {name: "Benedict", desc: "Change colors"},

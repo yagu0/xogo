@@ -31,7 +31,7 @@ export default class Antiking1Rules extends AbstractAntikingRules {
   genRandInitBaseFen() {
     // Always deterministic setup
     return {
-      fen: "2prbkqA/2p1nnbr/2pppppp/8/8/PPPPPP2/RBNN1P2/aQKBRP2 w 0",
+      fen: "2prbkqA/2p1nnbr/2pppppp/8/8/PPPPPP2/RBNN1P2/aQKBRP2",
       o: {"flags": "KAka"}
     };
   }

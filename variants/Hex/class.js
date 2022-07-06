@@ -78,7 +78,7 @@ export default class HexRules extends AbstractClickFillRules {
     // NOTE: size.x == size.y (square boards)
     const emptyCount = C.FenEmptySquares(this.size.x);
     return {
-      fen: (emptyCount + "/").repeat(this.size.x).slice(0, -1) + " w 0",
+      fen: (emptyCount + "/").repeat(this.size.x - 1) + emptyCount,
       o: {}
     };
   }

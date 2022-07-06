@@ -208,7 +208,7 @@ export default class ChessRules {
     baseFen.o = Object.assign({init: true}, baseFen.o);
     const parts = this.getPartFen(baseFen.o);
     return (
-      baseFen.fen +
+      baseFen.fen + " w 0" +
       (Object.keys(parts).length > 0 ? (" " + JSON.stringify(parts)) : "")
     );
   }
@@ -218,7 +218,7 @@ export default class ChessRules {
     let fen, flags = "0707";
     if (!this.options.randomness)
       // Deterministic:
-      fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0";
+      fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
     else {
       // Randomize
@@ -271,8 +271,7 @@ export default class ChessRules {
       fen = (
         pieces["b"].join("") +
         "/pppppppp/8/8/8/8/PPPPPPPP/" +
-        pieces["w"].join("").toUpperCase() +
-        " w 0"
+        pieces["w"].join("").toUpperCase()
       );
     }
     return { fen: fen, o: {flags: flags} };
@@ -477,17 +476,15 @@ export default class ChessRules {
   }
 
   // ordering as in pieces() p,r,n,b,q,k
-  initReserves(reserveStr) {
+  initReserves(reserveStr, pieceArray) {
+    if (!pieceArray)
+      pieceArray = ['p', 'r', 'n', 'b', 'q', 'k'];
     const counts = reserveStr.split("").map(c => parseInt(c, 36));
-    this.reserve = { w: {}, b: {} };
-    const pieceName = ['p', 'r', 'n', 'b', 'q', 'k'];
-    const L = pieceName.length;
-    for (let i of ArrayFun.range(2 * L)) {
-      if (i < L)
-        this.reserve['w'][pieceName[i]] = counts[i];
-      else
-        this.reserve['b'][pieceName[i-L]] = counts[i];
-    }
+    const L = pieceArray.length;
+    this.reserve = {
+      w: ArrayFun.toObject(pieceArray, counts.slice(0, L)),
+      b: ArrayFun.toObject(pieceArray, counts.slice(L, 2 * L))
+    };
   }
 
   initIspawn(ispawnStr) {

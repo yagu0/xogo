@@ -31,7 +31,7 @@ export default class AlapoRules extends ChessRules {
   genRandInitBaseFen() {
     let fen = "";
     if (this.options["randomness"] == 0)
-      fen = "rbqqbr/tcssct/6/6/TCSSCT/RBQQBR w 0";
+      fen = "rbqqbr/tcssct/6/6/TCSSCT/RBQQBR";
     else {
       const piece2pawn = {
         r: 't',
@@ -75,8 +75,7 @@ export default class AlapoRules extends ChessRules {
         pieces["b"].map(p => piece2pawn[p]).join("") +
         "/6/6/" +
         pieces["w"].map(p => piece2pawn[p].toUpperCase()).join("") + "/" +
-        pieces["w"].join("").toUpperCase() +
-        " w 0"
+        pieces["w"].join("").toUpperCase()
       );
     }
     return { fen: fen, o: {} };

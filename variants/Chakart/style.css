@@ -32,11 +32,11 @@ piece.remote-capture {
   background-image: url('/pieces/Chakart/shell.svg');
 }
 
-piece.mystery.white {
-  background-image: url('/pieces/Chakart/mystery_white.svg');
+piece.white.mystery {
+  background-image: url('/pieces/white_mystery.svg');
 }
-piece.mystery.black {
-  background-image: url('/pieces/Chakart/mystery_black.svg');
+piece.black.mystery {
+  background-image: url('/pieces/black_mystery.svg');
 }
 
 div.bonus-text {

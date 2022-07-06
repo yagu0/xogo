@@ -1,5 +1,4 @@
 import ChessRules from "/base_rules.js";
-import {Random} from "/utils/alea.js";
 import PiPo from "/utils/PiPo.js";
 import Move from "/utils/Move.js";
 
