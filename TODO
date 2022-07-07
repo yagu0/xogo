@@ -1,3 +1,6 @@
+Baroque Berolina Bicolour Brotherhood
+For Baroque (and Fugue and...) --> maybe a dedicated parent class ?
+
 Go game with option oneColor
 
 add variants :
@@ -5,3 +8,4 @@ Dark Racing Kings ? Checkered-Teleport ?
 
 Hmm... non ? -->
 Otage, Emergo, Pacosako : fonction "buildPiece(arg1, arg2)" returns HTML element with 2 SVG or SVG + number
+==> plus simple : deux classes, images superposées.
