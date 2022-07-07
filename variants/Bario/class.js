@@ -113,6 +113,8 @@ export default class BarioRules extends ChessRules {
       case 0:
         if (typeof x == "string")
           moves = this.getDropMovesFrom([x, y]);
+        // Empty move: just start + end
+        moves.forEach(m => {m.vanish.pop(); m.appear.pop();});
         break;
       case 1:
         // Both normal move (from defined piece) and definition allowed
@@ -201,7 +203,8 @@ export default class BarioRules extends ChessRules {
   postPlay(move) {
     const color = this.turn;
     if (this.movesCount <= 1 || move.reset || move.next) {
-      this.tryChangeTurn();
+      if (!move.next)
+        this.tryChangeTurn();
       return;
     }
     if (this.subTurn == 0)
@@ -216,7 +219,7 @@ export default class BarioRules extends ChessRules {
       super.postPlay(move);
     else if (typeof move.start.x == "string") {
       super.updateReserve(
-        color, move.appear[0].p, this.reserve[color][move.appear[0].p] - 1);
+        color, move.start.y, this.reserve[color][move.start.y] - 1);
       if (move.vanish.length == 1 && move.vanish[0].p == 'u')
         this.definition = move.end;
       this.subTurn++;
@@ -224,17 +227,16 @@ export default class BarioRules extends ChessRules {
     else {
       this.subTurn = 0;
       this.captureUndef = move.end;
-      this.tryChangeTurn(move, captureUndef);
+      this.tryChangeTurn(null, captureUndef);
     }
   }
 
+  // NOTE: not "trying", the turn always change here (TODO?)
   tryChangeTurn(move, captureUndef) {
-    if (!move.next) {
-      this.definition = null;
-      this.subTurn = captureUndef ? 0 : 1;
-      this.turn = C.GetOppCol(this.turn);
-      this.movesCount++;
-    }
+    this.definition = null;
+    this.subTurn = captureUndef ? 0 : 1;
+    this.turn = C.GetOppCol(this.turn);
+    this.movesCount++;
   }
 
   computeNextMove(move) {
