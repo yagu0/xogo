@@ -200,7 +200,7 @@ export default class BarioRules extends ChessRules {
 
   postPlay(move) {
     const color = this.turn;
-    if (this.movesCount <= 1 || move.reset) {
+    if (this.movesCount <= 1 || move.reset || move.next) {
       this.tryChangeTurn();
       return;
     }
@@ -228,12 +228,13 @@ export default class BarioRules extends ChessRules {
     }
   }
 
-  // NOTE: not "try" here, we know the turn changes (TODO?)
   tryChangeTurn(move, captureUndef) {
-    this.definition = null;
-    this.subTurn = captureUndef ? 0 : 1;
-    this.turn = C.GetOppCol(this.turn);
-    this.movesCount++;
+    if (!move.next) {
+      this.definition = null;
+      this.subTurn = captureUndef ? 0 : 1;
+      this.turn = C.GetOppCol(this.turn);
+      this.movesCount++;
+    }
   }
 
   computeNextMove(move) {
@@ -242,7 +243,7 @@ export default class BarioRules extends ChessRules {
       this.board.some(row => row.some(cell =>
         cell.charAt(0) == this.turn && cell.charAt(1) == 'u'))
     ) {
-      return null;
+      return;
     }
     const variety = (c) => {
       return (
@@ -257,26 +258,29 @@ export default class BarioRules extends ChessRules {
         )].length >= 2
       );
     };
-    this.playOnBoard(move);
     let next = {start: move.end, end: move.end, vanish: [], appear: []};
-    for (let c of ['w', 'b']) {
-      if (variety(c)) {
-        for (let i=0; i<this.size.x; i++) {
-          for (let j=0; j<this.size.y; j++) {
-            const pieceIJ = this.getPiece(i, j);
-            if (
-              this.board[i][j] != "" &&
-              !['p', 'k', 'u'].includes(pieceIJ)
-            ) {
-              // NOTE: could also use a "flip" strategy similar to Benedict
-              next.vanish.push(new PiPo({c: c, p: pieceIJ, x: i, y: j}));
-              next.appear.push(new PiPo({c: c, p: 'u', x: i, y: j}));
-              this.reserve[c][pieceIJ]++;
-            }
+    this.playOnBoard(move);
+    const twoOrMorePieces = {w: variety('w'), b: variety('b')};
+    const resetCols =
+      Object.keys(twoOrMorePieces).filter(k => twoOrMorePieces[k]);
+    if (resetCols.length >= 1) {
+      for (let i=0; i<this.size.x; i++) {
+        for (let j=0; j<this.size.y; j++) {
+          const colIJ = this.getColor(i, j);
+          const pieceIJ = this.getPiece(i, j);
+          if (
+            resetCols.includes(colIJ) &&
+            this.board[i][j] != "" &&
+            !['p', 'k', 'u'].includes(pieceIJ)
+          ) {
+            // NOTE: could also use a "flip" strategy similar to Benedict
+            next.vanish.push(new PiPo({c: colIJ, p: pieceIJ, x: i, y: j}));
+            next.appear.push(new PiPo({c: colIJ, p: 'u', x: i, y: j}));
+            this.reserve[colIJ][pieceIJ]++;
           }
         }
-        super.re_drawReserve([c]);
       }
+      super.re_drawReserve(resetCols);
     }
     this.undoOnBoard(move);
     if (next.vanish.length >= 1) {
