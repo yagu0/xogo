@@ -2340,14 +2340,13 @@ export default class ChessRules {
   }
 
   postPlay(move) {
-    const color = this.turn;
     if (this.options["dark"])
       this.updateEnlightened();
     if (this.options["teleport"]) {
       if (
         this.subTurnTeleport == 1 &&
         move.vanish.length > move.appear.length &&
-        move.vanish[1].c == color
+        move.vanish[1].c == this.turn
       ) {
         const v = move.vanish[move.vanish.length - 1];
         this.captured = {x: v.x, y: v.y, c: v.c, p: v.p};
@@ -2362,7 +2361,7 @@ export default class ChessRules {
 
   tryChangeTurn(move) {
     if (this.isLastMove(move)) {
-      this.turn = C.GetOppCol(color);
+      this.turn = C.GetOppCol(this.turn);
       this.movesCount++;
       this.subTurn = 1;
     }
