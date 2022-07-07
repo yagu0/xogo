@@ -48,7 +48,7 @@ export default class Antiking1Rules extends AbstractAntikingRules {
 
   getFlagsFen() {
     return (
-      Array.prototype.concat.apply(
+      Array.prototype.concat.apply([],
         ['w', 'b'].map(c => {
           const res = Object.keys(this.kingFlags[c]).join("");
           return (c == 'w' ? res.toUpperCase() : res);

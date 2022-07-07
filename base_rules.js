@@ -779,8 +779,8 @@ export default class ChessRules {
       piece = "k"; //capturing cannibal king: back to king form
     const oldCount = this.reserve[color][piece];
     this.reserve[color][piece] = count;
-    // Redrawing is much easier if count==0
-    if ([oldCount, count].includes(0))
+    // Redrawing is much easier if count==0 (or undefined)
+    if ([oldCount, count].some(item => !item))
       this.re_drawReserve([color]);
     else {
       const numId = this.getReserveNumId(color, piece);
@@ -2357,6 +2357,10 @@ export default class ChessRules {
       this.subTurnTeleport = 1;
       this.captured = null;
     }
+    this.tryChangeTurn(move);
+  }
+
+  tryChangeTurn(move) {
     if (this.isLastMove(move)) {
       this.turn = C.GetOppCol(color);
       this.movesCount++;
