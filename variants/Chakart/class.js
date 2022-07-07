@@ -312,7 +312,7 @@ export default class ChakartRules extends ChessRules {
         moves.push(this.getBasicMove([x, y], [x + shiftX, nextY]));
       }
     }
-    this.pawnPostProcess(moves, color, oppCol);
+    moves = super.pawnPostProcess(moves, color, oppCol);
     // Add mushroom on before-last square (+ potential segments)
     moves.forEach(m => {
       let [mx, my] = [x, y];
@@ -472,8 +472,7 @@ export default class ChakartRules extends ChessRules {
       )
     ) {
       // "Forgotten" promotion, which occurred after some effect
-      let moves = [move];
-      super.pawnPostProcess(moves, color, C.GetOppCol(color));
+      let moves = super.pawnPostProcess([move], color, C.GetOppCol(color));
       super.showChoices(moves, r);
     }
     else
@@ -481,6 +480,8 @@ export default class ChakartRules extends ChessRules {
   }
 
   computeNextMove(move) {
+    if (move.koopa)
+      return null;
     // Set potential random effects, so that play() is deterministic
     // from opponent viewpoint:
     const endPiece = this.getPiece(move.end.x, move.end.y);
@@ -641,6 +642,7 @@ export default class ChakartRules extends ChessRules {
             p: this.getPiece(move.start.x, move.start.y)
           }));
         }
+        em.koopa = true; //avoid applying effect
         break;
       case "chomp":
         // Eat piece

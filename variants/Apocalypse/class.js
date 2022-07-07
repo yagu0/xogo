@@ -224,8 +224,11 @@ export default class ApocalypseRules extends ChessRules {
       for (let c of ['w', 'b']) {
         const myMove = res[c + 'm'], oppMove = res[C.GetOppCol(c) + 'm'];
         if (
-          myMove.end.x == oppMove.start.x &&
-          myMove.end.y == oppMove.start.y
+          // More general test than checking moves ends,
+          // because of potential pawn relocation
+          myMove.vanish.length == 2 &&
+          myMove.vanish[1].x == oppMove.start.x &&
+          myMove.vanish[1].y == oppMove.start.y
         ) {
           // Whatever was supposed to vanish, finally doesn't vanish
           myMove.vanish.pop();
@@ -235,8 +238,8 @@ export default class ApocalypseRules extends ChessRules {
         // Collision (necessarily on empty square)
         if (!res.wm.illegal && !res.bm.illegal) {
           if (res.wm.vanish[0].p != res.bm.vanish[0].p) {
-            const c = (res.wm.vanish[0].p == 'n' ? 'w' : 'b');
-            res[c + 'm'].vanish.push(res[C.GetOppCol(c) + 'm'].appear.shift());
+            const vanishColor = (res.wm.vanish[0].p == 'n' ? 'b' : 'w');
+            res[vanishColor + 'm'].appear.shift();
           }
           else {
             // Collision of two pieces of same nature: both disappear
@@ -271,7 +274,7 @@ export default class ApocalypseRules extends ChessRules {
     return res;
   }
 
-  play(move) {
+  play(move, callback) {
     const color = this.turn;
     if (color == 'w')
       this.whiteMove.push(move);
@@ -289,6 +292,7 @@ export default class ApocalypseRules extends ChessRules {
         this.playOnBoard(move);
         this.playVisual(move);
       }
+      callback();
       return;
     }
     if (color == this.playerColor && this.firstMove) {
@@ -309,7 +313,7 @@ export default class ApocalypseRules extends ChessRules {
     if (color == 'b') {
       // A full turn just ended
       const res = this.resolveSynchroneMove(move);
-      const callback = () => {
+      const afterAnimate = () => {
         // start + end don't matter for playOnBoard() and playVisual().
         // Merging is necessary because moves may overlap.
         let toPlay = {appear: [], vanish: []};
@@ -321,11 +325,12 @@ export default class ApocalypseRules extends ChessRules {
         }
         this.playOnBoard(toPlay);
         this.playVisual(toPlay);
+        callback();
       };
       if (res.wm)
-        this.animate(res.wm, () => {if (!res.bm) callback();});
+        this.animate(res.wm, () => {if (!res.bm) afterAnimate();});
       if (res.bm)
-        this.animate(res.bm, callback);
+        this.animate(res.bm, afterAnimate);
       if (!res.wm && !res.bm) {
         this.displayIllegalInfo("both illegal");
         ['w', 'b'].forEach(c => this.penalties[c]++);
@@ -340,6 +345,8 @@ export default class ApocalypseRules extends ChessRules {
       }
       this.whiteMove = [];
     }
+    else
+      callback();
   }
 
   displayIllegalInfo(msg) {
@@ -370,9 +377,9 @@ export default class ApocalypseRules extends ChessRules {
       return "*";
     }
     // Count footmen: if a side has none, it loses
-    let fmCount = { 'w': 0, 'b': 0 };
-    for (let i=0; i<5; i++) {
-      for (let j=0; j<5; j++) {
+    let fmCount = {w: 0, b: 0};
+    for (let i=0; i<this.size.x; i++) {
+      for (let j=0; j<this.size.y; j++) {
         if (this.board[i][j] != "" && this.getPiece(i, j) == 'p')
           fmCount[this.getColor(i, j)]++;
       }

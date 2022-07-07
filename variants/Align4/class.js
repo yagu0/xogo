@@ -26,13 +26,10 @@ export default class Align4Rules extends ChessRules {
 
   genRandInitBaseFen() {
     let baseFen = super.genRandInitBaseFen();
-    return { fen: baseFen.fen.replace("rnbqkbnr/pppppppp", "4k3/8"), o: {} };
-  }
-
-  getPartFen(o) {
-    let parts = super.getPartFen(o);
-    parts["flags"] = parts["flags"].substr(0, 2) + "88";
-    return parts;
+    return {
+      fen: baseFen.fen.replace("rnbqkbnr/pppppppp", "4k3/8"),
+      o: {flags: baseFen.o.flags.substr(0, 2) + "88"}
+    };
   }
 
   initReserves() {

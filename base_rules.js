@@ -2476,32 +2476,37 @@ export default class ChessRules {
   buildMoveStack(move, r) {
     this.moveStack.push(move);
     this.computeNextMove(move);
-    this.play(move);
-    const newTurn = this.turn;
-    if (this.moveStack.length == 1 && !this.hideMoves)
-      this.playVisual(move, r);
-    if (move.next) {
-      this.gameState = {
-        fen: this.getFen(),
-        board: JSON.parse(JSON.stringify(this.board)) //easier
-      };
-      this.buildMoveStack(move.next, r);
-    }
-    else {
-      if (this.moveStack.length == 1) {
-        // Usual case (one normal move)
-        this.afterPlay(this.moveStack, newTurn, {send: true, res: true});
-        this.moveStack = []
+    const then = () => {
+      const newTurn = this.turn;
+      if (this.moveStack.length == 1 && !this.hideMoves)
+        this.playVisual(move, r);
+      if (move.next) {
+        this.gameState = {
+          fen: this.getFen(),
+          board: JSON.parse(JSON.stringify(this.board)) //easier
+        };
+        this.buildMoveStack(move.next, r);
       }
       else {
-        this.afterPlay(this.moveStack, newTurn, {send: true, res: false});
-        this.re_initFromFen(this.gameState.fen, this.gameState.board);
-        this.playReceivedMove(this.moveStack.slice(1), () => {
-          this.afterPlay(this.moveStack, newTurn, {send: false, res: true});
-          this.moveStack = []
-        });
+        if (this.moveStack.length == 1) {
+          // Usual case (one normal move)
+          this.afterPlay(this.moveStack, newTurn, {send: true, res: true});
+          this.moveStack = [];
+        }
+        else {
+          this.afterPlay(this.moveStack, newTurn, {send: true, res: false});
+          this.re_initFromFen(this.gameState.fen, this.gameState.board);
+          this.playReceivedMove(this.moveStack.slice(1), () => {
+            this.afterPlay(this.moveStack, newTurn, {send: false, res: true});
+            this.moveStack = [];
+          });
+        }
       }
-    }
+    };
+    // If hiding moves, then they are revealed in play() with callback
+    this.play(move, this.hideMoves ? then : null);
+    if (!this.hideMoves)
+      then();
   }
 
   // Implemented in variants using (automatic) moveStack
@@ -2632,8 +2637,9 @@ export default class ChessRules {
 
   launchAnimation(moves, container, callback) {
     if (this.hideMoves) {
-      moves.forEach(m => this.play(m));
-      callback();
+      for (let i=0; i<moves.length; i++)
+        // If hiding moves, they are revealed into play():
+        this.play(moves[i], i == moves.length - 1 ? callback : () => {});
       return;
     }
     const r = container.querySelector(".chessboard").getBoundingClientRect();
