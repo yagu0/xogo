@@ -1,19 +1,19 @@
 @import url("/base_pieces.css");
 
 piece.egg {
-  background-image: url('/pieces/Chakart/egg.svg');
+  background-image: url('/variants/Chakart/pieces/egg.svg');
 }
 
 piece.mushroom {
-  background-image: url('/pieces/Chakart/mushroom.svg');
+  background-image: url('/variants/Chakart/pieces/mushroom.svg');
 }
 
 piece.banana {
-  background-image: url('/pieces/Chakart/banana.svg');
+  background-image: url('/variants/Chakart/pieces/banana.svg');
 }
 
 piece.bomb {
-  background-image: url('/pieces/Chakart/bomb.svg');
+  background-image: url('/variants/Chakart/pieces/bomb.svg');
 }
 
 piece.white.invisible {
@@ -29,7 +29,7 @@ piece.immobilized {
 }
 
 piece.remote-capture {
-  background-image: url('/pieces/Chakart/shell.svg');
+  background-image: url('/variants/Chakart/pieces/shell.svg');
 }
 
 piece.white.mystery {

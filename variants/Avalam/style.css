@@ -1,33 +1,33 @@
 piece.white.stack {
-  background-image: url('/pieces/Avalam/white_stack.svg');
+  background-image: url('/variants/Avalam/pieces/white_stack.svg');
 }
 piece.white.stack2 {
-  background-image: url('/pieces/Avalam/white_stack2.svg');
+  background-image: url('/variants/Avalam/pieces/white_stack2.svg');
 }
 piece.white.stack3 {
-  background-image: url('/pieces/Avalam/white_stack3.svg');
+  background-image: url('/variants/Avalam/pieces/white_stack3.svg');
 }
 piece.white.stack4 {
-  background-image: url('/pieces/Avalam/white_stack4.svg');
+  background-image: url('/variants/Avalam/pieces/white_stack4.svg');
 }
 piece.white.stack5 {
-  background-image: url('/pieces/Avalam/white_stack5.svg');
+  background-image: url('/variants/Avalam/pieces/white_stack5.svg');
 }
 
 piece.black.stack {
-  background-image: url('/pieces/Avalam/black_stack.svg');
+  background-image: url('/variants/Avalam/pieces/black_stack.svg');
 }
 piece.black.stack2 {
-  background-image: url('/pieces/Avalam/black_stack2.svg');
+  background-image: url('/variants/Avalam/pieces/black_stack2.svg');
 }
 piece.black.stack3 {
-  background-image: url('/pieces/Avalam/black_stack3.svg');
+  background-image: url('/variants/Avalam/pieces/black_stack3.svg');
 }
 piece.black.stack4 {
-  background-image: url('/pieces/Avalam/black_stack4.svg');
+  background-image: url('/variants/Avalam/pieces/black_stack4.svg');
 }
 piece.black.stack5 {
-  background-image: url('/pieces/Avalam/black_stack5.svg');
+  background-image: url('/variants/Avalam/pieces/black_stack5.svg');
 }
 
 .board-sq {

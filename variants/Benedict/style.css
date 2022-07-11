@@ -1,9 +1,8 @@
 @import url("/base_pieces.css");
 
 piece.black.cleopatra {
-  background-image: url('/pieces/Benedict/black_cleopatra.svg');
+  background-image: url('/variants/Benedict/pieces/black_cleopatra.svg');
 }
-
 piece.white.cleopatra {
-  background-image: url('/pieces/Benedict/white_cleopatra.svg');
+  background-image: url('/variants/Benedict/pieces/white_cleopatra.svg');
 }

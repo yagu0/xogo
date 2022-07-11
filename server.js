@@ -55,7 +55,13 @@ wss.on("connection", (socket, req) => {
   sockets[sid] = socket;
   socket.isAlive = true;
   socket.on("pong", () => socket.isAlive = true);
-
+  if (params.dev == true) {
+    const chokidar = require("chokidar");
+    const watcher = chokidar.watch(
+      ["*.js", "*.css", "utils/", "variants/"],
+      {persistent: true});
+    watcher.on("change", path => send(sid, "filechange", {path: path}));
+  }
   socket.on("message", (msg) => {
     const obj = JSON.parse(msg);
     switch (obj.code) {

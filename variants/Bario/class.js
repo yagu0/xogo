@@ -6,7 +6,8 @@ export default class BarioRules extends ChessRules {
 
   static get Options() {
     return {
-      // TODO: Zen too?
+      select: C.Options.select,
+      input: C.Options.input,
       styles: [
         "atomic", "cannibal", "capture", "cylinder",
         "dark", "madrasi", "rifle", "teleport"

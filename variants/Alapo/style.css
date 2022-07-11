@@ -1,49 +1,49 @@
 piece.black.rook {
-  background-image: url('/pieces/Alapo/black_SQUARE.svg');
+  background-image: url('/variants/Alapo/pieces/black_SQUARE.svg');
 }
 piece.black.bishop {
-  background-image: url('/pieces/Alapo/black_TRIANGLE.svg');
+  background-image: url('/variants/Alapo/pieces/black_TRIANGLE.svg');
 }
 piece.black.bishop_inv {
-  background-image: url('/pieces/Alapo/black_TRIANGLE_inv.svg');
+  background-image: url('/variants/Alapo/pieces/black_TRIANGLE_inv.svg');
 }
 piece.black.queen {
-  background-image: url('/pieces/Alapo/black_CIRCLE.svg');
+  background-image: url('/variants/Alapo/pieces/black_CIRCLE.svg');
 }
 piece.black.babyrook {
-  background-image: url('/pieces/Alapo/black_square.svg');
+  background-image: url('/variants/Alapo/pieces/black_square.svg');
 }
 piece.black.babybishop {
-  background-image: url('/pieces/Alapo/black_triangle.svg');
+  background-image: url('/variants/Alapo/pieces/black_triangle.svg');
 }
 piece.black.babybishop_inv {
-  background-image: url('/pieces/Alapo/black_triangle_inv.svg');
+  background-image: url('/variants/Alapo/pieces/black_triangle_inv.svg');
 }
 piece.black.babyqueen {
-  background-image: url('/pieces/Alapo/black_circle.svg');
+  background-image: url('/variants/Alapo/pieces/black_circle.svg');
 }
 
 piece.white.rook {
-  background-image: url('/pieces/Alapo/white_SQUARE.svg');
+  background-image: url('/variants/Alapo/pieces/white_SQUARE.svg');
 }
 piece.white.bishop {
-  background-image: url('/pieces/Alapo/white_TRIANGLE.svg');
+  background-image: url('/variants/Alapo/pieces/white_TRIANGLE.svg');
 }
 piece.white.bishop_inv {
-  background-image: url('/pieces/Alapo/white_TRIANGLE_inv.svg');
+  background-image: url('/variants/Alapo/pieces/white_TRIANGLE_inv.svg');
 }
 piece.white.queen {
-  background-image: url('/pieces/Alapo/white_CIRCLE.svg');
+  background-image: url('/variants/Alapo/pieces/white_CIRCLE.svg');
 }
 piece.white.babyrook {
-  background-image: url('/pieces/Alapo/white_square.svg');
+  background-image: url('/variants/Alapo/pieces/white_square.svg');
 }
 piece.white.babybishop {
-  background-image: url('/pieces/Alapo/white_triangle.svg');
+  background-image: url('/variants/Alapo/pieces/white_triangle.svg');
 }
 piece.white.babybishop_inv {
-  background-image: url('/pieces/Alapo/white_triangle_inv.svg');
+  background-image: url('/variants/Alapo/pieces/white_triangle_inv.svg');
 }
 piece.white.babyqueen {
-  background-image: url('/pieces/Alapo/white_circle.svg');
+  background-image: url('/variants/Alapo/pieces/white_circle.svg');
 }

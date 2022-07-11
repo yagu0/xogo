@@ -17,7 +17,7 @@ const variants = [
 //  {name: 'Balaklava', desc: 'Meet the Mammoth'},
   {name: 'Bario', desc: 'A quantum story'},
   {name: "Balanced", desc: "balanced chess"},
-//  {name: 'Baroque', desc: 'Exotic captures'},*/
+  {name: 'Baroque', desc: 'Exotic captures'},
   {name: "Benedict", desc: "Change colors"},
 //  {name: 'Berolina', desc: 'Pawns move diagonally'},
 //  {name: 'Bicolour', desc: 'Harassed kings'},

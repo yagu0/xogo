@@ -1341,7 +1341,13 @@ export default class ChessRules {
   }
 
   getStepSpec(color, x, y, piece) {
-    return this.pieces(color, x, y)[piece || this.getPieceType(x, y)];
+    let pieceType = piece;
+    const allSpecs = this.pieces(color, x, y);
+    if (!piece)
+      pieceType = this.getPieceType(x, y);
+    else if (allSpecs[piece].moveas)
+      pieceType = allSpecs[piece].moveas;
+    return allSpecs[pieceType];
   }
 
   // Can thing on square1 capture thing on square2?

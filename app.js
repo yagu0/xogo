@@ -390,6 +390,10 @@ const messageCenter = (msg) => {
     case "closerematch":
       toggleVisible("newGame");
       break;
+    case "filechange":
+      // TODO?: could be more subtle
+      location.reload();
+      break;
   }
 };
 

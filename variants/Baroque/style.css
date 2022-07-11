@@ -1,0 +1,8 @@
+@import url("/base_pieces.css");
+
+piece.white.immobilizer {
+  background-image: url('/variants/Baroque/pieces/white_immobilizer.svg');
+}
+piece.black.immobilizer {
+  background-image: url('/variants/Baroque/pieces/black_immobilizer.svg');
+}

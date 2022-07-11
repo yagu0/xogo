@@ -1,8 +1,8 @@
 @import url("/variants/_Antiking/style.css");
 
 piece.black.pawn {
-  background-image: url('/pieces/Berolina/black_pawn.svg');
+  background-image: url('/variants/Berolina/pieces/black_pawn.svg');
 }
 piece.white.pawn {
-  background-image: url('/pieces/Berolina/white_pawn.svg');
+  background-image: url('/variants/Berolina/pieces/white_pawn.svg');
 }

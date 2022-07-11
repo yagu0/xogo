@@ -3,9 +3,9 @@
 }
 
 piece.white.stone {
-  background-image: url('/pieces/Go/black_stone.svg');
+  background-image: url('/variants/Go/pieces/black_stone.svg');
 }
 
 piece.black.stone {
-  background-image: url('/pieces/Go/white_stone.svg');
+  background-image: url('/variants/Go/pieces/white_stone.svg');
 }
