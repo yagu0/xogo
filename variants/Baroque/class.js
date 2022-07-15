@@ -175,7 +175,7 @@ export default class BaroqueRules extends ChessRules {
         moves = this.getBishopCaptures(moves);
         break;
       case 'q':
-        this.addPawnCaptures(moves);
+        this.addQueenCaptures(moves);
         break;
     }
     return moves;
@@ -335,21 +335,22 @@ export default class BaroqueRules extends ChessRules {
   }
 
   addQueenCaptures(moves, byChameleon) {
-    if (moves.length == 0) return;
+    if (moves.length == 0)
+      return;
     const [x, y] = [moves[0].start.x, moves[0].start.y];
     const adjacentSteps = this.pieces()['r'].moves[0].steps;
-    let capturingDirections = [];
+    let capturingDirections = {};
     const color = this.turn;
     const oppCol = C.GetOppCol(color);
     adjacentSteps.forEach(step => {
-      const [i, j] = [x + step[0], this.getY(y + step[1])];
+      const [i, j] = [x - step[0], this.getY(y - step[1])];
       if (
         this.onBoard(i, j) &&
         this.board[i][j] != "" &&
         this.getColor(i, j) == oppCol &&
         (!byChameleon || this.getPiece(i, j) == 'q')
       ) {
-        capturingDirections.push(step);
+        capturingDirections[step[0] + "." + step[1]] = true;
       }
     });
     moves.forEach(m => {
@@ -357,13 +358,7 @@ export default class BaroqueRules extends ChessRules {
         m.end.x != x ? (m.end.x - x) / Math.abs(m.end.x - x) : 0,
         m.end.y != y ? (m.end.y - y) / Math.abs(m.end.y - y) : 0
       ];
-      // NOTE: includes() and even _.isEqual() functions fail...
-      // TODO: this test should be done only once per direction
-      if (
-        capturingDirections.some(dir => {
-          return dir[0] == -step[0] && dir[1] == -step[1];
-        })
-      ) {
+      if (capturingDirections[step[0] + "." + step[1]]) {
         const [i, j] = [x - step[0], this.getY(y - step[1])];
         m.vanish.push(
           new PiPo({
