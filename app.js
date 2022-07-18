@@ -392,7 +392,7 @@ const messageCenter = (msg) => {
       break;
     case "filechange":
       // TODO?: could be more subtle
-      location.reload();
+      setTimeout(() => location.reload(), 100);
       break;
   }
 };
