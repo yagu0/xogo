@@ -8,7 +8,7 @@ import Move from "/utils/Move.js";
 import PiPo from "/utils/PiPo.js";
 import {ArrayFun} from "/utils/array.js";
 
-export default class GoRules extends ChessRules {
+export default class WeiqiRules extends ChessRules {
 
   // TODO: option oneColor (just alter pieces class of white stones)
   static get Options() {

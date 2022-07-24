@@ -1,12 +1,12 @@
-import GoRules from "/variants/Go/class.js";
+import GoRules from "/variants/Weiqi/class.js";
 import Move from "/utils/Move.js";
 import PiPo from "/utils/PiPo.js";
 import {ArrayFun} from "/utils/array.js";
 
-export default class AtarigoRules extends GoRules {
+export default class AtarigoRules extends WeiqiRules {
 
   static get Options() {
-    let input = GoRules.Options.input;
+    let input = WeiqiRules.Options.input;
     input[0].defaut = 11;
     return {input: input};
   }
