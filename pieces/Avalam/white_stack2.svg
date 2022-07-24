@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.0" width="230" height="230">
+<circle cx="115" cy="115" r="100" fill="gold" stroke="darkslategray"/>
+<path d="M100,85 h30 v30 h-30 v30 h30" fill="none" stroke-width="5" stroke="black"/>
+</svg>

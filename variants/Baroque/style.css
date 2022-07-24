@@ -1,4 +1,5 @@
 @import url("/base_pieces.css");
+@import url("/variants/_SpecialCaptures/style.css");
 
 piece.white.immobilizer {
   background-image: url('/variants/Baroque/pieces/white_immobilizer.svg');

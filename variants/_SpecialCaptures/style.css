@@ -1,0 +1,6 @@
+.piece.white.push-action {
+  background-image: url('/variants/_SpecialCaptures/pieces/capture_push.svg');
+}
+.piece.white.pull-action {
+  background-image: url('/variants/_SpecialCaptures/pieces/capture_pull.svg');
+}
