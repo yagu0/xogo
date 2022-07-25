@@ -1,7 +1,7 @@
-import ChessRules from "/base_rules.js";
+import AbstractFlipRules from "/variants/_Flip/class.js";
 import PiPo from "/utils/PiPo.js";
 
-export default class BenedictRules extends ChessRules {
+export default class BenedictRules extends AbstractFlipRules {
 
   static get Options() {
     return {
@@ -23,14 +23,6 @@ export default class BenedictRules extends ChessRules {
         "zen"
       ]
     };
-  }
-
-  get hasEnpassant() {
-    return false;
-  }
-
-  canTake() {
-    return false;
   }
 
   pieces(color, x, y) {
@@ -80,40 +72,6 @@ export default class BenedictRules extends ChessRules {
       }
     });
     return bMoves;
-  }
-
-  playOnBoard(move) {
-    super.playOnBoard(move);
-    this.flipColorOf(move.flips);
-  }
-  undoOnBoard(move) {
-    super.undoOnBoard(move);
-    this.flipColorOf(move.flips);
-  }
-
-  flipColorOf(flips) {
-    for (let xy of flips) {
-      const newColor = C.GetOppCol(this.getColor(xy.x, xy.y));
-      this.board[xy.x][xy.y] = newColor + this.board[xy.x][xy.y][1];
-    }
-  }
-
-  // Moves cannot flip our king's color, so all are valid
-  filterValid(moves) {
-    return moves;
-  }
-
-  // A king under (regular) check flips color, and the game is over.
-  underCheck() {
-    return false;
-  }
-
-  playVisual(move, r) {
-    super.playVisual(move, r);
-    move.flips.forEach(f => {
-      this.g_pieces[f.x][f.y].classList.toggle("white");
-      this.g_pieces[f.x][f.y].classList.toggle("black");
-    });
   }
 
 };

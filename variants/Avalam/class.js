@@ -42,7 +42,7 @@ export default class AvalamRules extends ChessRules {
     return {
       'b': {
         "class": "stack",
-        moves: [{steps: steps, range: 1}]
+        both: [{steps: steps, range: 1}]
       },
       'c': {
         "class": "stack2",

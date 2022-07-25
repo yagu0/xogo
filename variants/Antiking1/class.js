@@ -1,5 +1,6 @@
 import ChessRules from "/base_rules.js";
 import AbstractAntikingRules from "/variants/_Antiking/class.js";
+import BerolinaPawnSpec from "/variants/_Berolina/pawnSpec.js";
 
 export default class Antiking1Rules extends AbstractAntikingRules {
 
@@ -11,20 +12,8 @@ export default class Antiking1Rules extends AbstractAntikingRules {
   }
 
   pieces(color, x, y) {
-    const pawnShift = (color == "w" ? -1 : 1);
     let res = super.pieces(color, x, y);
-    res['p'].moves = [
-      {
-        steps: [[pawnShift, 1], [pawnShift, -1]],
-        range: 1
-      }
-    ];
-    res['p'].attack = [
-      {
-        steps: [[pawnShift, 0]],
-        range: 1
-      }
-    ];
+    res['p'] = BerolinaPawnSpec(color);
     return res;
   }
 

@@ -131,7 +131,7 @@ export default class AmbiguousRules extends ChessRules {
       't': {"class": "target-queen", moves: []},
       'l': {"class": "target-king", moves: []}
     };
-    return Object.assign({ 'g': {"class": "target", moves: []} },
+    return Object.assign({ 'g': {"class": "target"} },
       targets, super.pieces(color, x, y));
   }
 

@@ -1241,13 +1241,13 @@ export default class ChessRules {
       },
       'r': {
         "class": "rook",
-        moves: [
+        both: [
           {steps: [[0, 1], [0, -1], [1, 0], [-1, 0]]}
         ]
       },
       'n': {
         "class": "knight",
-        moves: [
+        both: [
           {
             steps: [
               [1, 2], [1, -2], [-1, 2], [-1, -2],
@@ -1259,13 +1259,13 @@ export default class ChessRules {
       },
       'b': {
         "class": "bishop",
-        moves: [
+        both: [
           {steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]]}
         ]
       },
       'q': {
         "class": "queen",
-        moves: [
+        both: [
           {
             steps: [
               [0, 1], [0, -1], [1, 0], [-1, 0],
@@ -1276,7 +1276,7 @@ export default class ChessRules {
       },
       'k': {
         "class": "king",
-        moves: [
+        both: [
           {
             steps: [
               [0, 1], [0, -1], [1, 0], [-1, 0],
@@ -1341,12 +1341,19 @@ export default class ChessRules {
 
   getStepSpec(color, x, y, piece) {
     let pieceType = piece;
-    const allSpecs = this.pieces(color, x, y);
+    let allSpecs = this.pieces(color, x, y);
     if (!piece)
       pieceType = this.getPieceType(x, y);
     else if (allSpecs[piece].moveas)
       pieceType = allSpecs[piece].moveas;
-    return allSpecs[pieceType];
+    let res = allSpecs[pieceType];
+    if (!res["both"])
+      res.both = [];
+    if (!res["moves"])
+      res.moves = [];
+    if (!res["attack"])
+      res.attack = [];
+    return res;
   }
 
   // Can thing on square1 capture thing on square2?
@@ -1380,7 +1387,7 @@ export default class ChessRules {
     const oppCol = C.GetOppCol(color);
     const piece = this.getPieceType(x, y);
     const stepSpec = this.getStepSpec(color, x, y, piece);
-    const attacks = stepSpec.attack || stepSpec.moves;
+    const attacks = stepSpec.both.concat(stepSpec.attack);
     for (let a of attacks) {
       outerLoop: for (let step of a.steps) {
         let [i, j] = [x + step[0], y + step[1]];
@@ -1779,7 +1786,7 @@ export default class ChessRules {
         elt.segments = this.getSegments(segments, segStart, end);
       res.push(elt);
     };
-    const exploreSteps = (stepArray) => {
+    const exploreSteps = (stepArray, mode) => {
       for (let s of stepArray) {
         outerLoop: for (let step of s.steps) {
           if (o.segments) {
@@ -1798,9 +1805,9 @@ export default class ChessRules {
                 !o.captureTarget ||
                 (o.captureTarget[0] == i && o.captureTarget[1] == j)
               ) {
-                if (o.one && !o.attackOnly)
+                if (o.one && mode != "attack")
                   return true;
-                if (!o.attackOnly)
+                if (mode != "attack")
                   addSquare(!o.captureTarget ? [i, j] : [x, y]);
                 if (o.captureTarget)
                   return res[0];
@@ -1823,9 +1830,9 @@ export default class ChessRules {
           if (!explored[i + "." + j]) {
             explored[i + "." + j] = true;
             if (allowed([x, y], [i, j])) {
-              if (o.one && !o.moveOnly)
+              if (o.one && mode != "moves")
                 return true;
-              if (!o.moveOnly)
+              if (mode != "moves")
                 addSquare(!o.captureTarget ? [i, j] : [x, y]);
               if (
                 o.captureTarget &&
@@ -1840,17 +1847,15 @@ export default class ChessRules {
       return undefined; //default, but let's explicit it
     };
     if (o.captureTarget)
-      return exploreSteps(o.captureSteps)
+      return exploreSteps(o.captureSteps, "attack");
     else {
       const stepSpec =
         o.stepSpec || this.getStepSpec(this.getColor(x, y), x, y);
       let outOne = false;
-      if (!o.attackOnly || !stepSpec.attack)
-        outOne = exploreSteps(stepSpec.moves);
-      if (!outOne && !o.moveOnly && !!stepSpec.attack) {
-        o.attackOnly = true; //ok because o is always a temporary object
-        outOne = exploreSteps(stepSpec.attack);
-      }
+      if (!o.attackOnly)
+        outOne = exploreSteps(stepSpec.both.concat(stepSpec.moves), "moves");
+      if (!outOne && !o.moveOnly)
+        outOne = exploreSteps(stepSpec.both.concat(stepSpec.attack), "attack");
       return (o.one ? outOne : res);
     }
   }
@@ -1873,7 +1878,7 @@ export default class ChessRules {
           if (this.canStepOver(x, y, apparentPiece))
             continue;
           const stepSpec = this.getStepSpec(colIJ, i, j);
-          const attacks = stepSpec.attack || stepSpec.moves;
+          const attacks = stepSpec.attack.concat(stepSpec.both);
           for (let a of attacks) {
             for (let s of a.steps) {
               // Quick check: if step isn't compatible, don't even try

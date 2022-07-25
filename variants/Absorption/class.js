@@ -26,7 +26,7 @@ export default class AbsorptionRules extends ChessRules {
       // amazon
       'a': {
         "class": "amazon",
-        moves: [
+        both: [
           {
             steps: [
               [0, 1], [0, -1], [1, 0], [-1, 0],
@@ -45,7 +45,7 @@ export default class AbsorptionRules extends ChessRules {
       // empress
       'e': {
         "class": "empress",
-        moves: [
+        both: [
           {
             steps: [
               [1, 0], [-1, 0], [0, 1], [0, -1]
@@ -63,7 +63,7 @@ export default class AbsorptionRules extends ChessRules {
       // princess
       's': {
         "class": "princess",
-        moves: [
+        both: [
           {
             steps: [
               [1, 1], [1, -1], [-1, 1], [-1, -1]

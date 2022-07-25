@@ -91,7 +91,7 @@ export default class AlapoRules extends ChessRules {
         {"class": "bishop" + (this.playerColor != color ? "_inv" : "")}),
       's': { //"square"
         "class": "babyrook",
-        moves: [
+        both: [
           {
             steps: [[0, 1], [0, -1], [1, 0], [-1, 0]],
             range: 1
@@ -100,7 +100,7 @@ export default class AlapoRules extends ChessRules {
       },
       'c': { //"circle"
         "class": "babyqueen",
-        moves: [
+        both: [
           {
             steps: [
               [0, 1], [0, -1], [1, 0], [-1, 0],
@@ -112,7 +112,7 @@ export default class AlapoRules extends ChessRules {
       },
       't': { //"triangle"
         "class": "babybishop" + (this.playerColor != color ? "_inv" : ""),
-        moves: [
+        both: [
           {
             steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]],
             range: 1

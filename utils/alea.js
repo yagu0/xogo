@@ -22,7 +22,7 @@ export const Random = {
       min = 0;
     }
     if (!Random.rand)
-      Random.setSeed(Math.floor(Math.random() * 1984));
+      Random.setSeed(Math.floor(Math.random() * 19840));
     return Math.floor(Random.rand() * (max - min)) + min;
   },
 

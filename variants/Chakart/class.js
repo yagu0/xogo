@@ -116,7 +116,6 @@ export default class ChakartRules extends ChessRules {
       {
         'y': {
           // Virtual piece for "king remote shell captures"
-          moves: [],
           attack: [
             {
               steps: [

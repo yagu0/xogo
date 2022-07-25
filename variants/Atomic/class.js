@@ -45,8 +45,8 @@ export default class AtomicRules extends ChessRules {
                 c: c
               })
             ],
-            start: { x: x, y: y },
-            end: { x: x, y: y }
+            start: {x: x, y: y},
+            end: {x: x, y: y}
           })
         ];
       }

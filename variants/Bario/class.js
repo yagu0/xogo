@@ -26,12 +26,7 @@ export default class BarioRules extends ChessRules {
 
   pieces(color, x, y) {
     return Object.assign(
-      {
-        'u': {
-          "class": "undefined",
-          moves: []
-        }
-      },
+      { 'u': {"class": "undefined"} },
       super.pieces(color, x, y)
     );
   }
@@ -165,8 +160,10 @@ export default class BarioRules extends ChessRules {
     if (super.underCheck(square_s, oppCol))
       return true;
     // Check potential specializations of undefined using reserve:
+    const inReserve = Object.keys(this.reserve[oppCol])
+                        .filter(k => this.reserve[oppCol][k] >= 1);
     const allAttacks = Array.prototype.concat.apply(
-      ['r', 'n', 'b', 'q'].map(p => this.pieces()[p].moves[0]));
+      inReserve.map(p => this.pieces()[p].both[0]));
     const [x, y] = square_s[0];
     for (let i=0; i<this.size.x; i++) {
       for (let j=0; j<this.size.y; j++) {

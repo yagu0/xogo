@@ -28,8 +28,8 @@ export default class ArenaRules extends ChessRules {
     const pawnShift = (color == "w" ? -1 : 1);
     Array.prototype.push.apply(pawnSpec.attack[0].steps,
                                [[-pawnShift, 1], [-pawnShift, -1]]);
-    queenSpec.moves[0].range = 3;
-    kingSpec.moves[0].range = 3;
+    queenSpec.both[0].range = 3;
+    kingSpec.both[0].range = 3;
     return Object.assign({},
       allSpecs,
       {
