@@ -5,6 +5,31 @@
 piece.white.stone {
   background-image: url('/variants/Weiqi/pieces/black_stone.svg');
 }
-piece.black.stone {
+piece.black.stone, piece.white.stone.one-color {
   background-image: url('/variants/Weiqi/pieces/white_stone.svg');
+}
+
+button.pass-btn {
+  display: block;
+  position: relative;
+  margin: 0 auto;
+}
+
+/* TODO: copy-paste from Chakart */
+div.pass-text {
+  position: relative;
+  margin-top: 15px;
+  width: 100%;
+  text-align: center;
+  background-color: transparent;
+  color: darkred;
+  font-weight: bold;
+  font-size: 2em;
+  animation: blinker 0.5s linear infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
 }

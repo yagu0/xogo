@@ -1,8 +1,3 @@
-//TODO:
-// - pass btn on top + message if opponent just passed
-// - do not count points: rely on players' ability to do that
-// - implement Ko rule (need something in fen: lastMove)
-
 import ChessRules from "/base_rules.js";
 import Move from "/utils/Move.js";
 import PiPo from "/utils/PiPo.js";
@@ -10,7 +5,6 @@ import {ArrayFun} from "/utils/array.js";
 
 export default class WeiqiRules extends ChessRules {
 
-  // TODO: option oneColor (just alter pieces class of white stones)
   static get Options() {
     return {
       input: [
@@ -19,6 +13,12 @@ export default class WeiqiRules extends ChessRules {
           variable: "bsize",
           type: "number",
           defaut: 9
+        },
+        {
+          label: "One color",
+          variable: "onecolor",
+          type: "checkbox",
+          defaut: false
         }
       ]
     };
@@ -82,15 +82,40 @@ export default class WeiqiRules extends ChessRules {
   genRandInitBaseFen() {
     const fenLine = C.FenEmptySquares(this.size.y);
     return {
-      fen: (fenLine + '/').repeat(this.size.x - 1) + fenLine + " w 0",
+      fen: (fenLine + '/').repeat(this.size.x - 1) + fenLine,
       o: {}
     };
   }
 
+  constructor(o) {
+    super(o);
+    if (!o.genFenOnly && !o.diagram) {
+      
+      this.passListener = () => this.play({pass: true}); //TODO: wrong, need to use buildMoveStack (warning empty move...)
+
+      // Show pass btn
+      let passBtn = document.createElement("button");
+      C.AddClass_es(passBtn, "pass-btn");
+      passBtn.innerHTML = "pass";
+      passBtn.addEventListener("click", this.passListener);
+      let container = document.getElementById(this.containerId);
+      container.appendChild(passBtn);
+    }
+  }
+
+  removeListeners() {
+    super.removeListeners();
+    let passBtn = document.getElementsByClassName("pass-btn")[0];
+    passBtn.removeEventListener("click", this.passListener);
+  }
+
   pieces(color, x, y) {
+    let classe_s = ["stone"];
+    if (this.options["onecolor"] && color == 'w')
+      classe_s.push("one-color");
     return {
       's': {
-        "class": "stone",
+        "class": classe_s,
         moves: []
       }
     };
@@ -160,6 +185,17 @@ export default class WeiqiRules extends ChessRules {
       }
     }
     return res;
+  }
+
+  play(move) {
+    if (move.pass) {
+      if (this.turn != this.playerColor)
+        super.displayMessage(null, "pass", "pass-text", 2000);
+      else
+        this.turn = C.GetOppCol(this.turn);
+    }
+    else
+      super.play(move);
   }
 
   filterValid(moves) {

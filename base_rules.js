@@ -1013,11 +1013,10 @@ export default class ChessRules {
     // TODO: onpointerdown/move/up ? See reveal.js /controllers/touch.js
   }
 
+  // NOTE: not called if isDiagram, or genFenOnly
   removeListeners() {
     let container = document.getElementById(this.containerId);
     this.windowResizeObs.unobserve(container);
-    if (this.isDiagram)
-      return; //no listeners in this case
     if ('onmousedown' in window) {
       this.mouseListeners.forEach(ml => {
         document.removeEventListener(ml.type, ml.listener);
