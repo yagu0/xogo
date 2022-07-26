@@ -1,7 +1,8 @@
-export default BerolinaPawnSpec = (color) => {
+export default function (color) {
 
   const pawnShift = (color == "w" ? -1 : 1);
   return {
+    "class": "pawn",
     moves: [
       {
         steps: [[pawnShift, 1], [pawnShift, -1]],
@@ -16,4 +17,4 @@ export default BerolinaPawnSpec = (color) => {
     ]
   };
 
-};
+}

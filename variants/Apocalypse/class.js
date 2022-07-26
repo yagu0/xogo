@@ -68,7 +68,7 @@ export default class ApocalypseRules extends ChessRules {
     return {
       'p': {
         "class": "pawn",
-        moves: [
+        both: [
           {
             steps: [[pawnShift, 0], [pawnShift, -1], [pawnShift, 1]],
             range: 1

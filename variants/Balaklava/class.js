@@ -34,7 +34,7 @@ export default class BalaklavaRules extends ChessRules {
   genRandInitBaseFen() {
     const baseFen = super.genRandInitBaseFen();
     return {
-      fen: baseFen.replace(/n/g, 'm').replace(/N/g, 'M'),
+      fen: baseFen.fen.replace(/n/g, 'm').replace(/N/g, 'M'),
       o: baseFen.o
     };
   }

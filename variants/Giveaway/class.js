@@ -80,10 +80,10 @@ export default class GiveawayRules extends ChessRules {
     super(o);
   }
 
-  underCheck(square, oppCol) {
+  underCheck(square_s, oppCol) {
     if (this.options["mode"] == "suicide")
       return false;
-    return super.underCheck(square, oppCol);
+    return super.underCheck(square_s, oppCol);
   }
 
   getCurrentScore() {

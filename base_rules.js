@@ -2080,7 +2080,7 @@ export default class ChessRules {
           // will be executed in filterValid() later.
           (
             i != finalSquares[castleSide][0] &&
-            this.underCheck([x, i], oppCol)
+            this.underCheck([[x, i]], oppCol)
           )
           ||
           (
@@ -2187,8 +2187,6 @@ export default class ChessRules {
   underCheck(square_s, oppCol) {
     if (this.options["taking"] || this.options["dark"])
       return false;
-    if (!Array.isArray(square_s[0]))
-      square_s = [square_s];
     return square_s.some(sq => this.underAttack(sq, oppCol));
   }
 

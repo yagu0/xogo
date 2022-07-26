@@ -2,9 +2,7 @@ import ChessRules from "/base_rules.js";
 import {Random} from "/utils/alea.js";
 import {ArrayFun} from "/utils/array.js";
 
-export class BicolourRules extends ChessRules {
-
-  // TODO: Options
+export default class BicolourRules extends ChessRules {
 
   get hasFlags() {
     return false;
@@ -103,9 +101,11 @@ export class BicolourRules extends ChessRules {
     };
   }
 
-  underCheck(color) {
-    const kingPos = this.searchKingPos(color)[0],
-    return (this.underAttack(kingPos, 'w') || this.underAttack(kingPos, 'b'));
+  underCheck(square_s) {
+    return (
+      this.underAttack(square_s[0], 'w') ||
+      this.underAttack(square_s[0], 'b')
+    );
   }
 
 };

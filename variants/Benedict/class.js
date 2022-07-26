@@ -1,5 +1,4 @@
 import AbstractFlipRules from "/variants/_Flip/class.js";
-import PiPo from "/utils/PiPo.js";
 
 export default class BenedictRules extends AbstractFlipRules {
 

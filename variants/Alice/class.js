@@ -119,7 +119,7 @@ export default class AliceRules extends ChessRules {
       this.playOnBoard(m);
       m.appear.forEach(a => this.toggleWorld(a.x, a.y));
       const kingAppear = m.appear.find(a => this.isKing(0, 0, a.p));
-      const target = kingAppear ? [kingAppear.x, kingAppear.y] : kingPos;
+      const target = [kingAppear ? [kingAppear.x, kingAppear.y] : kingPos];
       const res = this.underCheck(target, oppCol);
       m.appear.forEach(a => this.toggleWorld(a.x, a.y));
       this.undoOnBoard(m);

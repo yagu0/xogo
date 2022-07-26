@@ -187,7 +187,7 @@ export default class HexRules extends AbstractClickFillRules {
         max = z;
       explored[index] = true;
       component[index] = true;
-      for (let [dx, dy] of super.pieces()['k'].moves[0].steps) {
+      for (let [dx, dy] of super.pieces()['k'].both[0].steps) {
         const [nx, ny] = [x + dx, y + dy];
         const nidx = getIndex(nx, ny);
         if (
