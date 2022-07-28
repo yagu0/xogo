@@ -27,7 +27,7 @@ export default class BalaklavaRules extends ChessRules {
         }
       ]
     };
-    ['r', 'b', 'm', 'q'].forEach(p => res[p].moves = knightSpec.moves);
+    ['p', 'r', 'b', 'm', 'q'].forEach(p => res[p].moves = knightSpec.moves);
     return res;
   }
 
@@ -44,12 +44,16 @@ export default class BalaklavaRules extends ChessRules {
       return [];
     const color = moves[0].vanish[0].c;
     const lastRank = (color == 'w' ? 0 : this.size.x - 1);
+    const forward = (color == 'w' ? -1 : 1);
     const noKnightPromotions = moves.filter(m => {
       return (
-        m.end.x != lastRank ||
+        (m.end.x - m.start.x) * forward > 0 &&
         (
-          Math.abs(m.start.x - m.end.x) <= 1 &&
-          Math.abs(m.start.y - m.end.y) <= 1
+          m.end.x != lastRank ||
+          (
+            Math.abs(m.start.x - m.end.x) <= 1 &&
+            Math.abs(m.start.y - m.end.y) <= 1
+          )
         )
       );
     });
