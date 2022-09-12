@@ -26,6 +26,10 @@ export const Random = {
     return Math.floor(Random.rand() * (max - min)) + min;
   },
 
+  randBool: function() {
+    return Random.randInt(0, 2) == 0;
+  },
+
   // Inspired by https://github.com/jashkenas/underscore
   sample: function(arr, n) {
     n = n || 1;

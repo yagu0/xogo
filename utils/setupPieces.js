@@ -1,6 +1,6 @@
 import {Random} from "/utils/alea.js";
 
-export class Fenutil = {
+export class FenUtil = {
 
   // arg o (constraints): "between" with p1 and p2.
   //                      "flags", "diffCol": array of pieceType
@@ -15,84 +15,51 @@ export class Fenutil = {
           flags += i;
       });
     }
+    if (o.diffCol) {
+      o.diffCol.forEach(p => {
+        // Pieces of type p on different colors:
+        const firstP = res.indexOf(p),
+              lastP = res.lastIndexOf(p);
+        if ((firstP - lastP) % 2 != 0) {
+          const choice1 = Random.randBool() ? firstP : lastP;
+          let choice2;
+          do {
+            choice2 = Random.randInt(arr.length);
+          }
+          while (
+            choice2 == choice1 ||
+            o.diffCol.includes(choice2) ||
+            (choice2 - choice1) % 2 != 0
+          );
+          res[choice1] = res[choice2];
+          res[choice2] = p;
+        }
+      });
+    }
     if (o.between) {
       // Locate p1. If appearing first, exchange with first p2.
       // If appearing last, exchange with last p2.
-      res.findIndex(p => p == o.between["p1"])
+      const p1 = res.indexOf(o.between["p1"]);
+      const firstP2 = res.indexOf(o.between["p2"]),
+            lastP2 = res.lastIndexOf(o.between["p2"]);
+      if (p1 < firstP2 || p1 > lastP2) {
+        res[p1] = o.between["p2"];
+        if (p1 < firstP2)
+          res[firstP2] = o.between["p1"];
+        else //p1 > lastP2
+          res[lastP2] = o.between["p1"];
+      }
     }
-
     return {fen: res, flags: flags};
   }
 
   setupPieces(arr, o) {
-    if (o.randomness == 0)
-
-
+    const row1 = FenUtil.setupRow(arr, o);
+    const row2 = o.randomness == 2 ? FenUtil.setupRow(arr, o) : row1;
     return {
-      row1: 
-
-
-
+      w: row1.fen.toUpperCase,
+      b: row2.fen,
+      flags: row1.flags + row2.flags
+    };
   }
 };
-
-let fen, flags = "0707";
-    if (!this.options.randomness)
-      // Deterministic:
-      fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-
-    else {
-      // Randomize
-      let pieces = {w: new Array(8), b: new Array(8)};
-      flags = "";
-      // Shuffle pieces on first (and last rank if randomness == 2)
-      for (let c of ["w", "b"]) {
-        if (c == 'b' && this.options.randomness == 1) {
-          pieces['b'] = pieces['w'];
-          flags += flags;
-          break;
-        }
-        let positions = ArrayFun.range(8);
-        // Get random squares for bishops
-        let randIndex = 2 * Random.randInt(4);
-        const bishop1Pos = positions[randIndex];
-        // The second bishop must be on a square of different color
-        let randIndex_tmp = 2 * Random.randInt(4) + 1;
-        const bishop2Pos = positions[randIndex_tmp];
-        // Remove chosen squares
-        positions.splice(Math.max(randIndex, randIndex_tmp), 1);
-        positions.splice(Math.min(randIndex, randIndex_tmp), 1);
-        // Get random squares for knights
-        randIndex = Random.randInt(6);
-        const knight1Pos = positions[randIndex];
-        positions.splice(randIndex, 1);
-        randIndex = Random.randInt(5);
-        const knight2Pos = positions[randIndex];
-        positions.splice(randIndex, 1);
-        // Get random square for queen
-        randIndex = Random.randInt(4);
-        const queenPos = positions[randIndex];
-        positions.splice(randIndex, 1);
-        // Rooks and king positions are now fixed,
-        // because of the ordering rook-king-rook
-        const rook1Pos = positions[0];
-        const kingPos = positions[1];
-        const rook2Pos = positions[2];
-        // Finally put the shuffled pieces in the board array
-        pieces[c][rook1Pos] = "r";
-        pieces[c][knight1Pos] = "n";
-        pieces[c][bishop1Pos] = "b";
-        pieces[c][queenPos] = "q";
-        pieces[c][kingPos] = "k";
-        pieces[c][bishop2Pos] = "b";
-        pieces[c][knight2Pos] = "n";
-        pieces[c][rook2Pos] = "r";
-        flags += rook1Pos.toString() + rook2Pos.toString();
-      }
-      fen = (
-        pieces["b"].join("") +
-        "/pppppppp/8/8/8/8/PPPPPPPP/" +
-        pieces["w"].join("").toUpperCase()
-      );
-    }
-    return { fen: fen, o: {flags: flags} };
