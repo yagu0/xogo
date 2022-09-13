@@ -5,7 +5,7 @@ export class FenUtil = {
   // arg o (constraints): "between" with p1 and p2.
   //                      "flags", "diffCol": array of pieceType
   setupRow(arr, o) {
-    let res = arr;
+    let res = JSON.parse(JSON.stringify(arr));
     if (o.randomness >= 1)
       res = Random.shuffle(arr);
     let flags = "";
@@ -57,9 +57,10 @@ export class FenUtil = {
     const row1 = FenUtil.setupRow(arr, o);
     const row2 = o.randomness == 2 ? FenUtil.setupRow(arr, o) : row1;
     return {
-      w: row1.fen.toUpperCase,
+      w: row1.fen,
       b: row2.fen,
       flags: row1.flags + row2.flags
     };
   }
+
 };

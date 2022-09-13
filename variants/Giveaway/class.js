@@ -1,6 +1,7 @@
 import ChessRules from "/base_rules.js";
 import {ArrayFun} from "/utils/array.js";
 import {Random} from "/utils/alea.js";
+import {FenUtil} from "/utils/setupPieces.js";
 
 export default class GiveawayRules extends ChessRules {
 
@@ -37,42 +38,18 @@ export default class GiveawayRules extends ChessRules {
   }
 
   genRandInitBaseFen() {
-    if (this.options["mode"] == "losers")
-      return super.genRandInitBaseFen();
-
-    let fen = "";
-    if (this.options["randomness"] == 0)
-      fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-    else {
-      let pieces = { w: new Array(8), b: new Array(8) };
-      for (let c of ["w", "b"]) {
-        if (c == 'b' && this.options["randomness"] == 1) {
-          pieces['b'] = pieces['w'];
-          break;
-        }
-        // Get random squares for every piece, totally freely
-        let positions = Random.shuffle(ArrayFun.range(8));
-        const composition = ['b', 'b', 'r', 'r', 'n', 'n', 'k', 'q'];
-        const rem2 = positions[0] % 2;
-        if (rem2 == positions[1] % 2) {
-          // Fix bishops (on different colors)
-          for (let i=2; i<8; i++) {
-            if (positions[i] % 2 != rem2) {
-              [positions[1], positions[i]] = [positions[i], positions[1]];
-              break;
-            }
-          }
-        }
-        for (let i = 0; i < 8; i++)
-          pieces[c][positions[i]] = composition[i];
-      }
-      fen = (
-        pieces["b"].join("") +
-        "/pppppppp/8/8/8/8/PPPPPPPP/" +
-        pieces["w"].join("").toUpperCase()
-      );
+    let setupOpts = {diffCol: ['b']};
+    if (this.options["mode"] == "losers") {
+      setupOpts["between"] = ['k', 'r'];
+      setupOpts["flags"] = ['r'];
     }
-    return { fen: fen, o: {} };
+    const s = FenUtil.setupPieces(
+      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'], setupOpts);
+    return {
+      fen: s.b.join("") + "/pppppppp/8/8/8/8/PPPPPPPP/" +
+           s.w.join("").toUpperCase(),
+      o: {flags: s.flags}
+    };
   }
 
   constructor(o) {

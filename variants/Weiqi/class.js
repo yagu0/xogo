@@ -89,7 +89,7 @@ export default class WeiqiRules extends ChessRules {
 
   constructor(o) {
     super(o);
-    if (!o.genFenOnly && !o.diagram) {
+    if (!o.diagram) {
       this.passListener = () => {
         if (this.turn == this.playerColor) {
           let mv = {

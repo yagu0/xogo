@@ -1,5 +1,5 @@
 import ChessRules from "/base_rules.js";
-import GiveawayRules from "/variants/Giveaway/class.js";
+import {FenUtil} from "/utils/setupPieces.js";
 import PiPo from "/utils/PiPo.js";
 import Move from "/utils/Move.js";
 
@@ -42,9 +42,13 @@ export default class SuctionRules extends ChessRules {
   }
 
   genRandInitBaseFen() {
-    const options = Object.assign({mode: "suicide"}, this.options);
-    const gr = new GiveawayRules({options: options, genFenOnly: true});
-    return gr.genRandInitBaseFen();
+    const s = FenUtil.setupPieces(
+      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'], {diffCol: ['b']});
+    return {
+      fen: s.b.join("") + "/pppppppp/8/8/8/8/PPPPPPPP/" +
+           s.w.join("").toUpperCase(),
+      o: {}
+    };
   }
 
   getPartFen(o) {

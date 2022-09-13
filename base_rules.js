@@ -220,11 +220,13 @@ export default class ChessRules {
       ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
       {
         between: {p1: 'k', p2: 'r'},
-        diffCol: ['b']
+        diffCol: ['b'],
+        flags: ['r']
       }
     );
     return {
-      fen: s.b + "/pppppppp/8/8/8/8/PPPPPPPP/" + s.w,
+      fen: s.b.join("") + "/pppppppp/8/8/8/8/PPPPPPPP/" +
+           s.w.join("").toUpperCase(),
       o: {flags: s.flags}
     };
   }
@@ -356,9 +358,6 @@ export default class ChessRules {
       if (this.options[opt.variable] === undefined)
         this.options[opt.variable] = opt.defaut;
     });
-    if (o.genFenOnly)
-      // This object will be used only for initial FEN generation
-      return;
 
     // Some variables
     this.playerColor = o.color;
@@ -965,7 +964,7 @@ export default class ChessRules {
     // TODO: onpointerdown/move/up ? See reveal.js /controllers/touch.js
   }
 
-  // NOTE: not called if isDiagram, or genFenOnly
+  // NOTE: not called if isDiagram
   removeListeners() {
     let container = document.getElementById(this.containerId);
     this.windowResizeObs.unobserve(container);

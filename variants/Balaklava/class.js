@@ -1,4 +1,5 @@
 import ChessRules from "/base_rules.js";
+import {FenUtil} from "/utils/setupPieces.js";
 
 export default class BalaklavaRules extends ChessRules {
 
@@ -32,10 +33,12 @@ export default class BalaklavaRules extends ChessRules {
   }
 
   genRandInitBaseFen() {
-    const baseFen = super.genRandInitBaseFen();
+    const s = FenUtil.setupPieces(
+      ['r', 'm', 'b', 'q', 'k', 'b', 'm', 'r'], {diffCol: ['b']});
     return {
-      fen: baseFen.fen.replace(/n/g, 'm').replace(/N/g, 'M'),
-      o: baseFen.o
+      fen: s.b.join("") + "/pppppppp/8/8/8/8/PPPPPPPP/" +
+           s.w.join("").toUpperCase(),
+      o: {}
     };
   }
 

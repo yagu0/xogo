@@ -1,7 +1,7 @@
 import ChessRules from "/base_rules.js";
-import GiveawayRules from "/variants/Giveaway/class.js";
 import {ArrayFun} from "/utils/array.js";
 import {Random} from "/utils/alea.js";
+import {FenUtil} from "/utils/setupPieces.js";
 import PiPo from "/utils/PiPo.js";
 import Move from "/utils/Move.js";
 
@@ -131,11 +131,13 @@ export default class ChakartRules extends ChessRules {
   }
 
   genRandInitBaseFen() {
-    const options = Object.assign({mode: "suicide"}, this.options);
-    const gr = new GiveawayRules({options: options, genFenOnly: true});
-    let res = gr.genRandInitBaseFen();
-    res.o["flags"] = "1111"; //Peach + Mario flags
-    return res;
+    const s = FenUtil.setupPieces(
+      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'], {diffCol: ['b']});
+    return {
+      fen: s.b.join("") + "/pppppppp/8/8/8/8/PPPPPPPP/" +
+           s.w.join("").toUpperCase(),
+      o: {flags: "1111"} //Peach + Mario
+    };
   }
 
   fen2board(f) {

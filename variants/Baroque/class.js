@@ -1,5 +1,5 @@
-import GiveawayRules from "/variants/Giveaway/class.js";
 import AbstractSpecialCaptureRules from "/variants/_SpecialCaptures.js";
+import {FenUtil} from "/utils/setupPieces.js";
 import {Random} from "/utils/alea.js";
 
 export default class BaroqueRules extends AbstractSpecialCaptureRules {
@@ -33,27 +33,20 @@ export default class BaroqueRules extends AbstractSpecialCaptureRules {
   }
 
   genRandInitBaseFen() {
-    if (this.options["randomness"] == 0)
-      return "rnbkqbnm/pppppppp/8/8/8/8/PPPPPPPP/MNBQKBNR";
-    const options = Object.assign({mode: "suicide"}, this.options);
-    const gr = new GiveawayRules({options: options, genFenOnly: true});
-    let res = gr.genRandInitBaseFen();
-    let immPos = {};
-    for (let c of ['w', 'b']) {
-      const rookChar = (c == 'w' ? 'R' : 'r');
-      switch (Random.randInt(2)) {
-        case 0:
-          immPos[c] = res.fen.indexOf(rookChar);
-          break;
-        case 1:
-          immPos[c] = res.fen.lastIndexOf(rookChar);
-          break;
-      }
+    const s = FenUtil.setupPieces(
+      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'i'], {diffCol: ['b']});
+    if (this.options["randomness"] <= 1) {
+      // Fix immobilizers/rooks pattern
+      const toExchange1 = s.w.indexOf('r'),
+            toExchange2 = s.w.indexOf('i');
+      s.w[toExchange1] = 'i';
+      s.w[toExchange2] = 'r';
     }
-    res.fen = res.fen.substring(0, immPos['b']) + 'i' +
-              res.fen.substring(immPos['b'] + 1, immPos['w']) + 'I' +
-              res.fen.substring(immPos['w'] + 1);
-    return res;
+    return {
+      fen: s.b.join("") + "/pppppppp/8/8/8/8/PPPPPPPP/" +
+           s.w.join("").toUpperCase(),
+      o: {}
+    };
   }
 
   pieces() {

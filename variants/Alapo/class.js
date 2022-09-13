@@ -1,6 +1,7 @@
 import ChessRules from "/base_rules.js";
 import {ArrayFun} from "/utils/array.js";
 import {Random} from "/utils/alea.js";
+import {FenUtil} from "/utils/setupPieces.js";
 
 export default class AlapoRules extends ChessRules {
 
@@ -29,55 +30,20 @@ export default class AlapoRules extends ChessRules {
   }
 
   genRandInitBaseFen() {
-    let fen = "";
-    if (this.options["randomness"] == 0)
-      fen = "rbqqbr/tcssct/6/6/TCSSCT/RBQQBR";
-    else {
-      const piece2pawn = {
-        r: 't',
-        q: 's',
-        b: 'c'
-      };
-      let pieces = { w: new Array(6), b: new Array(6) };
-      // Shuffle pieces on first (and last rank if randomness == 2)
-      for (let c of ["w", "b"]) {
-        if (c == 'b' && this.options["randomness"] == 1) {
-          pieces['b'] = pieces['w'];
-          break;
-        }
-        let positions = ArrayFun.range(6);
-        // Get random squares for bishops
-        let randIndex = 2 * Random.randInt(3);
-        const bishop1Pos = positions[randIndex];
-        let randIndex_tmp = 2 * Random.randInt(3) + 1;
-        const bishop2Pos = positions[randIndex_tmp];
-        positions.splice(Math.max(randIndex, randIndex_tmp), 1);
-        positions.splice(Math.min(randIndex, randIndex_tmp), 1);
-        // Get random square for queens
-        randIndex = Random.randInt(4);
-        const queen1Pos = positions[randIndex];
-        positions.splice(randIndex, 1);
-        randIndex = Random.randInt(3);
-        const queen2Pos = positions[randIndex];
-        positions.splice(randIndex, 1);
-        // Rooks positions are now fixed,
-        const rook1Pos = positions[0];
-        const rook2Pos = positions[1];
-        pieces[c][rook1Pos] = "r";
-        pieces[c][bishop1Pos] = "b";
-        pieces[c][queen1Pos] = "q";
-        pieces[c][queen2Pos] = "q";
-        pieces[c][bishop2Pos] = "b";
-        pieces[c][rook2Pos] = "r";
-      }
-      fen = (
-        pieces["b"].join("") + "/" +
-        pieces["b"].map(p => piece2pawn[p]).join("") +
-        "/6/6/" +
-        pieces["w"].map(p => piece2pawn[p].toUpperCase()).join("") + "/" +
-        pieces["w"].join("").toUpperCase()
-      );
-    }
+    const s =
+      FenUtil.setupPieces(['r', 'b', 'q', 'q', 'b', 'r'], {diffCol: ['b']});
+    const piece2pawn = {
+      r: 't',
+      q: 's',
+      b: 'c'
+    };
+    const fen = (
+      s.b.join("") + "/" +
+      s.b.map(p => piece2pawn[p]).join("") +
+      "/6/6/" +
+      s.w.map(p => piece2pawn[p].toUpperCase()).join("") + "/" +
+      s.w.join("").toUpperCase()
+    );
     return { fen: fen, o: {} };
   }
 
