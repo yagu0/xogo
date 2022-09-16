@@ -2640,6 +2640,7 @@ export default class ChessRules {
     let container = document.getElementById(this.containerId);
     if (document.hidden) {
       document.onvisibilitychange = () => {
+        // TODO here: page reload ?! (some issues if tab changed...)
         document.onvisibilitychange = undefined;
         checkDisplayThenAnimate(700);
       };

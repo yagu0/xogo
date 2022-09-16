@@ -1,4 +1,4 @@
-# xogo.live
+# xogo.casa
 
 Simplified version of old vchess.club, to focus on the essential : the game.
 

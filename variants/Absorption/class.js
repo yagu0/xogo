@@ -23,7 +23,6 @@ export default class AbsorptionRules extends ChessRules {
 
   pieces(color, x, y) {
     let fusions = {
-      // amazon
       'a': {
         "class": "amazon",
         both: [
@@ -42,7 +41,6 @@ export default class AbsorptionRules extends ChessRules {
           }
         ]
       },
-      // empress
       'e': {
         "class": "empress",
         both: [
@@ -60,7 +58,6 @@ export default class AbsorptionRules extends ChessRules {
           }
         ]
       },
-      // princess
       's': {
         "class": "princess",
         both: [

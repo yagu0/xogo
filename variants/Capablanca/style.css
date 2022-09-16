@@ -1,0 +1,17 @@
+@import url("/base_pieces.css");
+
+piece.black.empress {
+  background-image: url('/pieces/black_empress.svg');
+}
+
+piece.black.princess {
+  background-image: url('/pieces/black_princess.svg');
+}
+
+piece.white.empress {
+  background-image: url('/pieces/white_empress.svg');
+}
+
+piece.white.princess {
+  background-image: url('/pieces/white_princess.svg');
+}
