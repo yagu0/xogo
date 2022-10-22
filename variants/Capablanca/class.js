@@ -54,6 +54,7 @@ export default class CapablancaRules extends ChessRules {
     const s = FenUtil.setupPieces(
       ['r', 'n', 's', 'b', 'q', 'k', 'b', 'e', 'n', 'r'],
       {
+        randomness: this.options["randomness"],
         between: {p1: 'k', p2: 'r'},
         diffCol: ['b'],
         flags: ['r']

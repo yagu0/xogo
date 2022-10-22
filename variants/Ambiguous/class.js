@@ -24,7 +24,12 @@ export default class AmbiguousRules extends ChessRules {
 
   genRandInitBaseFen() {
     const s = FenUtil.setupPieces(
-      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'], {diffCol: ['b']});
+      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+      {
+        randomness: this.options["randomness"],
+        diffCol: ['b']
+      }
+    );
     return {
       fen: s.b.join("") + "/pppppppp/8/8/8/8/PPPPPPPP/" +
            s.w.join("").toUpperCase(),

@@ -15,39 +15,41 @@ export const FenUtil = {
           flags += i;
       });
     }
-    if (o.diffCol) {
-      o.diffCol.forEach(p => {
-        // Pieces of type p on different colors:
-        const firstP = res.indexOf(p),
-              lastP = res.lastIndexOf(p);
-        if ((firstP - lastP) % 2 != 0) {
-          const choice1 = Random.randBool() ? firstP : lastP;
-          let choice2;
-          do {
-            choice2 = Random.randInt(arr.length);
+    if (o.randomness >= 1) {
+      if (o.diffCol) {
+        o.diffCol.forEach(p => {
+          // Pieces of type p on different colors:
+          const firstP = res.indexOf(p),
+                lastP = res.lastIndexOf(p);
+          if ((firstP - lastP) % 2 != 0) {
+            const choice1 = Random.randBool() ? firstP : lastP;
+            let choice2;
+            do {
+              choice2 = Random.randInt(arr.length);
+            }
+            while (
+              choice2 == choice1 ||
+              o.diffCol.includes(choice2) ||
+              (choice2 - choice1) % 2 != 0
+            );
+            res[choice1] = res[choice2];
+            res[choice2] = p;
           }
-          while (
-            choice2 == choice1 ||
-            o.diffCol.includes(choice2) ||
-            (choice2 - choice1) % 2 != 0
-          );
-          res[choice1] = res[choice2];
-          res[choice2] = p;
+        });
+      }
+      if (o.between) {
+        // Locate p1. If appearing first, exchange with first p2.
+        // If appearing last, exchange with last p2.
+        const p1 = res.indexOf(o.between["p1"]);
+        const firstP2 = res.indexOf(o.between["p2"]),
+              lastP2 = res.lastIndexOf(o.between["p2"]);
+        if (p1 < firstP2 || p1 > lastP2) {
+          res[p1] = o.between["p2"];
+          if (p1 < firstP2)
+            res[firstP2] = o.between["p1"];
+          else //p1 > lastP2
+            res[lastP2] = o.between["p1"];
         }
-      });
-    }
-    if (o.between) {
-      // Locate p1. If appearing first, exchange with first p2.
-      // If appearing last, exchange with last p2.
-      const p1 = res.indexOf(o.between["p1"]);
-      const firstP2 = res.indexOf(o.between["p2"]),
-            lastP2 = res.lastIndexOf(o.between["p2"]);
-      if (p1 < firstP2 || p1 > lastP2) {
-        res[p1] = o.between["p2"];
-        if (p1 < firstP2)
-          res[firstP2] = o.between["p1"];
-        else //p1 > lastP2
-          res[lastP2] = o.between["p1"];
       }
     }
     return {fen: res, flags: flags};

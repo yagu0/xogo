@@ -38,7 +38,10 @@ export default class GiveawayRules extends ChessRules {
   }
 
   genRandInitBaseFen() {
-    let setupOpts = {diffCol: ['b']};
+    let setupOpts = {
+      randomness: this.options["randomness"],
+      diffCol: ['b']
+    };
     if (this.options["mode"] == "losers") {
       setupOpts["between"] = ['k', 'r'];
       setupOpts["flags"] = ['r'];

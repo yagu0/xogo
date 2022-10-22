@@ -30,8 +30,13 @@ export default class AlapoRules extends ChessRules {
   }
 
   genRandInitBaseFen() {
-    const s =
-      FenUtil.setupPieces(['r', 'b', 'q', 'q', 'b', 'r'], {diffCol: ['b']});
+    const s = FenUtil.setupPieces(
+      ['r', 'b', 'q', 'q', 'b', 'r'],
+      {
+        randomness: this.options["randomness"],
+        diffCol: ['b']
+      }
+    );
     const piece2pawn = {
       r: 't',
       q: 's',

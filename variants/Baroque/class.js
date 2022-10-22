@@ -34,7 +34,12 @@ export default class BaroqueRules extends AbstractSpecialCaptureRules {
 
   genRandInitBaseFen() {
     const s = FenUtil.setupPieces(
-      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'i'], {diffCol: ['b']});
+      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'i'],
+      {
+        randomness: this.options["randomness"],
+        diffCol: ['b']
+      }
+    );
     if (this.options["randomness"] <= 1) {
       // Fix immobilizers/rooks pattern
       const toExchange1 = s.w.indexOf('r'),

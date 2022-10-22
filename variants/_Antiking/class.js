@@ -37,8 +37,8 @@ export default class AbstractAntikingRules extends ChessRules {
     return ['k', 'a'].includes(p);
   }
 
-  // NOTE: canTake includes (wrong) captures of antiking,
-  // to detect attacks on antikings.
+  // NOTE: canTake includes (wrong) captures of (anti)king,
+  // to detect attacks on (anti)kings.
   canTake([x1, y1], [x2, y2]) {
     const piece1 = this.getPiece(x1, y1);
     const color1 = this.getColor(x1, y1);
@@ -49,10 +49,10 @@ export default class AbstractAntikingRules extends ChessRules {
     );
   }
 
-  // Remove captures of antiking (see above)
+  // Remove captures of (anti)king (see above)
   getPotentialMovesFrom([x, y]) {
     return super.getPotentialMovesFrom([x, y]).filter(m =>
-      m.vanish.length == 1 || m.vanish[1].p != 'a');
+      m.vanish.length == 1 || !['k', 'a'].includes(m.vanish[1].p));
   }
 
   underCheck(square_s, color) {

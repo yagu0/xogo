@@ -219,6 +219,7 @@ export default class ChessRules {
     const s = FenUtil.setupPieces(
       ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
       {
+        randomness: this.options["randomness"],
         between: {p1: 'k', p2: 'r'},
         diffCol: ['b'],
         flags: ['r']
@@ -556,7 +557,7 @@ export default class ChessRules {
     chessboard.style.top = spaceTop + "px";
     // Give sizes instead of recomputing them,
     // because chessboard might not be drawn yet.
-    this.setupPieces({
+    this.setupVisualPieces({
       width: cbWidth,
       height: cbHeight,
       x: spaceLeft,
@@ -596,7 +597,7 @@ export default class ChessRules {
     return board;
   }
 
-  setupPieces(r) {
+  setupVisualPieces(r) {
     let chessboard =
       document.getElementById(this.containerId).querySelector(".chessboard");
     if (!r)

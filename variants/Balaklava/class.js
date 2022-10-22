@@ -34,7 +34,12 @@ export default class BalaklavaRules extends ChessRules {
 
   genRandInitBaseFen() {
     const s = FenUtil.setupPieces(
-      ['r', 'm', 'b', 'q', 'k', 'b', 'm', 'r'], {diffCol: ['b']});
+      ['r', 'm', 'b', 'q', 'k', 'b', 'm', 'r'],
+      {
+        randomness: this.options["randomness"],
+        diffCol: ['b']
+      }
+    );
     return {
       fen: s.b.join("") + "/pppppppp/8/8/8/8/PPPPPPPP/" +
            s.w.join("").toUpperCase(),

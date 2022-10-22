@@ -10,7 +10,7 @@ export default class AbstractClickFillRules extends ChessRules {
     return {}
   }
 
-  setupPieces() {
+  setupVisualPieces() {
     for (let i=0; i<this.size.x; i++) {
       for (let j=0; j<this.size.y; j++) {
         const markHere =
