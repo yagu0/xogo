@@ -1,10 +1,10 @@
 import {Random} from "/utils/alea.js";
 
-export class FenUtil = {
+export const FenUtil = {
 
   // arg o (constraints): "between" with p1 and p2.
   //                      "flags", "diffCol": array of pieceType
-  setupRow(arr, o) {
+  setupRow: function(arr, o) {
     let res = JSON.parse(JSON.stringify(arr));
     if (o.randomness >= 1)
       res = Random.shuffle(arr);
@@ -51,9 +51,9 @@ export class FenUtil = {
       }
     }
     return {fen: res, flags: flags};
-  }
+  },
 
-  setupPieces(arr, o) {
+  setupPieces: function(arr, o) {
     const row1 = FenUtil.setupRow(arr, o);
     const row2 = o.randomness == 2 ? FenUtil.setupRow(arr, o) : row1;
     return {

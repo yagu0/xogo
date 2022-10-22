@@ -38,7 +38,7 @@ export default class AbstractAntikingRules extends ChessRules {
   }
 
   // NOTE: canTake includes (wrong) captures of antiking,
-  // to not go to low-level using findDestSquares()
+  // to detect attacks on antikings.
   canTake([x1, y1], [x2, y2]) {
     const piece1 = this.getPiece(x1, y1);
     const color1 = this.getColor(x1, y1);
