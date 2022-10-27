@@ -286,9 +286,9 @@ export default class ChessRules {
   // Position part of the FEN string
   getPosition() {
     let position = "";
-    for (let i = 0; i < this.size.y; i++) {
+    for (let i = 0; i < this.size.x; i++) {
       let emptyCount = 0;
-      for (let j = 0; j < this.size.x; j++) {
+      for (let j = 0; j < this.size.y; j++) {
         if (this.board[i][j] == "")
           emptyCount++;
         else {
@@ -303,7 +303,7 @@ export default class ChessRules {
       if (emptyCount > 0)
         // "Flush remainder"
         position += C.FenEmptySquares(emptyCount);
-      if (i < this.size.y - 1)
+      if (i < this.size.x - 1)
         position += "/"; //separate rows
     }
     return position;

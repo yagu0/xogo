@@ -1,4 +1,5 @@
 import ChessRules from "/base_rules.js";
+import {FenUtil} from "/utils/setupPieces.js";
 
 export default class CapablancaRules extends ChessRules {
 
@@ -47,7 +48,11 @@ export default class CapablancaRules extends ChessRules {
   }
 
   get size() {
-    return {x: 8, y: 10};
+    return {
+      x: 8,
+      y: 10,
+      ratio: 1.25
+    };
   }
 
   genRandInitBaseFen() {

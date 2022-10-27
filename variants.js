@@ -23,7 +23,7 @@ const variants = [
   {name: 'Bicolour', desc: 'Harassed kings'},
   {name: 'Brotherhood', desc: 'Friendly pieces'},
   {name: 'Cannibal', desc: 'Capture powers'},
-//  {name: 'Capablanca', desc: 'Capablanca Chess', disp: 'Capablanca Chess'},
+  {name: 'Capablanca', desc: 'Capablanca Chess', disp: 'Capablanca'},
   {name: 'Capture', desc: 'Mandatory captures'},
   {name: 'Chakart', desc: 'Capture the princess'},
 //  {name: 'Checkered', desc: 'Shared pieces'},
