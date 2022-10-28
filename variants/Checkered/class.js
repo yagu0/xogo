@@ -15,7 +15,6 @@ export default class CheckeredRules extends ChessRules {
           defaut: false
         }
       ],
-      // Game modifiers (using "elementary variants"). Default: false
       styles: [
         "balance",
         "capture",
@@ -37,7 +36,8 @@ export default class CheckeredRules extends ChessRules {
       b: "c",
       n: "o"
     };
-    if (b[0] == "c") return checkered_codes[b[1]];
+    if (b[0] == "c")
+      return checkered_codes[b[1]];
     return super.board2fen(b);
   }
 
@@ -60,7 +60,40 @@ export default class CheckeredRules extends ChessRules {
     return super.fen2board(f);
   }
 
-  // TODO: pieces()
+  pieces(color, x, y) {
+    let baseRes = super.pieces(color, x, y);
+    if (
+      this.getPiece(x, y) == 'p' &&
+      this.stage == 2 &&
+      this.getColor(x, y) == 'c'
+    ) {
+      // Checkered pawns on stage 2 are bidirectional
+      const initRank = ((color == 'w' && x >= 6) || (color == 'b' && x <= 1));
+      baseRes['p'] = {
+        "class": "pawn",
+        moves: [
+          {
+            steps: [[1, 0], [-1, 0]],
+            range: (initRank ? 2 : 1)
+          }
+        ],
+        attack: [
+          {
+            steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]],
+            range: 1
+          }
+        ]
+      };
+    }
+    const checkered = {
+      's': {"class": "checkered-pawn", moveas: 'p'},
+      'u': {"class": "checkered-rook", moveas: 'r'},
+      'o': {"class": "checkered-knight", moveas: 'n'},
+      'c': {"class": "checkered-bishop", moveas: 'b'},
+      't': {"class": "checkered-queen", moveas: 'q'}
+    };
+    return Object.assign(baseRes, checkered);
+  }
 
   setOtherVariables(fenParsed) {
     super.setOtherVariables(fenParsed);
@@ -130,110 +163,81 @@ export default class CheckeredRules extends ChessRules {
       const color2 = this.getColor(x2, y2);
       return color1 != color2 && [color1, color2].includes('c');
     }
-    // Checkered aren't captured
     return (
       color1 != color2 &&
-      color2 != "c" &&
+      color2 != "c" && //checkered aren't captured
       (color1 != "c" || color2 != this.turn)
     );
   }
 
-  // TODO::::
-  getPotentialMovesFrom([x, y], noswitch) {
-    let standardMoves = super.getPotentialMovesFrom([x, y]);
-    if (this.stage == 1) {
-      const color = this.turn;
-      // Post-processing: apply "checkerization" of standard moves
-      const lastRank = (color == "w" ? 0 : 7);
-      let moves = [];
-      // King is treated differently: it never turn checkered
-      if (this.getPiece(x, y) == V.KING) {
-        // If at least one checkered piece, allow switching:
-        if (
-          this.canSwitch && !noswitch &&
-          this.board.some(b => b.some(cell => cell[0] == 'c'))
-        ) {
-          const oppCol = V.GetOppCol(color);
-          moves.push(
-            new Move({
-              start: { x: x, y: y },
-              end: { x: this.kingPos[oppCol][0], y: this.kingPos[oppCol][1] },
-              appear: [],
-              vanish: []
-            })
-          );
-        }
-        return standardMoves.concat(moves);
+  postProcessPotentialMoves(moves) {
+    if (this.stage == 2 || moves.length == 0)
+      return moves;
+    const color = this.turn;
+    // Apply "checkerization" of standard moves
+    const lastRank = (color == "w" ? 0 : 7);
+    const [x, y] = [moves[0].start.x, moves[0].start.y];
+    let moves = [];
+    const piece = this.getPiece(x, y);
+    // King is treated differently: it never turn checkered
+    if (piece == 'k') {
+      // If at least one checkered piece, allow switching:
+      if (
+        this.canSwitch && !noswitch &&
+        this.board.some(b => b.some(cell => cell[0] == 'c'))
+      ) {
+        const oppCol = C.GetOppCol(color);
+        const oppKingPos = this.searchKingPos(oppCol)[0];
+        moves.push(
+          new Move({
+            start: { x: x, y: y },
+            end: { x: oppKingPos[0], y: oppKingPos[1] },
+            appear: [],
+            vanish: []
+          })
+        );
       }
-      standardMoves.forEach(m => {
-        if (m.vanish[0].p == V.PAWN) {
+      return moves;
+    }
+    if (piece == 'p') {
+      // Filter out forbidden pawn moves
+      moves = moves.filter(m => {
+        if (m.vanish[0].p == 'p') {
           if (
             Math.abs(m.end.x - m.start.x) == 2 &&
             !this.pawnFlags[this.turn][m.start.y]
           ) {
-            return; //skip forbidden 2-squares jumps
+            return false; //forbidden 2-squares jumps
           }
           if (
             this.board[m.end.x][m.end.y] == V.EMPTY &&
             m.vanish.length == 2 &&
             this.getColor(m.start.x, m.start.y) == "c"
           ) {
-            return; //checkered pawns cannot take en-passant
+            return false; //checkered pawns cannot take en-passant
           }
         }
-        if (m.vanish.length == 1)
-          // No capture
-          moves.push(m);
-        else {
-          // A capture occured (m.vanish.length == 2)
-          m.appear[0].c = "c";
-          moves.push(m);
-          if (
-            // Avoid promotions (already treated):
-            m.appear[0].p != m.vanish[1].p &&
-            (m.vanish[0].p != V.PAWN || m.end.x != lastRank)
-          ) {
-            // Add transformation into captured piece
-            let m2 = JSON.parse(JSON.stringify(m));
-            m2.appear[0].p = m.vanish[1].p;
-            moves.push(m2);
-          }
-        }
+        return true;
       });
-      return moves;
     }
-    return standardMoves;
-  }
-
-  // TODO: merge this into pieces() method
-  getPotentialPawnMoves([x, y]) {
-    const color = this.getColor(x, y);
-    if (this.stage == 2) {
-      const saveTurn = this.turn;
-      if (this.sideCheckered == this.turn) {
-        // Cannot change PawnSpecs.bidirectional, so cheat a little:
-        this.turn = 'w';
-        const wMoves = super.getPotentialPawnMoves([x, y]);
-        this.turn = 'b';
-        const bMoves = super.getPotentialPawnMoves([x, y]);
-        this.turn = saveTurn;
-        return wMoves.concat(bMoves);
+    let extraMoves = [];
+    moves.forEach(m => {
+      if (m.vanish.length == 2 && m.appear.length == 1)
+        // A capture occured
+        m.appear[0].c = "c";
+        if (
+          m.appear[0].p != m.vanish[1].p &&
+          // No choice if promotion:
+          (m.vanish[0].p != 'p' || m.end.x != lastRank)
+        ) {
+          // Add transformation into captured piece
+          let m2 = JSON.parse(JSON.stringify(m));
+          m2.appear[0].p = m.vanish[1].p;
+          extraMoves.push(m2);
+        }
       }
-      // Playing with both colors:
-      this.turn = color;
-      const moves = super.getPotentialPawnMoves([x, y]);
-      this.turn = saveTurn;
-      return moves;
-    }
-    let moves = super.getPotentialPawnMoves([x, y]);
-    // Post-process: set right color for checkered moves
-    if (color == 'c') {
-      moves.forEach(m => {
-        m.appear[0].c = 'c'; //may be done twice if capture
-        m.vanish[0].c = 'c';
-      });
-    }
-    return moves;
+    });
+    return moves.concat(extraMoves);
   }
 
   canIplay(side, [x, y]) {
@@ -264,15 +268,15 @@ export default class CheckeredRules extends ChessRules {
 
   // TODO: adapt, merge
   filterValid(moves) {
-    if (moves.length == 0) return [];
+    if (moves.length == 0)
+      return [];
     const color = this.turn;
-    const oppCol = V.GetOppCol(color);
-    const L = this.cmoves.length; //at least 1: init from FEN
-    const stage = this.stage; //may change if switch
+    const oppCol = C.GetOppCol(color);
     return moves.filter(m => {
       // Checkered cannot be under check (no king)
-      if (stage == 2 && this.sideCheckered == color) return true;
-      this.play(m);
+      if (stage == 2 && this.sideCheckered == color)
+        return true;
+      this.playOnBoard(m);
       let res = true;
       if (stage == 1) {
         if (m.appear.length == 0 && m.vanish.length == 0) {
@@ -284,7 +288,7 @@ export default class CheckeredRules extends ChessRules {
             this.getAllPotentialMoves().length > 0
           );
         }
-        else res = !this.oppositeMoves(this.cmoves[L - 1], m);
+        else res = !this.oppositeMoves(this.cmove, m);
       }
       if (res && m.appear.length > 0) res = !this.underCheck(color);
       // At stage 2, side with B & W can be undercheck with both kings:
@@ -312,7 +316,7 @@ export default class CheckeredRules extends ChessRules {
             )
           )
         ) {
-          const moves = this.getPotentialMovesFrom([i, j], "noswitch");
+          const moves = this.getPotentialMovesFrom([i, j]);
           if (moves.length > 0) {
             for (let k = 0; k < moves.length; k++)
               if (this.filterValid([moves[k]]).length > 0) return true;
