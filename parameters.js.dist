@@ -1,8 +1,8 @@
 const Params = {
 
   // Usage on client:
-  http_server: "http://localhost:8000", //https://xogo.live
-  socket_server: "ws://localhost:8080", //wss://xogo.live
+  http_server: "http://localhost:8000", //https://xogo.casa
+  socket_server: "ws://localhost:8080", //wss://xogo.casa
 
   // Usage on (socket) server:
   socket_port: 8080, //...
