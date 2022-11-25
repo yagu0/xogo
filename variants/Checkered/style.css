@@ -1,0 +1,17 @@
+@import url("/base_pieces.css");
+
+piece.checkered-pawn {
+  background-image: url('/variants/Checkered/pieces/cp.svg');
+}
+piece.checkered-rook {
+  background-image: url('/variants/Checkered/pieces/cr.svg');
+}
+piece.checkered-knight {
+  background-image: url('/variants/Checkered/pieces/cn.svg');
+}
+piece.checkered-bishop {
+  background-image: url('/variants/Checkered/pieces/cb.svg');
+}
+piece.checkered-queen {
+  background-image: url('/variants/Checkered/pieces/cq.svg');
+}
