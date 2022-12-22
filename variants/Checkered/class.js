@@ -60,6 +60,38 @@ export default class CheckeredRules extends ChessRules {
     return super.fen2board(f);
   }
 
+  getPartFen(o) {
+    let parts = super.getPartFen(o);
+    parts["cmove"] = this.getCmoveFen();
+    parts["stage"] = this.getStageFen();
+    return parts;
+  }
+
+  getCmoveFen() {
+    if (!this.cmove)
+      return "-";
+    return (
+      C.CoordsToSquare(this.cmove.start) + C.CoordsToSquare(this.cmove.end)
+    );
+  }
+
+  getStageFen() {
+    return (this.stage + this.sideCheckered);
+  }
+
+  getFlagsFen() {
+    let fen = super.getFlagsFen();
+    // Add pawns flags
+    for (let c of ["w", "b"])
+      for (let i = 0; i < 8; i++)
+        fen += (this.pawnFlags[c][i] ? "1" : "0");
+    return fen;
+  }
+
+  getPawnShift(color) {
+    return super.getPawnShift(color == 'c' ? this.turn : color);
+  }
+
   pieces(color, x, y) {
     let baseRes = super.pieces(color, x, y);
     if (
@@ -109,8 +141,7 @@ export default class CheckeredRules extends ChessRules {
     // Stage 1: as Checkered2. Stage 2: checkered pieces are autonomous
     const stageInfo = fenParsed.stage;
     this.stage = parseInt(stageInfo[0], 10);
-    this.canSwitch = (this.stage == 1 && stageInfo[1] != '-');
-    this.sideCheckered = (this.stage == 2 ? stageInfo[1] : undefined);
+    this.sideCheckered = (this.stage == 2 ? stageInfo[1] : "");
   }
 
   setFlags(fenflags) {
@@ -150,7 +181,7 @@ export default class CheckeredRules extends ChessRules {
   getCmove(move) {
     // No checkered move to undo at stage 2:
     if (this.stage == 1 && move.vanish.length == 1 && move.appear[0].c == "c")
-      return { start: move.start, end: move.end };
+      return {start: move.start, end: move.end};
     return null;
   }
 
@@ -183,7 +214,7 @@ export default class CheckeredRules extends ChessRules {
     if (piece == 'k') {
       // If at least one checkered piece, allow switching:
       if (
-        this.canSwitch && !noswitch &&
+        this.options["withswitch"] &&
         this.board.some(b => b.some(cell => cell[0] == 'c'))
       ) {
         const oppCol = C.GetOppCol(color);
@@ -256,9 +287,9 @@ export default class CheckeredRules extends ChessRules {
   oppositeMoves(m1, m2) {
     return (
       !!m1 &&
-      m2.appear[0].c == "c" &&
       m2.appear.length == 1 &&
       m2.vanish.length == 1 &&
+      m2.appear[0].c == "c" &&
       m1.start.x == m2.end.x &&
       m1.end.x == m2.start.x &&
       m1.start.y == m2.end.y &&
@@ -266,46 +297,36 @@ export default class CheckeredRules extends ChessRules {
     );
   }
 
-  // TODO: adapt, merge
   filterValid(moves) {
-    if (moves.length == 0)
-      return [];
     const color = this.turn;
-    const oppCol = C.GetOppCol(color);
-    return moves.filter(m => {
+    if (stage == 2 && this.sideCheckered == color)
       // Checkered cannot be under check (no king)
-      if (stage == 2 && this.sideCheckered == color)
-        return true;
+      return moves;
+    let kingPos = super.searchKingPos(color);
+    const oppCol = C.GetOppCol(color);
+    if (this.stage == 2)
+      // Must consider both kings (attacked by checkered side)
+      kingPos = [kingPos, super.searchKingPos(oppCol)];
+    return moves.filter(m => {
       this.playOnBoard(m);
       let res = true;
-      if (stage == 1) {
-        if (m.appear.length == 0 && m.vanish.length == 0) {
-          // Special "switch" move: kings must not be attacked by checkered.
-          // Not checking for oppositeMoves here: checkered are autonomous
-          res = (
-            !this.isAttacked(this.kingPos['w'], ['c']) &&
-            !this.isAttacked(this.kingPos['b'], ['c']) &&
-            this.getAllPotentialMoves().length > 0
-          );
-        }
-        else res = !this.oppositeMoves(this.cmove, m);
-      }
-      if (res && m.appear.length > 0) res = !this.underCheck(color);
-      // At stage 2, side with B & W can be undercheck with both kings:
-      if (res && stage == 2) res = !this.underCheck(oppCol);
-      this.undo(m);
+      if (stage == 1)
+        res = !this.oppositeMoves(this.cmove, m);
+      if (res && m.appear.length > 0)
+        // NOTE: oppCol might be inaccurate; fixed in underCheck()
+        res = !this.underCheck(kingPos, oppCol);
+      this.undoOnBoard(m);
       return res;
     });
   }
 
-  atLeastOneMove() {
-    const color = this.turn;
-    const oppCol = V.GetOppCol(color);
-    for (let i = 0; i < V.size.x; i++) {
-      for (let j = 0; j < V.size.y; j++) {
+  atLeastOneMove(color) {
+    const oppCol = C.GetOppCol(color);
+    for (let i = 0; i < this.size.x; i++) {
+      for (let j = 0; j < this.size.y; j++) {
         const colIJ = this.getColor(i, j);
         if (
-          this.board[i][j] != V.EMPTY &&
+          this.board[i][j] != "" &&
           (
             (this.stage == 1 && colIJ != oppCol) ||
             (this.stage == 2 &&
@@ -317,52 +338,25 @@ export default class CheckeredRules extends ChessRules {
           )
         ) {
           const moves = this.getPotentialMovesFrom([i, j]);
-          if (moves.length > 0) {
-            for (let k = 0; k < moves.length; k++)
-              if (this.filterValid([moves[k]]).length > 0) return true;
-          }
+          if (moves.some(m => this.filterValid([m]).length >= 1))
+            return true;
         }
       }
     }
     return false;
   }
 
-  // TODO: adapt
-  underCheck(color) {
+  underCheck(square_s, oppCol) {
     if (this.stage == 1)
-      return this.isAttacked(this.kingPos[color], [V.GetOppCol(color), "c"]);
-    if (color == this.sideCheckered) return false;
-    return (
-      this.isAttacked(this.kingPos['w'], ["c"]) ||
-      this.isAttacked(this.kingPos['b'], ["c"])
-    );
+      return super.underAttack(square_s, [oppCol, 'c']);
+    if (oppCol != this.sideCheckered)
+      return false; //checkered pieces is me, I'm not under check
+    return super.underAttack(square_s, 'c');
   }
 
-  play(move) {
-    move.flags = JSON.stringify(this.aggregateFlags());
-    this.epSquares.push(this.getEpSquare(move));
-    V.PlayOnBoard(this.board, move);
-    if (move.appear.length > 0 || move.vanish.length > 0)
-    {
-      this.turn = V.GetOppCol(this.turn);
-      this.movesCount++;
-    }
-    this.postPlay(move);
-  }
-
-  postPlay(move) {
-    if (move.appear.length == 0 && move.vanish.length == 0) {
-      this.stage = 2;
-      this.sideCheckered = this.turn;
-    }
-    else {
-      const c = move.vanish[0].c;
-      const piece = move.vanish[0].p;
-      if (piece == V.KING) {
-        this.kingPos[c][0] = move.appear[0].x;
-        this.kingPos[c][1] = move.appear[0].y;
-      }
-      super.updateCastleFlags(move, piece);
+  prePlay(move) {
+    if (move.appear.length > 0 && move.vanish.length > 0) {
+      super.prePlay(move);
       if (
         [1, 6].includes(move.start.x) &&
         move.vanish[0].p == V.PAWN &&
@@ -372,82 +366,56 @@ export default class CheckeredRules extends ChessRules {
         this.pawnFlags[move.start.x == 6 ? "w" : "b"][move.start.y] = false;
       }
     }
+  }
+
+  postPlay(move) {
+    if (move.appear.length == 0 && move.vanish.length == 0) {
+      this.stage = 2;
+      this.sideCheckered = this.turn;
+    }
+    else
+      super.postPlay(move);
     this.cmove = this.getCmove(move);
+  }
+
+  tryChangeTurn(move) {
+    if (move.appear.length > 0 && move.vanish.length > 0)
+      super.tryChangeTurn(move);
   }
 
   getCurrentScore() {
     const color = this.turn;
     if (this.stage == 1) {
-      if (this.atLeastOneMove()) return "*";
+      if (this.atLeastOneMove(color))
+        return "*";
       // Artifically change turn, for checkered pawns
-      this.turn = V.GetOppCol(this.turn);
-      const res =
-        this.isAttacked(this.kingPos[color], [V.GetOppCol(color), "c"])
-          ? color == "w"
-            ? "0-1"
-            : "1-0"
-          : "1/2";
-      this.turn = V.GetOppCol(this.turn);
+      const oppCol = C.GetOppCol(color);
+      this.turn = oppCol;
+      const kingPos = super.searchKingPos(color)[0];
+      let res = "1/2";
+      if (super.underAttack(kingPos, [oppCol, 'c']))
+        res = (color == "w" ? "0-1" : "1-0");
+      this.turn = color;
       return res;
     }
     // Stage == 2:
-    if (this.sideCheckered == this.turn) {
+    if (this.sideCheckered == color) {
       // Check if remaining checkered pieces: if none, I lost
       if (this.board.some(b => b.some(cell => cell[0] == 'c'))) {
-        if (!this.atLeastOneMove()) return "1/2";
+        if (!this.atLeastOneMove(color))
+          return "1/2";
         return "*";
       }
-      return color == 'w' ? "0-1" : "1-0";
+      return (color == 'w' ? "0-1" : "1-0");
     }
-    if (this.atLeastOneMove()) return "*";
-    let res = this.isAttacked(this.kingPos['w'], ["c"]);
-    if (!res) res = this.isAttacked(this.kingPos['b'], ["c"]);
-    if (res) return color == 'w' ? "0-1" : "1-0";
+    if (this.atLeastOneMove(color))
+      return "*";
+    let res = super.underAttack(super.searchKingPos(color)[0], 'c');
+    if (!res)
+      res = super.underAttack(super.searchKingPos(oppCol)[0], 'c');
+    if (res)
+      return (color == 'w' ? "0-1" : "1-0");
     return "1/2";
-  }
-
-  // TODO: adapt
-  static GenRandInitFen(options) {
-    const baseFen = ChessRules.GenRandInitFen(options);
-    return (
-      // Add 16 pawns flags + empty cmove + stage == 1:
-      baseFen.slice(0, -2) + "1111111111111111 - - 1" +
-      (!options["switch"] ? '-' : "")
-    );
-  }
-      {
-        cmove: fenParts[5],
-        stage: fenParts[6]
-      }
-
-  getCmoveFen() {
-    const L = this.cmoves.length;
-    return (
-      !this.cmoves[L - 1]
-        ? "-"
-        : ChessRules.CoordsToSquare(this.cmoves[L - 1].start) +
-          ChessRules.CoordsToSquare(this.cmoves[L - 1].end)
-    );
-  }
-
-  getStageFen() {
-    if (this.stage == 1) return "1" + (!this.canSwitch ? '-' : "");
-    // Stage == 2:
-    return "2" + this.sideCheckered;
-  }
-
-  getFen() {
-    return (
-      super.getFen() + " " + this.getCmoveFen() + " " + this.getStageFen()
-    );
-  }
-
-  getFlagsFen() {
-    let fen = super.getFlagsFen();
-    // Add pawns flags
-    for (let c of ["w", "b"])
-      for (let i = 0; i < 8; i++) fen += (this.pawnFlags[c][i] ? "1" : "0");
-    return fen;
   }
 
 };

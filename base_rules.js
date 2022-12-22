@@ -1171,8 +1171,12 @@ export default class ChessRules {
   ////////////////////////
   // PIECES SPECIFICATIONS
 
+  getPawnShift(color) {
+    return (color == "w" ? -1 : 1);
+  }
+
   pieces(color, x, y) {
-    const pawnShift = (color == "w" ? -1 : 1);
+    const pawnShift = this.getPawnShift(color);
     // NOTE: jump 2 squares from first rank (pawns can be here sometimes)
     const initRank = ((color == 'w' && x >= 6) || (color == 'b' && x <= 1));
     return {
@@ -2102,8 +2106,10 @@ export default class ChessRules {
   ////////////////////
   // MOVES VALIDATION
 
-  // Is piece (or square) at given position attacked by "oppCol" ?
+  // Is piece (or square) at given position attacked by "oppCol(s)" ?
   underAttack([x, y], oppCol) {
+    if (!Array.isArray(oppCol))
+      oppCol = [oppCol];
     // An empty square is considered as king,
     // since it's used only in getCastleMoves (TODO?)
     const king = this.board[x][y] == "" || this.isKing(x, y);
@@ -2113,7 +2119,7 @@ export default class ChessRules {
         this.findCapturesOn(
           [x, y],
           {
-            byCol: [oppCol],
+            byCol: oppCol,
             segments: this.options["cylinder"],
             one: true
           }
@@ -2129,7 +2135,7 @@ export default class ChessRules {
             segments: this.options["cylinder"],
             one: true
           },
-          ([i1, j1], [i2, j2]) => this.getColor(i2, j2) == oppCol
+          ([i1, j1], [i2, j2]) => oppCol.includes(this.getColor(i2, j2))
         )
       )
     );
