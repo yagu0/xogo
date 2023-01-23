@@ -470,7 +470,7 @@ export default class ChessRules {
   }
 
   getRankInReserve(c, p) {
-    const pieces = Object.keys(this.pieces());
+    const pieces = Object.keys(this.pieces(c, c, p));
     const lastIndex = pieces.findIndex(pp => pp == p)
     let toTest = pieces.slice(0, lastIndex);
     return toTest.reduce(
@@ -519,7 +519,6 @@ export default class ChessRules {
 
   re_drawBoardElements() {
     const board = this.getSvgChessboard();
-    const oppCol = C.GetOppCol(this.playerColor);
     const container = document.getElementById(this.containerId);
     const rc = container.getBoundingClientRect();
     let chessboard = container.querySelector(".chessboard");
@@ -1065,7 +1064,8 @@ export default class ChessRules {
   // Include square of the en-passant capturing square:
   enlightEnpassant() {
     // NOTE: shortcut, pawn has only one attack type, doesn't depend on square
-    const steps = this.pieces(this.playerColor)["p"].attack[0].steps;
+    // TODO: (0, 0) is wrong, would need to place an attacker here...
+    const steps = this.pieces(this.playerColor, 0, 0)["p"].attack[0].steps;
     for (let step of steps) {
       const x = this.epSquare.x - step[0],
             y = this.getY(this.epSquare.y - step[1]);
@@ -1141,7 +1141,7 @@ export default class ChessRules {
   getPieceType(x, y, p) {
     if (!p)
       p = this.getPiece(x, y);
-    return this.pieces()[p].moveas || p;
+    return this.pieces(this.getColor(x, y), x, y)[p].moveas || p;
   }
 
   isKing(x, y, p) {
@@ -1152,8 +1152,12 @@ export default class ChessRules {
     return !!C.CannibalKings[p];
   }
 
-  // Get opponent color
-  static GetOppCol(color) {
+  static GetOppTurn(color) {
+    return (color == 'w' ? 'b' : 'w');
+  }
+
+  // Get opponent color(s): may differ from turn (e.g. Checkered)
+  getOppCols(color) {
     return (color == "w" ? "b" : "w");
   }
 
@@ -1340,7 +1344,7 @@ export default class ChessRules {
     if (!this.options["madrasi"])
       return false;
     const color = this.getColor(x, y);
-    const oppCol = C.GetOppCol(color);
+    const oppCols = this.getOppCols(color);
     const piece = this.getPieceType(x, y);
     const stepSpec = this.getStepSpec(color, x, y, piece);
     const attacks = stepSpec.both.concat(stepSpec.attack);
@@ -1356,7 +1360,7 @@ export default class ChessRules {
         }
         if (
           this.onBoard(i, j) &&
-          this.getColor(i, j) == oppCol &&
+          oppCols.includes(this.getColor(i, j)) &&
           this.getPieceType(i, j) == piece
         ) {
           return true;
@@ -1368,7 +1372,6 @@ export default class ChessRules {
 
   // Stop at the first capture found
   atLeastOneCapture(color) {
-    const oppCol = C.GetOppCol(color);
     const allowed = (sq1, sq2) => {
       return (
         // NOTE: canTake is reversed for Zen.
@@ -1504,19 +1507,19 @@ export default class ChessRules {
     if (moves.length == 0)
       return [];
     const color = this.getColor(moves[0].start.x, moves[0].start.y);
-    const oppCol = C.GetOppCol(color);
+    const oppCols = this.getOppCols(color);
 
     if (this.options["capture"] && this.atLeastOneCapture(color))
-      moves = this.capturePostProcess(moves, oppCol);
+      moves = this.capturePostProcess(moves, oppCols);
 
     if (this.options["atomic"])
-      moves = this.atomicPostProcess(moves, color, oppCol);
+      moves = this.atomicPostProcess(moves, color, oppCols);
 
     if (
       moves.length > 0 &&
       this.getPieceType(moves[0].start.x, moves[0].start.y) == "p"
     ) {
-      moves = this.pawnPostProcess(moves, color, oppCol);
+      moves = this.pawnPostProcess(moves, color, oppCols);
     }
 
     if (this.options["cannibal"] && this.options["rifle"])
@@ -1526,22 +1529,22 @@ export default class ChessRules {
     return moves;
   }
 
-  capturePostProcess(moves, oppCol) {
+  capturePostProcess(moves, oppCols) {
     // Filter out non-capturing moves (not using m.vanish because of
     // self captures of Recycle and Teleport).
     return moves.filter(m => {
       return (
         this.board[m.end.x][m.end.y] != "" &&
-        this.getColor(m.end.x, m.end.y) == oppCol
+        oppCols.includes(this.getColor(m.end.x, m.end.y))
       );
     });
   }
 
-  atomicPostProcess(moves, color, oppCol) {
+  atomicPostProcess(moves, color, oppCols) {
     moves.forEach(m => {
       if (
         this.board[m.end.x][m.end.y] != "" &&
-        this.getColor(m.end.x, m.end.y) == oppCol
+        oppCols.includes(this.getColor(m.end.x, m.end.y))
       ) {
         // Explosion!
         let steps = [
@@ -1596,7 +1599,7 @@ export default class ChessRules {
     return moves;
   }
 
-  pawnPostProcess(moves, color, oppCol) {
+  pawnPostProcess(moves, color, oppCols) {
     let moreMoves = [];
     const lastRank = (color == "w" ? 0 : this.size.x - 1);
     const initPiece = this.getPiece(moves[0].start.x, moves[0].start.y);
@@ -1617,7 +1620,7 @@ export default class ChessRules {
       if (
         this.options["cannibal"] &&
         this.board[x2][y2] != "" &&
-        this.getColor(x2, y2) == oppCol
+        oppCols.includes(this.getColor(x2, y2))
       ) {
         finalPieces = [this.getPieceType(x2, y2)];
       }
@@ -1819,7 +1822,7 @@ export default class ChessRules {
   // Search for enemy (or not) pieces attacking [x, y]
   findCapturesOn([x, y], o, allowed) {
     if (!o.byCol)
-      o.byCol = [C.GetOppCol(this.getColor(x, y) || this.turn)];
+      o.byCol = this.getOppCols(this.getColor(x, y) || this.turn);
     let res = [];
     for (let i=0; i<this.size.x; i++) {
       for (let j=0; j<this.size.y; j++) {
@@ -1976,17 +1979,17 @@ export default class ChessRules {
   getEnpassantCaptures([x, y]) {
     const color = this.getColor(x, y);
     const shiftX = (color == 'w' ? -1 : 1);
-    const oppCol = C.GetOppCol(color);
+    const oppCols = this.getOppCols(color);
     if (
       this.epSquare &&
       this.epSquare.x == x + shiftX &&
       Math.abs(this.getY(this.epSquare.y - y)) == 1 &&
       // Doublemove (and Progressive?) guards:
       this.board[this.epSquare.x][this.epSquare.y] == "" &&
-      this.getColor(x, this.epSquare.y) == oppCol
+      oppCols.includes(this.getColor(x, this.epSquare.y))
     ) {
       const [epx, epy] = [this.epSquare.x, this.epSquare.y];
-      this.board[epx][epy] = oppCol + 'p';
+      this.board[epx][epy] = this.board[x][this.epSquares.y];
       let enpassantMove = this.getBasicMove([x, y], [epx, epy]);
       this.board[epx][epy] = "";
       const lastIdx = enpassantMove.vanish.length - 1; //think Rifle
@@ -2000,7 +2003,7 @@ export default class ChessRules {
     const c = this.getColor(x, y);
 
     // Castling ?
-    const oppCol = C.GetOppCol(c);
+    const oppCols = this.getOppCols(c);
     let moves = [];
     // King, then rook:
     finalSquares =
@@ -2036,7 +2039,7 @@ export default class ChessRules {
           // will be executed in filterValid() later.
           (
             i != finalSquares[castleSide][0] &&
-            this.underCheck([[x, i]], oppCol)
+            this.underCheck([[x, i]], oppCols)
           )
           ||
           (
@@ -2107,9 +2110,7 @@ export default class ChessRules {
   // MOVES VALIDATION
 
   // Is piece (or square) at given position attacked by "oppCol(s)" ?
-  underAttack([x, y], oppCol) {
-    if (!Array.isArray(oppCol))
-      oppCol = [oppCol];
+  underAttack([x, y], oppCols) {
     // An empty square is considered as king,
     // since it's used only in getCastleMoves (TODO?)
     const king = this.board[x][y] == "" || this.isKing(x, y);
@@ -2119,7 +2120,7 @@ export default class ChessRules {
         this.findCapturesOn(
           [x, y],
           {
-            byCol: oppCol,
+            byCol: oppCols,
             segments: this.options["cylinder"],
             one: true
           }
@@ -2135,17 +2136,17 @@ export default class ChessRules {
             segments: this.options["cylinder"],
             one: true
           },
-          ([i1, j1], [i2, j2]) => oppCol.includes(this.getColor(i2, j2))
+          ([i1, j1], [i2, j2]) => oppCols.includes(this.getColor(i2, j2))
         )
       )
     );
   }
 
   // Argument is (very generally) an array of squares (= arrays)
-  underCheck(square_s, oppCol) {
+  underCheck(square_s, oppCols) {
     if (this.options["taking"] || this.options["dark"])
       return false;
-    return square_s.some(sq => this.underAttack(sq, oppCol));
+    return square_s.some(sq => this.underAttack(sq, oppCols));
   }
 
   // Scan board for king(s)
@@ -2164,7 +2165,7 @@ export default class ChessRules {
   filterValid(moves, color) {
     if (!color)
       color = this.turn;
-    const oppCol = C.GetOppCol(color);
+    const oppCols = this.getOppCols(color);
     let kingPos = this.searchKingPos(color);
     let filtered = {}; //avoid re-checking similar moves (promotions...)
     return moves.filter(m => {
@@ -2188,7 +2189,7 @@ export default class ChessRules {
           else
             res = false; //king vanished
         }
-        res &&= !this.underCheck(kingPos, oppCol);
+        res &&= !this.underCheck(kingPos, oppCols);
         if (oldKingPP && newKingPP)
           kingPos[sqIdx] = [oldKingPP.x, oldKingPP.y];
         this.undoOnBoard(m);
@@ -2327,7 +2328,7 @@ export default class ChessRules {
 
   tryChangeTurn(move) {
     if (this.isLastMove(move)) {
-      this.turn = C.GetOppCol(this.turn);
+      this.turn = (this.turn == 'w' ? 'b' : 'w');
       this.movesCount++;
       this.subTurn = 1;
     }
@@ -2339,8 +2340,8 @@ export default class ChessRules {
     if (move.next)
       return false;
     const color = this.turn;
-    const oppKingPos = this.searchKingPos(C.GetOppCol(color));
-    if (oppKingPos.length == 0 || this.underCheck(oppKingPos, color))
+    const oppKingPos = this.searchKingPos(C.GetOppTurn(color));
+    if (oppKingPos.length == 0 || this.underCheck(oppKingPos, [color]))
       return true;
     return (
       (
@@ -2391,25 +2392,24 @@ export default class ChessRules {
     // Shortcut in case the score was computed before:
     if (move.result)
       return move.result;
-    const color = this.turn;
-    const oppCol = C.GetOppCol(color);
+    const oppTurn = C.GetOppTurn(this.turn);
     const kingPos = {
-      [color]: this.searchKingPos(color),
-      [oppCol]: this.searchKingPos(oppCol)
+      w: this.searchKingPos('w'),
+      b: this.searchKingPos('b')
     };
-    if (kingPos[color].length == 0 && kingPos[oppCol].length == 0)
+    if (kingPos[this.turn].length == 0 && kingPos[oppTurn].length == 0)
       return "1/2";
-    if (kingPos[color].length == 0)
+    if (kingPos[this.turn].length == 0)
       return (color == "w" ? "0-1" : "1-0");
-    if (kingPos[oppCol].length == 0)
+    if (kingPos[oppTurn].length == 0)
       return (color == "w" ? "1-0" : "0-1");
-    if (this.atLeastOneMove(color))
+    if (this.atLeastOneMove(this.turn))
       return "*";
     // No valid move: stalemate or checkmate?
-    if (!this.underCheck(kingPos[color], oppCol))
+    if (!this.underCheck(kingPos[this.turn], this.getOppCols(this.turn)))
       return "1/2";
     // OK, checkmate
-    return (color == "w" ? "0-1" : "1-0");
+    return (this.turn == "w" ? "0-1" : "1-0");
   }
 
   playVisual(move, r) {
