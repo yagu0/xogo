@@ -28,6 +28,12 @@ export default class CheckeredRules extends ChessRules {
     };
   }
 
+  static GetColorClass(c) {
+    if (c == 'c')
+      return "checkered";
+    return C.GetColorClass(c);
+  }
+
   static board2fen(b) {
     const checkered_codes = {
       p: "s",
@@ -58,6 +64,12 @@ export default class CheckeredRules extends ChessRules {
     if (Object.keys(checkered_pieces).includes(f))
       return "c" + checkered_pieces[f];
     return super.fen2board(f);
+  }
+
+  genRandInitBaseFen() {
+    let res = super.genRandInitBaseFen();
+    res.o.flags += "1".repeat(16); //pawns flags
+    return res;
   }
 
   getPartFen(o) {
@@ -243,7 +255,7 @@ export default class CheckeredRules extends ChessRules {
             return false; //forbidden 2-squares jumps
           }
           if (
-            this.board[m.end.x][m.end.y] == V.EMPTY &&
+            this.board[m.end.x][m.end.y] == "" &&
             m.vanish.length == 2 &&
             this.getColor(m.start.x, m.start.y) == "c"
           ) {
@@ -304,7 +316,7 @@ export default class CheckeredRules extends ChessRules {
 
   filterValid(moves) {
     const color = this.turn;
-    if (stage == 2 && this.sideCheckered == color)
+    if (this.stage == 2 && this.sideCheckered == color)
       // Checkered cannot be under check (no king)
       return moves;
     let kingPos = super.searchKingPos(color);
@@ -315,7 +327,7 @@ export default class CheckeredRules extends ChessRules {
     return moves.filter(m => {
       this.playOnBoard(m);
       let res = true;
-      if (stage == 1)
+      if (this.stage == 1)
         res = !this.oppositeMoves(this.cmove, m);
       if (res && m.appear.length > 0)
         res = !this.underCheck(kingPos, oppCols);
@@ -353,7 +365,7 @@ export default class CheckeredRules extends ChessRules {
   underCheck(square_s, oppCols) {
     if (this.stage == 2 && oppCol != this.sideCheckered)
       return false; //checkered pieces is me, I'm not under check
-    return super.underAttack(square_s, oppCols);
+    return square_s.some(sq => super.underAttack(sq, oppCols));
   }
 
   prePlay(move) {
@@ -361,7 +373,7 @@ export default class CheckeredRules extends ChessRules {
       super.prePlay(move);
       if (
         [1, 6].includes(move.start.x) &&
-        move.vanish[0].p == V.PAWN &&
+        move.vanish[0].p == 'p' &&
         Math.abs(move.end.x - move.start.x) == 2
       ) {
         // This move turns off a 2-squares pawn flag

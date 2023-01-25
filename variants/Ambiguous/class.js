@@ -45,7 +45,7 @@ export default class AmbiguousRules extends ChessRules {
   // Subturn 2: play a move for me (which just indicate a square).
   getPotentialMovesFrom([x, y]) {
     const color = this.turn;
-    const oppCol = C.GetOppCol(color);
+    const oppCol = C.GetOppTurn(color);
     if (this.subTurn == 2) {
       // Just play a normal move (which in fact only indicate a square)
       let movesHash = {};
@@ -161,7 +161,7 @@ export default class AmbiguousRules extends ChessRules {
 
   getCurrentScore() {
     // This function is only called at subTurn 1
-    const color = C.GetOppCol(this.turn);
+    const color = C.GetOppTurn(this.turn);
     if (this.searchKingPos(color).length == 0)
       return (color == 'w' ? "0-1" : "1-0");
     return "*";
@@ -170,7 +170,7 @@ export default class AmbiguousRules extends ChessRules {
   postPlay(move) {
     const color = this.turn;
     if (this.subTurn == 2 || this.searchKingPos(color).length == 0) {
-      this.turn = C.GetOppCol(color);
+      this.turn = C.GetOppTurn(color);
       this.movesCount++;
     }
     this.subTurn = 3 - this.subTurn;

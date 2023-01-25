@@ -27,7 +27,7 @@ export default class AbstractFlipRules extends ChessRules {
 
   flipColorOf(flips) {
     for (let xy of flips) {
-      const newColor = C.GetOppCol(this.getColor(xy.x, xy.y));
+      const newColor = C.GetOppTurn(this.getColor(xy.x, xy.y));
       this.board[xy.x][xy.y] = newColor + this.board[xy.x][xy.y][1];
     }
   }

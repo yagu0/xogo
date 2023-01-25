@@ -108,7 +108,7 @@ export default class AlapoRules extends ChessRules {
     // Try both colors (to detect potential suicides)
     let won = {};
     for (let c of ['w', 'b']) {
-      const oppCol = C.GetOppCol(c);
+      const oppCol = C.GetOppTurn(c);
       const goal = (c == 'w' ? 0 : 5);
       won[c] = this.board[goal].some((b,j) => {
         return (

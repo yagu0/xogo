@@ -118,7 +118,7 @@ export default class AvalancheRules extends ChessRules {
 
   postPlay(move) {
     const color = this.turn;
-    const oppCol = C.GetOppCol(color);
+    const oppCol = C.GetOppTurn(color);
     this.promotion = (
       this.subTurn == 2 &&
       move.end.x == (oppCol == 'w' ? 0 : this.size.x - 1) &&

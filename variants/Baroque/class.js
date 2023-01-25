@@ -99,7 +99,7 @@ export default class BaroqueRules extends AbstractSpecialCaptureRules {
   isImmobilized([x, y]) {
     const piece = this.getPiece(x, y);
     const color = this.getColor(x, y);
-    const oppCol = C.GetOppCol(color);
+    const oppCol = C.GetOppTurn(color);
     const adjacentSteps = this.pieces()['k'].moves[0].steps;
     for (let step of adjacentSteps) {
       const [i, j] = [x + step[0], this.getY(y + step[1])];

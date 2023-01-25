@@ -233,7 +233,7 @@ export default class BarioRules extends ChessRules {
   tryChangeTurn(move, captureUndef) {
     this.definition = null;
     this.subTurn = captureUndef ? 0 : 1;
-    this.turn = C.GetOppCol(this.turn);
+    this.turn = C.GetOppTurn(this.turn);
     this.movesCount++;
   }
 

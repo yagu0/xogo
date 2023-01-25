@@ -35,7 +35,7 @@ export default class BenedictRules extends AbstractFlipRules {
   }
 
   postProcessPotentialMoves(moves) {
-    const oppCol = C.GetOppCol(this.turn);
+    const oppCol = C.GetOppTurn(this.turn);
     let bMoves = super.postProcessPotentialMoves(moves);
     bMoves.forEach(m => {
       m.flips = [];

@@ -102,7 +102,7 @@ export default class ApocalypseRules extends ChessRules {
       }
     }
     else {
-      const oppCol = C.GetOppCol(this.getColor(x, y));
+      const oppCol = C.GetOppTurn(this.getColor(x, y));
       moves = super.getPotentialMovesFrom([x, y]).filter(m => {
         // Remove pawn push toward own color (absurd)
         return (
@@ -222,7 +222,7 @@ export default class ApocalypseRules extends ChessRules {
       if (!res.wm || !res.bm)
         return;
       for (let c of ['w', 'b']) {
-        const myMove = res[c + 'm'], oppMove = res[C.GetOppCol(c) + 'm'];
+        const myMove = res[c + 'm'], oppMove = res[C.GetOppTurn(c) + 'm'];
         if (
           // More general test than checking moves ends,
           // because of potential pawn relocation
@@ -306,7 +306,7 @@ export default class ApocalypseRules extends ChessRules {
       };
       this.playVisual(revFirstMove);
     }
-    this.turn = C.GetOppCol(color);
+    this.turn = C.GetOppTurn(color);
     this.movesCount++;
     this.subTurn = 1;
     this.firstMove = null;

@@ -220,7 +220,7 @@ export default class ChakartRules extends ChessRules {
       moves = this.getDropMovesFrom([x, y]);
     else if (this.egg == "kingboo") {
       const color = this.turn;
-      const oppCol = C.GetOppCol(color);
+      const oppCol = C.GetOppTurn(color);
       // Only allow to swap (non-immobilized!) pieces
       for (let i=0; i<this.size.x; i++) {
         for (let j=0; j<this.size.y; j++) {
@@ -282,7 +282,7 @@ export default class ChakartRules extends ChessRules {
 
   getPawnMovesFrom([x, y]) {
     const color = this.turn;
-    const oppCol = C.GetOppCol(color);
+    const oppCol = C.GetOppTurn(color);
     const shiftX = (color == 'w' ? -1 : 1);
     const firstRank = (color == "w" ? this.size.x - 1 : 0);
     let moves = [];
@@ -392,7 +392,7 @@ export default class ChakartRules extends ChessRules {
 
   play(move) {
     const color = this.turn;
-    const oppCol = C.GetOppCol(color);
+    const oppCol = C.GetOppTurn(color);
     this.egg = move.egg;
     if (move.egg == "toadette") {
       this.reserve = { w: {}, b: {} };
@@ -478,7 +478,7 @@ export default class ChakartRules extends ChessRules {
       )
     ) {
       // "Forgotten" promotion, which occurred after some effect
-      let moves = super.pawnPostProcess([move], color, C.GetOppCol(color));
+      let moves = super.pawnPostProcess([move], color, C.GetOppTurn(color));
       super.showChoices(moves, r);
     }
     else
@@ -589,8 +589,8 @@ export default class ChakartRules extends ChessRules {
       case "luigi":
       case "waluigi":
         // Change color of friendly or enemy piece, king excepted
-        const oldColor = (move.egg == "waluigi" ? color : C.GetOppCol(color));
-        const newColor = C.GetOppCol(oldColor);
+        const oldColor = (move.egg == "waluigi" ? color : C.GetOppTurn(color));
+        const newColor = C.GetOppTurn(oldColor);
         const coords = getRandomPiece(oldColor);
         if (coords) {
           const piece = this.getPiece(coords[0], coords[1]);

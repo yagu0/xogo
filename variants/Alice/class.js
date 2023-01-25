@@ -104,7 +104,7 @@ export default class AliceRules extends ChessRules {
 
   filterValid(moves) {
     const color = this.turn;
-    const oppCol = C.GetOppCol(color);
+    const oppCol = C.GetOppTurn(color);
     const kingPos = this.searchKingPos(color)[0];
     const kingPiece = this.getPiece(kingPos[0], kingPos[1]);
     return super.filterValid(moves).filter(m => {

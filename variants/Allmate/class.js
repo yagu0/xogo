@@ -35,7 +35,7 @@ export default class AllmateRules extends ChessRules {
     if (move.appear.length > 0)
       this.curMove = move;
     const color = this.turn;
-    const oppCol = C.GetOppCol(this.turn);
+    const oppCol = C.GetOppTurn(this.turn);
     let mv = new Move({
       start: this.curMove.end,
       end: this.curMove.end,
@@ -58,7 +58,7 @@ export default class AllmateRules extends ChessRules {
 
   // is piece on square x,y mated by color?
   isMated(x, y, color) {
-    const myColor = C.GetOppCol(color);
+    const myColor = C.GetOppTurn(color);
     if (!super.underAttack([x, y], color))
       return false;
     for (let i=0; i<this.size.x; i++) {

@@ -640,7 +640,7 @@ export default class ChessRules {
           const color = this.getColor(i, j);
           const piece = this.getPiece(i, j);
           addPiece(i, j, "g_pieces", this.pieces(color, i, j)[piece]["class"]);
-          this.g_pieces[i][j].classList.add(C.GetColorClass(color));
+          this.g_pieces[i][j].classList.add(V.GetColorClass(color));
           if (this.enlightened && !this.enlightened[i][j])
             this.g_pieces[i][j].classList.add("hidden");
         }
@@ -707,7 +707,7 @@ export default class ChessRules {
         rcontainer.appendChild(r_cell);
         let piece = document.createElement("piece");
         C.AddClass_es(piece, this.pieces(c, c, p)[p]["class"]);
-        piece.classList.add(C.GetColorClass(c));
+        piece.classList.add(V.GetColorClass(c));
         piece.style.width = "100%";
         piece.style.height = "100%";
         this.r_pieces[c][p] = piece;
@@ -1016,7 +1016,7 @@ export default class ChessRules {
       const cdisp = moves[i].choice || moves[i].appear[0].p;
       C.AddClass_es(piece,
         this.pieces(color, moves[i].end.x, moves[i].end.y)[cdisp]["class"]);
-      piece.classList.add(C.GetColorClass(color));
+      piece.classList.add(V.GetColorClass(color));
       piece.style.width = "100%";
       piece.style.height = "100%";
       choice.appendChild(piece);
@@ -2426,7 +2426,7 @@ export default class ChessRules {
       this.g_pieces[a.x][a.y] = document.createElement("piece");
       C.AddClass_es(this.g_pieces[a.x][a.y],
                     this.pieces(a.c, a.x, a.y)[a.p]["class"]);
-      this.g_pieces[a.x][a.y].classList.add(C.GetColorClass(a.c));
+      this.g_pieces[a.x][a.y].classList.add(V.GetColorClass(a.c));
       this.g_pieces[a.x][a.y].style.width = pieceWidth + "px";
       this.g_pieces[a.x][a.y].style.height = pieceWidth + "px";
       const [ip, jp] = this.getPixelPosition(a.x, a.y, r);
@@ -2503,8 +2503,8 @@ export default class ChessRules {
       C.RemoveClass_es(movingPiece, pieces[startCode]["class"]);
       C.AddClass_es(movingPiece, pieces[drag.p]["class"]);
       if (apparentColor != drag.c) {
-        movingPiece.classList.remove(C.GetColorClass(apparentColor));
-        movingPiece.classList.add(C.GetColorClass(drag.c));
+        movingPiece.classList.remove(V.GetColorClass(apparentColor));
+        movingPiece.classList.add(V.GetColorClass(drag.c));
       }
     }
     container.appendChild(movingPiece);

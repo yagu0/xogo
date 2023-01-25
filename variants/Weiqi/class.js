@@ -137,7 +137,7 @@ export default class WeiqiRules extends ChessRules {
     if (this.board[x][y] != "" || this.turn != this.playerColor)
       return null;
     const color = this.turn;
-    const oppCol = C.GetOppCol(color);
+    const oppCol = C.GetOppTurn(color);
     let move = new Move({
       appear: [new PiPo({x: x, y: y, c: color, p: 's'})],
       vanish: [],
@@ -201,7 +201,7 @@ export default class WeiqiRules extends ChessRules {
     if (move.pass) {
       if (this.turn != this.playerColor)
         super.displayMessage(null, "pass", "pass-text", 2000);
-      this.turn = C.GetOppCol(this.turn);
+      this.turn = C.GetOppTurn(this.turn);
     }
     else
       super.play(move);

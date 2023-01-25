@@ -23,7 +23,7 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
   addPincerCaptures(moves, byChameleon) {
     const steps = this.pieces()['p'].moves[0].steps;
     const color = this.turn;
-    const oppCol = C.GetOppCol(color);
+    const oppCol = C.GetOppTurn(color);
     moves.forEach(m => {
       if (byChameleon && m.start.x != m.end.x && m.start.y != m.end.y)
         // Chameleon not moving as pawn
@@ -61,7 +61,7 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
 
   addCoordinatorCaptures(moves, byChameleon) {
     const color = this.turn;
-    const oppCol = V.GetOppCol(color);
+    const oppCol = V.GetOppTurn(color);
     const kp = this.searchKingPos(color)[0];
     moves.forEach(m => {
       // Check piece-king rectangle (if any) corners for enemy pieces
@@ -91,7 +91,7 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
     // Look in every direction for captures
     const steps = this.pieces()['r'].moves[0].steps;
     const color = this.turn;
-    const oppCol = C.GetOppCol(color);
+    const oppCol = C.GetOppTurn(color);
     let moves = [];
     outerLoop: for (let step of steps) {
       let [i, j] = [x + step[0], this.getY(y + step[1])];
@@ -160,7 +160,7 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
     const adjacentSteps = this.pieces()['r'].moves[0].steps;
     let capturingPullDir = {};
     const color = this.turn;
-    const oppCol = C.GetOppCol(color);
+    const oppCol = C.GetOppTurn(color);
     if (type != "push") {
       adjacentSteps.forEach(step => {
         const [bi, bj] = [sx - step[0], this.getY(sy - step[1])];

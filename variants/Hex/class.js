@@ -66,7 +66,7 @@ export default class HexRules extends AbstractClickFillRules {
         new PiPo({
           x: coords.x,
           y: coords.y,
-          c: C.GetOppCol(this.turn),
+          c: C.GetOppTurn(this.turn),
           p: 'p'
         })
       );
@@ -168,11 +168,11 @@ export default class HexRules extends AbstractClickFillRules {
   play(move) {
     this.playOnBoard(move);
     this.movesCount++;
-    this.turn = C.GetOppCol(this.turn);
+    this.turn = C.GetOppTurn(this.turn);
   }
 
   getCurrentScore() {
-    const oppCol = C.GetOppCol(this.turn);
+    const oppCol = C.GetOppTurn(this.turn);
     // Search for connecting path of opp color:
     let explored = {}, component;
     let min, max;
