@@ -34,7 +34,7 @@ export default class CheckeredRules extends ChessRules {
     return C.GetColorClass(c);
   }
 
-  static board2fen(b) {
+  board2fen(b) {
     const checkered_codes = {
       p: "s",
       q: "t",
@@ -47,7 +47,7 @@ export default class CheckeredRules extends ChessRules {
     return super.board2fen(b);
   }
 
-  static fen2board(f) {
+  fen2board(f) {
     // Tolerate upper-case versions of checkered pieces (why not?)
     const checkered_pieces = {
       s: "p",
@@ -119,24 +119,33 @@ export default class CheckeredRules extends ChessRules {
 
   pieces(color, x, y) {
     let baseRes = super.pieces(color, x, y);
-    if (
-      this.getPiece(x, y) == 'p' &&
-      this.stage == 2 &&
-      this.getColor(x, y) == 'c'
-    ) {
+    if (this.getPiece(x, y) == 'p' && color == 'c') {
+      const pawnShift = this.getPawnShift(this.turn); //cannot trust color
+      const initRank = (
+        (this.stage == 2 && [1, 6].includes(x)) ||
+        (this.stage == 1 &&
+          ((x == 1 && this.turn == 'b') || (x == 6 && this.turn == 'w'))
+        )
+      );
       // Checkered pawns on stage 2 are bidirectional
-      const initRank = ((color == 'w' && x >= 6) || (color == 'b' && x <= 1));
+      let moveSteps = [[pawnShift, 0]],
+          attackSteps = [[pawnShift, 1], [pawnShift, -1]];
+      if (this.stage == 2) {
+        moveSteps.push([-pawnShift, 0]);
+        Array.prototype.push.apply(attackSteps,
+          [[-pawnShift, 1], [-pawnShift, -1]]);
+      }
       baseRes['p'] = {
         "class": "pawn",
         moves: [
           {
-            steps: [[1, 0], [-1, 0]],
+            steps: moveSteps,
             range: (initRank ? 2 : 1)
           }
         ],
         attack: [
           {
-            steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]],
+            steps: attackSteps,
             range: 1
           }
         ]
@@ -324,16 +333,25 @@ export default class CheckeredRules extends ChessRules {
       // Must consider both kings (attacked by checkered side)
       kingPos = [kingPos, super.searchKingPos(C.GetOppTurn(this.turn))];
     const oppCols = this.getOppCols(color);
-    return moves.filter(m => {
+    // Artificial turn change required, because canTake uses turn info.
+    // canTake is called from underCheck --> ... --> findDestSquares
+    this.turn = C.GetOppTurn(this.turn);
+    const filteredMoves = moves.filter(m => {
       this.playOnBoard(m);
+      if (m.vanish[0].p == 'k')
+        kingPos[0] = [m.appear[0].x, m.appear[0].y];
       let res = true;
       if (this.stage == 1)
         res = !this.oppositeMoves(this.cmove, m);
       if (res && m.appear.length > 0)
         res = !this.underCheck(kingPos, oppCols);
+      if (m.vanish[0].p == 'k')
+        kingPos[0] = [m.vanish[0].x, m.vanish[0].y];
       this.undoOnBoard(m);
       return res;
     });
+    this.turn = C.GetOppTurn(this.turn);
+    return filteredMoves;
   }
 
   atLeastOneMove(color) {

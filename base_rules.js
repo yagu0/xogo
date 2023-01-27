@@ -1849,9 +1849,7 @@ export default class ChessRules {
                 {
                   captureTarget: [x, y],
                   captureSteps: [{steps: [s], range: a.range}],
-                  segments: o.segments,
-                  attackOnly: true,
-                  one: false //one and captureTarget are mutually exclusive
+                  segments: o.segments
                 },
                 allowed
               );
@@ -1989,7 +1987,7 @@ export default class ChessRules {
       oppCols.includes(this.getColor(x, this.epSquare.y))
     ) {
       const [epx, epy] = [this.epSquare.x, this.epSquare.y];
-      this.board[epx][epy] = this.board[x][this.epSquares.y];
+      this.board[epx][epy] = this.board[x][this.epSquare.y];
       let enpassantMove = this.getBasicMove([x, y], [epx, epy]);
       this.board[epx][epy] = "";
       const lastIdx = enpassantMove.vanish.length - 1; //think Rifle
@@ -2167,36 +2165,30 @@ export default class ChessRules {
       color = this.turn;
     const oppCols = this.getOppCols(color);
     let kingPos = this.searchKingPos(color);
-    let filtered = {}; //avoid re-checking similar moves (promotions...)
     return moves.filter(m => {
-      const key = m.start.x + m.start.y + '.' + m.end.x + m.end.y;
-      if (!filtered[key]) {
-        this.playOnBoard(m);
-        let newKingPP = null,
-            sqIdx = 0,
-            res = true; //a priori valid
-        const oldKingPP =
-          m.vanish.find(v => this.isKing(0, 0, v.p) && v.c == color);
-        if (oldKingPP) {
-          // Search king in appear array:
-          newKingPP =
-            m.appear.find(a => this.isKing(0, 0, a.p) && a.c == color);
-          if (newKingPP) {
-            sqIdx = kingPos.findIndex(kp =>
-              kp[0] == oldKingPP.x && kp[1] == oldKingPP.y);
-            kingPos[sqIdx] = [newKingPP.x, newKingPP.y];
-          }
-          else
-            res = false; //king vanished
+      this.playOnBoard(m);
+      let newKingPP = null,
+          sqIdx = 0,
+          res = true; //a priori valid
+      const oldKingPP =
+        m.vanish.find(v => this.isKing(0, 0, v.p) && v.c == color);
+      if (oldKingPP) {
+        // Search king in appear array:
+        newKingPP =
+          m.appear.find(a => this.isKing(0, 0, a.p) && a.c == color);
+        if (newKingPP) {
+          sqIdx = kingPos.findIndex(kp =>
+            kp[0] == oldKingPP.x && kp[1] == oldKingPP.y);
+          kingPos[sqIdx] = [newKingPP.x, newKingPP.y];
         }
-        res &&= !this.underCheck(kingPos, oppCols);
-        if (oldKingPP && newKingPP)
-          kingPos[sqIdx] = [oldKingPP.x, oldKingPP.y];
-        this.undoOnBoard(m);
-        filtered[key] = res;
-        return res;
+        else
+          res = false; //king vanished
       }
-      return filtered[key];
+      res &&= !this.underCheck(kingPos, oppCols);
+      if (oldKingPP && newKingPP)
+        kingPos[sqIdx] = [oldKingPP.x, oldKingPP.y];
+      this.undoOnBoard(m);
+      return res;
     });
   }
 
@@ -2400,9 +2392,9 @@ export default class ChessRules {
     if (kingPos[this.turn].length == 0 && kingPos[oppTurn].length == 0)
       return "1/2";
     if (kingPos[this.turn].length == 0)
-      return (color == "w" ? "0-1" : "1-0");
+      return (this.turn == "w" ? "0-1" : "1-0");
     if (kingPos[oppTurn].length == 0)
-      return (color == "w" ? "1-0" : "0-1");
+      return (this.turn == "w" ? "1-0" : "0-1");
     if (this.atLeastOneMove(this.turn))
       return "*";
     // No valid move: stalemate or checkmate?
