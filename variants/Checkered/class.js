@@ -12,7 +12,7 @@ export default class CheckeredRules extends ChessRules {
           label: "Allow switching",
           variable: "withswitch",
           type: "checkbox",
-          defaut: false
+          defaut: true
         }
       ],
       styles: [
@@ -227,6 +227,7 @@ export default class CheckeredRules extends ChessRules {
   }
 
   postProcessPotentialMoves(moves) {
+    moves = super.postProcessPotentialMoves(moves);
     if (this.stage == 2 || moves.length == 0)
       return moves;
     const color = this.turn;
@@ -331,12 +332,11 @@ export default class CheckeredRules extends ChessRules {
     let kingPos = super.searchKingPos(color);
     if (this.stage == 2)
       // Must consider both kings (attacked by checkered side)
-      kingPos = [kingPos, super.searchKingPos(C.GetOppTurn(this.turn))];
+      kingPos.push(super.searchKingPos(C.GetOppTurn(this.turn))[0]);
     const oppCols = this.getOppCols(color);
-    // Artificial turn change required, because canTake uses turn info.
-    // canTake is called from underCheck --> ... --> findDestSquares
-    this.turn = C.GetOppTurn(this.turn);
     const filteredMoves = moves.filter(m => {
+      if (m.vanish.length == 0 && m.appear.length == 0)
+        return true; //switch move
       this.playOnBoard(m);
       if (m.vanish[0].p == 'k')
         kingPos[0] = [m.appear[0].x, m.appear[0].y];
@@ -350,7 +350,6 @@ export default class CheckeredRules extends ChessRules {
       this.undoOnBoard(m);
       return res;
     });
-    this.turn = C.GetOppTurn(this.turn);
     return filteredMoves;
   }
 
@@ -381,9 +380,14 @@ export default class CheckeredRules extends ChessRules {
   }
 
   underCheck(square_s, oppCols) {
-    if (this.stage == 2 && oppCol != this.sideCheckered)
+    if (this.stage == 2 && this.turn == this.sideCheckered)
       return false; //checkered pieces is me, I'm not under check
-    return square_s.some(sq => super.underAttack(sq, oppCols));
+    // Artificial turn change required, because canTake uses turn info.
+    // canTake is called from underCheck --> ... --> findDestSquares
+    this.turn = C.GetOppTurn(this.turn);
+    const res = square_s.some(sq => super.underAttack(sq, oppCols));
+    this.turn = C.GetOppTurn(this.turn);
+    return res;
   }
 
   prePlay(move) {
@@ -404,6 +408,8 @@ export default class CheckeredRules extends ChessRules {
     if (move.appear.length == 0 && move.vanish.length == 0) {
       this.stage = 2;
       this.sideCheckered = this.turn;
+      if (this.playerColor != this.turn)
+        super.displayMessage(null, "Autonomous checkered!", "info-text", 2000);
     }
     else
       super.postPlay(move);

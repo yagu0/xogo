@@ -15,3 +15,14 @@ piece.checkered.bishop {
 piece.checkered.queen {
   background-image: url('/variants/Checkered/pieces/cq.svg');
 }
+
+div.info-text {
+  position: relative;
+  margin-top: 15px;
+  width: 100%;
+  text-align: center;
+  background-color: transparent;
+  color: darkblue;
+  font-weight: bold;
+  font-size: 2em;
+}
