@@ -2320,7 +2320,7 @@ export default class ChessRules {
 
   tryChangeTurn(move) {
     if (this.isLastMove(move)) {
-      this.turn = (this.turn == 'w' ? 'b' : 'w');
+      this.turn = C.GetOppTurn(this.turn);
       this.movesCount++;
       this.subTurn = 1;
     }
@@ -2406,7 +2406,8 @@ export default class ChessRules {
 
   playVisual(move, r) {
     move.vanish.forEach(v => {
-      this.g_pieces[v.x][v.y].remove();
+      if (this.g_pieces[v.x][v.y]) //can be null (e.g. Apocalypse)
+        this.g_pieces[v.x][v.y].remove();
       this.g_pieces[v.x][v.y] = null;
     });
     let chessboard =
@@ -2475,6 +2476,10 @@ export default class ChessRules {
 
   animateMoving(start, end, drag, segments, cb) {
     let initPiece = this.getDomPiece(start.x, start.y);
+    if (!initPiece) { //TODO: shouldn't occur!
+      cb();
+      return;
+    }
     // NOTE: cloning often not required, but light enough, and simpler
     let movingPiece = initPiece.cloneNode();
     initPiece.style.opacity = "0";

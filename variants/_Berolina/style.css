@@ -1,6 +1,6 @@
 piece.black.pawn {
-  background-image: url('/variants/_Berolina/pieces/black_pawn.svg');
+  background-image: url('/pieces/_Berolina/black_pawn.svg');
 }
 piece.white.pawn {
-  background-image: url('/variants/_Berolina/pieces/white_pawn.svg');
+  background-image: url('/pieces/_Berolina/white_pawn.svg');
 }

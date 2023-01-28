@@ -3,10 +3,10 @@
 }
 
 piece.white.stone {
-  background-image: url('/variants/Weiqi/pieces/black_stone.svg');
+  background-image: url('/pieces/Weiqi/black_stone.svg');
 }
 piece.black.stone, piece.white.stone.one-color {
-  background-image: url('/variants/Weiqi/pieces/white_stone.svg');
+  background-image: url('/pieces/Weiqi/white_stone.svg');
 }
 
 button.pass-btn {

@@ -13,7 +13,7 @@ export default class BalaklavaRules extends ChessRules {
 
   pieces(color, x, y) {
     let res = super.pieces(color, x, y);
-    const knightSpec = res['n'];
+    const knightSpecMoves = res['n'].both;
     delete res['n'];
     res['m'] = {
       "class": "mammoth",
@@ -28,7 +28,11 @@ export default class BalaklavaRules extends ChessRules {
         }
       ]
     };
-    ['p', 'r', 'b', 'm', 'q'].forEach(p => res[p].moves = knightSpec.moves);
+    ['p', 'r', 'b', 'm', 'q'].forEach(p => {
+      if (!res[p].moves)
+        res[p].moves = [];
+      Array.prototype.push.apply(res[p].moves, knightSpecMoves);
+    });
     return res;
   }
 
@@ -43,7 +47,7 @@ export default class BalaklavaRules extends ChessRules {
     return {
       fen: s.b.join("") + "/pppppppp/8/8/8/8/PPPPPPPP/" +
            s.w.join("").toUpperCase(),
-      o: {}
+      o: {flags: s.flags}
     };
   }
 

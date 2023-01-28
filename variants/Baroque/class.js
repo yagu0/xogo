@@ -1,4 +1,4 @@
-import AbstractSpecialCaptureRules from "/variants/_SpecialCaptures.js";
+import AbstractSpecialCaptureRules from "/variants/_SpecialCaptures/class.js";
 import {FenUtil} from "/utils/setupPieces.js";
 import {Random} from "/utils/alea.js";
 
@@ -100,7 +100,7 @@ export default class BaroqueRules extends AbstractSpecialCaptureRules {
     const piece = this.getPiece(x, y);
     const color = this.getColor(x, y);
     const oppCol = C.GetOppTurn(color);
-    const adjacentSteps = this.pieces()['k'].moves[0].steps;
+    const adjacentSteps = this.pieces()['k'].both[0].steps;
     for (let step of adjacentSteps) {
       const [i, j] = [x + step[0], this.getY(y + step[1])];
       if (

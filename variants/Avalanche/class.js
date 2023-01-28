@@ -7,6 +7,14 @@ export default class AvalancheRules extends ChessRules {
   static get Options() {
     return {
       select: C.Options.select,
+      input: [
+        {
+          label: "Balanced",
+          variable: "balanced",
+          type: "checkbox",
+          defaut: false
+        }
+      ],
       styles: [
         "atomic",
         "cannibal",
@@ -116,35 +124,46 @@ export default class AvalancheRules extends ChessRules {
     return false;
   }
 
-  postPlay(move) {
+  tryChangeTurn(move) {
     const color = this.turn;
     const oppCol = C.GetOppTurn(color);
-    this.promotion = (
-      this.subTurn == 2 &&
-      move.end.x == (oppCol == 'w' ? 0 : this.size.x - 1) &&
-      move.vanish[0].p == 'p'
-    );
-    if (this.subTurn == 0) {
-      this.subTurn++;
-      if (!this.atLeastOneMove(color)) {
-        move.result = "1/2"; //avoid re-computation
-        this.turn = oppCol;
+    const incrementTurn = () => {
+      if (this.options["balanced"] && this.movesCount == 0) {
+        // No pawn push on move 1:
+        return true;
       }
-    }
-    else if (this.subTurn == 2) {
-      this.turn = oppCol;
-      this.subTurn = this.promotion ? 0 : 1;
-    }
-    else { //subTurn == 1, usual case
+      this.promotion = (
+        this.subTurn == 2 &&
+        move.end.x == (oppCol == 'w' ? 0 : this.size.x - 1) &&
+        move.vanish[0].p == 'p'
+      );
+      if (this.subTurn == 0) {
+        this.subTurn++;
+        if (!this.atLeastOneMove(color)) {
+          move.result = "1/2"; //avoid re-computation
+          return true;
+        }
+        return false;
+      }
+      if (this.subTurn == 2) {
+        this.subTurn = (this.promotion ? 0 : 1);
+        return true;
+      }
+      // subTurn == 1, usual case
       const kingCapture = this.searchKingPos(oppCol).length == 0;
       if (kingCapture)
         move.result = (color == 'w' ? "1-0" : "0-1");
-      if (!kingCapture && this.atLeastOnePawnPush(oppCol))
-        this.subTurn++;
-      else {
-        this.turn = oppCol;
-        this.subTurn = this.promotion ? 0 : 1;
+      if (kingCapture || !this.atLeastOnePawnPush(oppCol)) {
+        this.subTurn = (this.promotion ? 0 : 1);
+        return true;
       }
+      // A pawn push is possible: usual case
+      this.subTurn++;
+      return false;
+    };
+    if (incrementTurn()) {
+      this.turn = oppCol;
+      this.movesCount++;
     }
   }
 

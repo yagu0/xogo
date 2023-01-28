@@ -112,7 +112,7 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
         [i, j] = [i + step[0], this.getY(j + step[1])];
         while (this.onBoard(i, j) && this.board[i][j] == "") {
           let mv = this.getBasicMove([x, y], [i, j]);
-          Array.prorotype.push.apply(mv.vanish, vanished);
+          Array.prototype.push.apply(mv.vanish, vanished);
           moves.push(mv);
           [i, j] = [i + step[0], this.getY(j + step[1])];
         }
@@ -133,7 +133,7 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
   getChameleonCaptures(moves, pushPullType, onlyOneJump) {
     const [x, y] = [moves[0].start.x, moves[0].start.y];
     moves = moves.concat(
-      this.getKnightCaptures([x, y], "asChameleon", onlyOneJump));
+      this.getLeaperCaptures([x, y], "asChameleon", onlyOneJump));
     // No "king capture" because king cannot remain under check
     this.addPincerCaptures(moves, "asChameleon");
     this.addCoordinatorCaptures(moves, "asChameleon");
@@ -177,8 +177,8 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
     moves.forEach(m => {
       const [ex, ey] = [m.end.x, m.end.y];
       const step = [
-        ex != x ? (ex - x) / Math.abs(ex - x) : 0,
-        ey != y ? (ey - y) / Math.abs(ey - y) : 0
+        ex != sx ? (ex - sx) / Math.abs(ex - sx) : 0,
+        ey != sy ? (ey - sy) / Math.abs(ey - sy) : 0
       ];
       let vanishPull, vanishPush;
       if (type != "pull") {
@@ -194,7 +194,7 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
         }
       }
       if (capturingPullDir[step[0] + "." + step[1]]) {
-        const [bi, bj] = [x - step[0], this.getY(y - step[1])];
+        const [bi, bj] = [sx - step[0], this.getY(sy - step[1])];
         vanishPull =
           new PiPo({x: bi, y: bj, p: this.getPiece(bi, bj), c: oppCol});
       }

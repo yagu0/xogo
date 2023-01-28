@@ -156,7 +156,7 @@ export default class AvalamRules extends ChessRules {
     if (height == 5)
       return [];
     let moves = [];
-    for (let s of this.pieces()['b'].moves[0].steps) {
+    for (let s of this.pieces(this.turn, x, y)['b'].both[0].steps) {
       const [i, j] = [x + s[0], y + s[1]];
       if (
         this.onBoard(i, j) &&
