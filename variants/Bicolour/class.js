@@ -4,12 +4,38 @@ import {ArrayFun} from "/utils/array.js";
 
 export default class BicolourRules extends ChessRules {
 
+  static get Options() {
+    return {
+      select: C.Options.select,
+      input: [
+        {
+          label: "King takes all",
+          variable: "takeboth",
+          type: "checkbox",
+          defaut: true
+        },
+        {
+          label: "Capture king",
+          variable: "taking",
+          type: "checkbox",
+          defaut: false
+        }
+      ],
+      styles: ["balance", "capture", "cylinder", "dark",
+               "doublemove", "madrasi", "progressive", "zen"]
+    };
+  }
+
   get hasFlags() {
     return false;
   }
 
   canTake([x1, y1], [x2, y2]) {
-    return (this.getPiece(x2, y2) == 'k' || super.canTake([x1, y1], [x2, y2]));
+    return (
+      this.getPiece(x2, y2) == 'k' ||
+      (this.getPiece(x1, y1) == 'k' && this.options["takeboth"]) ||
+      super.canTake([x1, y1], [x2, y2])
+    );
   }
 
   genRandInitBaseFen() {
@@ -102,10 +128,7 @@ export default class BicolourRules extends ChessRules {
   }
 
   underCheck(square_s) {
-    return (
-      this.underAttack(square_s[0], 'w') ||
-      this.underAttack(square_s[0], 'b')
-    );
+    return super.underCheck(square_s, ['w', 'b']);
   }
 
 };

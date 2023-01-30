@@ -1321,6 +1321,11 @@ export default class ChessRules {
     return this.getColor(x1, y1) !== this.getColor(x2, y2);
   }
 
+  // TODO: currently unused, but makes sense?
+  canSelfTake([x1, y1], [x2, y2]) {
+    return true;
+  }
+
   canStepOver(i, j, p) {
     // In some variants, objects on boards don't stop movement (Chakart)
     return this.board[i][j] == "";
@@ -1724,7 +1729,7 @@ export default class ChessRules {
     }
     return squares.map(s => {
       let mv = this.getBasicMove([x, y], s.sq);
-      if (this.options["cylinder"] && s.segments.length >= 2)
+      if (this.options["cylinder"] && !!s.segments && s.segments.length >= 2)
         mv.segments = s.segments;
       return mv;
     });
@@ -1742,7 +1747,7 @@ export default class ChessRules {
     const addSquare = ([i, j]) => {
       let elt = {sq: [i, j]};
       if (o.segments)
-        elt.segments = this.getSegments(segments, segStart, end);
+        elt.segments = this.getSegments(segments, segStart, [i, j]);
       res.push(elt);
     };
     const exploreSteps = (stepArray, mode) => {

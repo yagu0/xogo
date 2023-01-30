@@ -594,6 +594,10 @@ export default class ChakartRules extends ChessRules {
         const coords = getRandomPiece(oldColor);
         if (coords) {
           const piece = this.getPiece(coords[0], coords[1]);
+          if (coords[0] == move.start.x && coords[1] == move.start.y) {
+            // Moving piece change color: fix coords
+            coords = [move.end.x, move.end.y];
+          }
           em = new Move({
             appear: [
               new PiPo({x: coords[0], y: coords[1], c: newColor, p: piece})

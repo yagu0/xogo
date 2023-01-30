@@ -5,7 +5,8 @@ export default class BerolinaRules extends ChessRules {
 
   pieces(color, x, y) {
     let res = super.pieces(color, x, y);
-    res['p'] = BerolinaPawnSpec(color);
+    const initRank = ((color == 'w' && x == 6) || (color == 'b' && x == 1));
+    res['p'] = BerolinaPawnSpec(color, initRank);
     return res;
   }
 

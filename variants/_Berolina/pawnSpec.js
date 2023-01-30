@@ -1,4 +1,4 @@
-export default function (color) {
+export default function (color, initRank) {
 
   const pawnShift = (color == "w" ? -1 : 1);
   return {
@@ -6,7 +6,7 @@ export default function (color) {
     moves: [
       {
         steps: [[pawnShift, 1], [pawnShift, -1]],
-        range: 1
+        range: (initRank ? 2 : 1)
       }
     ],
     attack: [

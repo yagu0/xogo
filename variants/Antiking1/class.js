@@ -13,7 +13,7 @@ export default class Antiking1Rules extends AbstractAntikingRules {
 
   pieces(color, x, y) {
     let res = super.pieces(color, x, y);
-    res['p'] = BerolinaPawnSpec(color);
+    res['p'] = BerolinaPawnSpec(color); //no 2-squares moves
     return res;
   }
 

@@ -60,10 +60,10 @@ export default class AbstractAntikingRules extends ChessRules {
     square_s.forEach(sq => {
       switch (this.getPiece(sq[0], sq[1])) {
         case 'k':
-          res ||= super.underAttack(sq, color);
+          res ||= super.underAttack(sq, [color]);
           break;
         case 'a':
-          res ||= !super.underAttack(sq, color);
+          res ||= !super.underAttack(sq, [color]);
           break;
       }
     });

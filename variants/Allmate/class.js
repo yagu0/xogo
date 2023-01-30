@@ -59,7 +59,7 @@ export default class AllmateRules extends ChessRules {
   // is piece on square x,y mated by color?
   isMated(x, y, color) {
     const myColor = C.GetOppTurn(color);
-    if (!super.underAttack([x, y], color))
+    if (!super.underAttack([x, y], [color]))
       return false;
     for (let i=0; i<this.size.x; i++) {
       for (let j=0; j<this.size.y; j++) {
@@ -71,7 +71,7 @@ export default class AllmateRules extends ChessRules {
             if (i == x && j == y) {
               // The mated-candidate has moved itself
               testSquare = [move.end.x, move.end.y]; }
-            const res = this.underAttack(testSquare, color);
+            const res = this.underAttack(testSquare, [color]);
             this.undoOnBoard(move);
             if (!res)
               return false;

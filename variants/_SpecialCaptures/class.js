@@ -22,7 +22,7 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
   // Modify capturing moves among listed pincer moves
   addPincerCaptures(moves, byChameleon) {
     const steps = this.pieces()['p'].moves[0].steps;
-    const color = this.turn;
+    const color = moves[0].vanish[0].c;
     const oppCol = C.GetOppTurn(color);
     moves.forEach(m => {
       if (byChameleon && m.start.x != m.end.x && m.start.y != m.end.y)
@@ -60,7 +60,7 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
   }
 
   addCoordinatorCaptures(moves, byChameleon) {
-    const color = this.turn;
+    const color = moves[0].vanish[0].c;
     const oppCol = V.GetOppTurn(color);
     const kp = this.searchKingPos(color)[0];
     moves.forEach(m => {
@@ -90,7 +90,7 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
   getLeaperCaptures([x, y], byChameleon, onlyOne) {
     // Look in every direction for captures
     const steps = this.pieces()['r'].moves[0].steps;
-    const color = this.turn;
+    const color = this.getColor(x, y);
     const oppCol = C.GetOppTurn(color);
     let moves = [];
     outerLoop: for (let step of steps) {
@@ -154,12 +154,10 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
 
   // type: nothing (freely, capture all), or pull or push, or "exclusive"
   addPushmePullyouCaptures(moves, byChameleon, type) {
-    if (moves.length == 0)
-      return;
     const [sx, sy] = [moves[0].start.x, moves[0].start.y];
     const adjacentSteps = this.pieces()['r'].moves[0].steps;
     let capturingPullDir = {};
-    const color = this.turn;
+    const color = moves[0].vanish[0].c;
     const oppCol = C.GetOppTurn(color);
     if (type != "push") {
       adjacentSteps.forEach(step => {
@@ -216,14 +214,14 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
     });
   }
 
-  underAttack([x, y], oppCol) {
+  underAttack([x, y], oppCols) {
     // Generate all potential opponent moves, check if king captured.
     // TODO: do it more efficiently.
     const color = this.getColor(x, y);
     for (let i = 0; i < this.size.x; i++) {
       for (let j = 0; j < this.size.y; j++) {
         if (
-          this.board[i][j] != "" && this.getColor(i, j) == oppCol &&
+          this.board[i][j] != "" && oppCols.includes(this.getColor(i, j)) &&
           this.getPotentialMovesFrom([i, j]).some(m => {
             return (
               m.vanish.length >= 2 &&

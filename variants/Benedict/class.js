@@ -49,7 +49,7 @@ export default class BenedictRules extends AbstractFlipRules {
           },
           ([i1, j1], [i2, j2]) => {
             return (
-              super.canTake([i1, j1], [i2, j2]) &&
+              this.getColor(i2, j2) == oppCol &&
               (!this.options["zen"] || this.getPiece(i2, j2) == 'k')
             );
           }
@@ -61,8 +61,7 @@ export default class BenedictRules extends AbstractFlipRules {
               byCol: [oppCol],
               segments: this.options["cylinder"]
             },
-            ([i1, j1], [i2, j2]) =>
-              this.getPiece(i1, j1) != 'k' && super.canTake([i2, j2], [i1, j1])
+            ([i1, j1], [i2, j2]) => this.getPiece(i1, j1) != 'k'
           );
           Array.prototype.push.apply(attacks, zenAttacks);
         }
