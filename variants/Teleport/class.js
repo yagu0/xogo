@@ -5,8 +5,12 @@ export default class TeleportRules extends ChessRules {
   static get Options() {
     return {
       select: C.Options.select,
-      // TODO? option "teleport king"?
-      input: C.Options.input,
+      input: C.Options.input.concat({
+        label: "Teleport king",
+        variable: "tpking",
+        type: "checkbox",
+        defaut: false
+      }),
       styles: C.Options.styles.filter(s => s != "teleport")
     };
   }
@@ -14,6 +18,10 @@ export default class TeleportRules extends ChessRules {
   constructor(o) {
     o.options["teleport"] = true;
     super(o);
+  }
+
+  canSelfTake([x1, y1], [x2, y2]) {
+    return (this.options["tpking"] || !this.isKing(x2, y2));
   }
 
 };

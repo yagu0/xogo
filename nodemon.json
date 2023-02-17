@@ -1,0 +1,26 @@
+{
+  "ignore": [
+    "app.js",
+    "assets/",
+    "assets.zip","
+    "base_pieces.css",
+    "base_rules.js",
+    "common.css",
+    "favicon.ico",
+    "index.html",
+    "LICENSE",
+    "parameters.js",
+    "parameters.js.dist",
+    "pieces/",
+    "README.md",
+    "start.sh",
+    "stop.sh",
+    "utils/",
+    "TODO",
+    "variants/",
+    "variants.js"
+  ],
+  "watch": [
+    "server.js"
+  ]
+}

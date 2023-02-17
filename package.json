@@ -2,11 +2,11 @@
   "dependencies": {
     "ws": "^7.5.3"
   },
-  "devDependencies": {
-    "chokidar": "^3.5.3"
-  },
   "scripts": {
     "start": "./start.sh",
     "stop": "./stop.sh"
+  },
+  "devDependencies": {
+    "chokidar": "^3.5.3"
   }
 }

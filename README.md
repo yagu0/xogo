@@ -14,6 +14,6 @@ Rename parameters.js.dist &rarr; parameters.js, and edit file. <br/>
 ```npm i```
 
 Generate some pieces: <br/>
-```python generateSVG.py``` in variants/Avalam/pieces
+```python generateSVG.py``` in pieces/Avalam
 
 ```./start.sh``` (and later, ```./stop.sh```)

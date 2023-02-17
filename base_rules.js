@@ -1321,9 +1321,9 @@ export default class ChessRules {
     return this.getColor(x1, y1) !== this.getColor(x2, y2);
   }
 
-  // TODO: currently unused, but makes sense?
+  // Teleport & Recycle. Assumption: color(x1,y1) == color(x2,y2)
   canSelfTake([x1, y1], [x2, y2]) {
-    return true;
+    return !this.isKing(x2, y2);
   }
 
   canStepOver(i, j, p) {
@@ -1488,6 +1488,7 @@ export default class ChessRules {
   }
 
   // All possible moves from selected square
+  // TODO: generalize usage if arg "color" (e.g. Checkered)
   getPotentialMovesFrom([x, y], color) {
     if (this.subTurnTeleport == 2)
       return [];
@@ -1722,8 +1723,12 @@ export default class ChessRules {
           segments: this.options["cylinder"],
           stepSpec: stepSpec
         },
-        ([i1, j1], [i2, j2]) =>
-          this.getColor(i2, j2) == color && !this.isKing(i2, j2)
+        ([i1, j1], [i2, j2]) => {
+          return (
+            this.getColor(i2, j2) == color &&
+            this.canSelfTake([i1, j1], [i2, j2])
+          );
+        }
       );
       Array.prototype.push.apply(squares, selfCaptures);
     }
@@ -2164,6 +2169,31 @@ export default class ChessRules {
     return res;
   }
 
+  // cb: callback returning a boolean (false if king missing)
+  trackKingWrap(move, kingPos, cb) {
+    let newKingPP = null,
+        sqIdx = 0,
+        res = true; //a priori valid
+    const oldKingPP =
+      move.vanish.find(v => this.isKing(0, 0, v.p) && v.c == color);
+    if (oldKingPP) {
+      // Search king in appear array:
+      newKingPP =
+        move.appear.find(a => this.isKing(0, 0, a.p) && a.c == color);
+      if (newKingPP) {
+        sqIdx = kingPos.findIndex(kp =>
+          kp[0] == oldKingPP.x && kp[1] == oldKingPP.y);
+        kingPos[sqIdx] = [newKingPP.x, newKingPP.y];
+      }
+      else
+        res = false; //king vanished
+    }
+    res &&= cb(kingPos);
+    if (oldKingPP && newKingPP)
+      kingPos[sqIdx] = [oldKingPP.x, oldKingPP.y];
+    return res;
+  }
+
   // 'color' arg because some variants (e.g. Refusal) check opponent moves
   filterValid(moves, color) {
     if (!color)
@@ -2172,26 +2202,9 @@ export default class ChessRules {
     let kingPos = this.searchKingPos(color);
     return moves.filter(m => {
       this.playOnBoard(m);
-      let newKingPP = null,
-          sqIdx = 0,
-          res = true; //a priori valid
-      const oldKingPP =
-        m.vanish.find(v => this.isKing(0, 0, v.p) && v.c == color);
-      if (oldKingPP) {
-        // Search king in appear array:
-        newKingPP =
-          m.appear.find(a => this.isKing(0, 0, a.p) && a.c == color);
-        if (newKingPP) {
-          sqIdx = kingPos.findIndex(kp =>
-            kp[0] == oldKingPP.x && kp[1] == oldKingPP.y);
-          kingPos[sqIdx] = [newKingPP.x, newKingPP.y];
-        }
-        else
-          res = false; //king vanished
-      }
-      res &&= !this.underCheck(kingPos, oppCols);
-      if (oldKingPP && newKingPP)
-        kingPos[sqIdx] = [oldKingPP.x, oldKingPP.y];
+      const res = this.trackKingWrap(m, kingPos, (kp) => {
+        return !this.underCheck(kp, oppCols);
+      });
       this.undoOnBoard(m);
       return res;
     });
@@ -2367,7 +2380,7 @@ export default class ChessRules {
         if (this.board[i][j] != "" && this.getColor(i, j) == color) {
           // NOTE: in fact searching for all potential moves from i,j.
           //       I don't believe this is an issue, for now at least.
-          const moves = this.getPotentialMovesFrom([i, j]);
+          const moves = this.getPotentialMovesFrom([i, j], color);
           if (moves.some(m => this.filterValid([m]).length >= 1))
             return true;
         }

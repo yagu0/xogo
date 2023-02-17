@@ -27,7 +27,7 @@ const variants = [
   {name: 'Capture', desc: 'Mandatory captures'},
   {name: 'Chakart', desc: 'Capture the princess'},
   {name: 'Checkered', desc: 'Shared pieces'},
-//  {name: 'Checkless', desc: 'No-check mode'},
+  {name: 'Checkless', desc: 'No-check mode'},
   {name: 'Chess960', disp: "Chess 960", desc: "Standard rules"},
 //  {name: 'Circular', desc: 'Run forward'},
 //  {name: 'Clorange', desc: 'A Clockwork Orange', disp: 'Clockwork Orange'},
