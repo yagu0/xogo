@@ -122,6 +122,11 @@ export default class ChessRules {
     return false;
   }
 
+  // Some variants do not flip board as black
+  get flippedBoard() {
+    return (this.playerColor == 'b');
+  }
+
   // Some variants use click infos:
   doClick(coords) {
     if (typeof coords.x != "number")
@@ -566,7 +571,7 @@ export default class ChessRules {
 
   // Get SVG board (background, no pieces)
   getSvgChessboard() {
-    const flipped = (this.playerColor == 'b');
+    const flipped = this.flippedBoard;
     let board = `
       <svg
         viewBox="0 0 ${10*this.size.y} ${10*this.size.x}"
@@ -830,7 +835,7 @@ export default class ChessRules {
     }
     else {
       const sqSize = r.width / this.size.y;
-      const flipped = (this.playerColor == 'b');
+      const flipped = this.flippedBoard;
       x = (flipped ? this.size.y - 1 - j : j) * sqSize;
       y = (flipped ? this.size.x - 1 - i : i) * sqSize;
     }
@@ -1067,7 +1072,7 @@ export default class ChessRules {
     // TODO: (0, 0) is wrong, would need to place an attacker here...
     const steps = this.pieces(this.playerColor, 0, 0)["p"].attack[0].steps;
     for (let step of steps) {
-      const x = this.epSquare.x - step[0],
+      const x = this.epSquare.x - step[0], //NOTE: epSquare.x not on edge
             y = this.getY(this.epSquare.y - step[1]);
       if (
         this.onBoard(x, y) &&
@@ -1178,18 +1183,19 @@ export default class ChessRules {
   getPawnShift(color) {
     return (color == "w" ? -1 : 1);
   }
+  isPawnInitRank(x, color) {
+    return (color == 'w' && x >= 6) || (color == 'b' && x <= 1);
+  }
 
   pieces(color, x, y) {
     const pawnShift = this.getPawnShift(color);
-    // NOTE: jump 2 squares from first rank (pawns can be here sometimes)
-    const initRank = ((color == 'w' && x >= 6) || (color == 'b' && x <= 1));
     return {
       'p': {
         "class": "pawn",
         moves: [
           {
             steps: [[pawnShift, 0]],
-            range: (initRank ? 2 : 1)
+            range: (this.isPawnInitRank(x, color) ? 2 : 1)
           }
         ],
         attack: [
@@ -1290,6 +1296,17 @@ export default class ChessRules {
       res += this.size.y;
     return res;
   }
+  // Circular?
+  getX(x) {
+    return x; //generally, no
+  }
+
+  increment([x, y], step) {
+    return [
+      this.getX(x + step[0]),
+      this.getY(y + step[1])
+    ];
+  }
 
   getSegments(curSeg, segStart, segEnd) {
     if (curSeg.length == 0)
@@ -1355,13 +1372,12 @@ export default class ChessRules {
     const attacks = stepSpec.both.concat(stepSpec.attack);
     for (let a of attacks) {
       outerLoop: for (let step of a.steps) {
-        let [i, j] = [x + step[0], y + step[1]];
-        let stepCounter = 1;
+        let [i, j] = this.increment([x, y], step);
+        let stepCounter = 0;
         while (this.onBoard(i, j) && this.board[i][j] == "") {
           if (a.range <= stepCounter++)
             continue outerLoop;
-          i += step[0];
-          j = this.getY(j + step[1]);
+          [i, j] = this.increment([i, j], step);
         }
         if (
           this.onBoard(i, j) &&
@@ -1570,8 +1586,7 @@ export default class ChessRules {
           vanish: []
         });
         for (let step of steps) {
-          let x = m.end.x + step[0];
-          let y = this.getY(m.end.y + step[1]);
+          let [x, y] = this.increment([m.end.x, m.end.y], step);
           if (
             this.onBoard(x, y) &&
             this.board[x][y] != "" &&
@@ -1659,7 +1674,7 @@ export default class ChessRules {
         m.appear[0].p = this.pawnPromotions[0];
         for (let i=1; i<this.pawnPromotions.length; i++) {
           let newMv = JSON.parse(JSON.stringify(m));
-          newMv.appear[0].p = this.pawnSpecs.promotions[i];
+          newMv.appear[0].p = this.pawnPromotions[i];
           newMoves.push(newMv);
         }
       }
@@ -1785,8 +1800,7 @@ export default class ChessRules {
             if (s.range <= stepCounter++)
               continue outerLoop;
             const oldIJ = [i, j];
-            i += step[0];
-            j = this.getY(j + step[1]);
+            [i, j] = this.increment([i, j], step);
             if (o.segments && Math.abs(j - oldIJ[1]) > 1) {
               // Boundary between segments (cylinder mode)
               segments.push([[segStart[0], segStart[1]], oldIJ]);
@@ -1990,7 +2004,7 @@ export default class ChessRules {
     const oppCols = this.getOppCols(color);
     if (
       this.epSquare &&
-      this.epSquare.x == x + shiftX &&
+      this.epSquare.x == x + shiftX && //NOTE: epSquare.x not on edge
       Math.abs(this.getY(this.epSquare.y - y)) == 1 &&
       // Doublemove (and Progressive?) guards:
       this.board[this.epSquare.x][this.epSquare.y] == "" &&
