@@ -2171,6 +2171,10 @@ export default class ChessRules {
 
   // cb: callback returning a boolean (false if king missing)
   trackKingWrap(move, kingPos, cb) {
+    if (move.appear.length == 0 && move.vanish.length == 0)
+      return true;
+    const color =
+      (move.vanish.length > 0 ? move.vanish[0].c : move.appear[0].c);
     let newKingPP = null,
         sqIdx = 0,
         res = true; //a priori valid

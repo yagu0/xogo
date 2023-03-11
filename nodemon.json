@@ -2,7 +2,7 @@
   "ignore": [
     "app.js",
     "assets/",
-    "assets.zip","
+    "assets.zip",
     "base_pieces.css",
     "base_rules.js",
     "common.css",

@@ -24,7 +24,7 @@ export default class ChecklessRules extends ChessRules {
   }
 
   filterValid(moves) {
-    fmoves = super.filterValid(moves);
+    const fmoves = super.filterValid(moves);
     // Filter out moves giving check but not checkmate
     const color = this.turn;
     const oppCol = C.GetOppTurn(color);
@@ -35,7 +35,7 @@ export default class ChecklessRules extends ChessRules {
       const res = this.trackKingWrap(m, oppKingPos, (oppKp) => {
         return (
           !this.underCheck(oppKp, [color]) ||
-          this.atLeastOneMove_aux(oppKp, kingPos, oppCol, color)
+          !this.atLeastOneMove_aux(oppKp, kingPos, oppCol, color)
         );
       });
       this.undoOnBoard(m);
