@@ -23,7 +23,6 @@ export default class CircularRules extends ChessRules {
   }
 
   // Circular board:
-  // TODO: graph with segments, as for cylindrical...
   getX(x) {
     let res = x % this.size.x;
     if (res < 0)

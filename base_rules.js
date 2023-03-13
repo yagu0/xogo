@@ -1413,7 +1413,6 @@ export default class ChessRules {
                 {
                   attackOnly: true,
                   one: true,
-                  segments: this.options["cylinder"]
                 },
                 allowed
               )
@@ -1424,10 +1423,7 @@ export default class ChessRules {
                 this.options["zen"] &&
                 this.findCapturesOn(
                   [i, j],
-                  {
-                    one: true,
-                    segments: this.options["cylinder"]
-                  },
+                  {one: true},
                   allowed
                 )
               )
@@ -1692,7 +1688,6 @@ export default class ChessRules {
         [x, y],
         {
           attackOnly: true,
-          segments: this.options["cylinder"],
           stepSpec: stepSpec
         },
         ([i1, j1], [i2, j2]) => {
@@ -1707,7 +1702,6 @@ export default class ChessRules {
       [x, y],
       {
         moveOnly: !!stepSpec.attack || this.options["zen"],
-        segments: this.options["cylinder"],
         stepSpec: stepSpec
       }
     );
@@ -1720,11 +1714,10 @@ export default class ChessRules {
           !this.isKing(i1, j1) && this.canTake([i2, j2], [i1, j1])
       );
       // Technical step: segments (if any) are reversed
-      if (this.options["cylinder"]) {
-        zenCaptures.forEach(z => {
+      zenCaptures.forEach(z => {
+        if (!!z.segments)
           z.segments = z.segments.reverse().map(s => s.reverse())
-        });
-      }
+      });
       Array.prototype.push.apply(squares, zenCaptures);
     }
     if (
@@ -1735,7 +1728,6 @@ export default class ChessRules {
         [x, y],
         {
           attackOnly: true,
-          segments: this.options["cylinder"],
           stepSpec: stepSpec
         },
         ([i1, j1], [i2, j2]) => {
@@ -1749,7 +1741,7 @@ export default class ChessRules {
     }
     return squares.map(s => {
       let mv = this.getBasicMove([x, y], s.sq);
-      if (this.options["cylinder"] && !!s.segments && s.segments.length >= 2)
+      if (!!s.segments)
         mv.segments = s.segments;
       return mv;
     });
@@ -1760,23 +1752,21 @@ export default class ChessRules {
       allowed = (sq1, sq2) => this.canTake(sq1, sq2);
     const apparentPiece = this.getPiece(x, y); //how it looks
     let res = [];
-    // Next 3 for Cylinder mode: (unused if !o.segments)
+    // Next 3 for Cylinder mode or circular (useless otherwise)
     let explored = {};
     let segments = [];
     let segStart = [];
     const addSquare = ([i, j]) => {
       let elt = {sq: [i, j]};
-      if (o.segments)
+      if (segments.length >= 1)
         elt.segments = this.getSegments(segments, segStart, [i, j]);
       res.push(elt);
     };
     const exploreSteps = (stepArray, mode) => {
       for (let s of stepArray) {
         outerLoop: for (let step of s.steps) {
-          if (o.segments) {
-            segments = [];
-            segStart = [x, y];
-          }
+          segments = [];
+          segStart = [x, y];
           let [i, j] = [x, y];
           let stepCounter = 0;
           while (
@@ -1801,8 +1791,8 @@ export default class ChessRules {
               continue outerLoop;
             const oldIJ = [i, j];
             [i, j] = this.increment([i, j], step);
-            if (o.segments && Math.abs(j - oldIJ[1]) > 1) {
-              // Boundary between segments (cylinder mode)
+            if (Math.abs(j - oldIJ[1]) > 1 || Math.abs(i - oldIJ[0]) > 1) {
+              // Boundary between segments (cylinder or circular mode)
               segments.push([[segStart[0], segStart[1]], oldIJ]);
               segStart = [i, j];
             }
@@ -1873,7 +1863,6 @@ export default class ChessRules {
                 {
                   captureTarget: [x, y],
                   captureSteps: [{steps: [s], range: a.range}],
-                  segments: o.segments
                 },
                 allowed
               );
@@ -2143,7 +2132,6 @@ export default class ChessRules {
           [x, y],
           {
             byCol: oppCols,
-            segments: this.options["cylinder"],
             one: true
           }
         )
@@ -2155,7 +2143,6 @@ export default class ChessRules {
           [x, y],
           {
             attackOnly: true,
-            segments: this.options["cylinder"],
             one: true
           },
           ([i1, j1], [i2, j2]) => oppCols.includes(this.getColor(i2, j2))
