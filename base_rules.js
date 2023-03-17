@@ -408,14 +408,14 @@ export default class ChessRules {
   }
 
   // Some additional variables from FEN (variant dependant)
-  setOtherVariables(fenParsed) {
+  setOtherVariables(fenParsed, pieceArray) {
     // Set flags and enpassant:
     if (this.hasFlags)
       this.setFlags(fenParsed.flags);
     if (this.hasEnpassant)
       this.epSquare = this.getEpSquare(fenParsed.enpassant);
     if (this.hasReserve && !this.isDiagram)
-      this.initReserves(fenParsed.reserve);
+      this.initReserves(fenParsed.reserve, pieceArray);
     if (this.options["crazyhouse"])
       this.initIspawn(fenParsed.ispawn);
     if (this.options["teleport"]) {
