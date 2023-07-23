@@ -51,26 +51,28 @@ export default class ClorangeRules extends ChessRules {
     );
   }
 
+  pawnPostProcess(moves, color, oppCols) {
+    let res = super.pawnPostProcess(moves, color, oppCols);
+    if (res.length > 0 && res[0].vanish[0].p == 's') {
+      // Fix promotions of non-violent pawns (if any)
+      res.forEach(m => {
+        if (m.appear[0].p != 's')
+          m.appear[0].p = V.NV_PIECES[V.V_PIECES.indexOf(m.appear[0].p)];
+      });
+    }
+    return res;
+  }
+
   prePlay(move) {
     super.prePlay(move);
-    // No crazyhouse or recycle, so the last call didn't update reserve:
-    if (
-      (move.vanish.length == 2 && move.appear.length == 1) ||
-      move.vanish.length == 0 //drop
-    ) {
-      const trPiece =
-        (move.vanish.length > 0 ? move.vanish[1].p : move.appear[0].p);
-      const normal = V.V_PIECES.includes(trPiece);
-      const pIdx = (normal ? V.V_PIECES : V.NV_PIECES).indexOf(trPiece);
+    // NOTE: drop moves already taken into account in base prePlay()
+    if (move.vanish.length == 2 && move.appear.length == 1) {
+      const normal = V.V_PIECES.includes(move.vanish[1].p);
+      const pIdx =
+        (normal ? V.V_PIECES : V.NV_PIECES).indexOf(move.vanish[1].p);
       const resPiece = (normal ? V.NV_PIECES : V.V_PIECES)[pIdx];
-      if (move.vanish.length > 0) {
-        super.updateReserve(C.GetOppTurn(this.turn), resPiece,
-          this.reserve[C.GetOppTurn(this.turn)][resPiece] + 1);
-      }
-      else {
-        super.updateReserve(this.turn, resPiece,
-          this.reserve[this.turn][resPiece] - 1);
-      }
+      super.updateReserve(C.GetOppTurn(this.turn), resPiece,
+        this.reserve[C.GetOppTurn(this.turn)][resPiece] + 1);
     }
   }
 
