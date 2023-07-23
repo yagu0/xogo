@@ -30,7 +30,7 @@ const variants = [
   {name: 'Checkless', desc: 'No-check mode'},
   {name: 'Chess960', disp: "Chess 960", desc: "Standard rules"},
   {name: 'Circular', desc: 'Run forward'},
-//  {name: 'Clorange', desc: 'A Clockwork Orange', disp: 'Clockwork Orange'},
+  {name: 'Clorange', desc: 'A Clockwork Orange', disp: 'Clockwork Orange'},
 //  {name: 'Convert', desc: 'Convert enemy pieces'},
 //  {name: 'Copycat', desc: 'Borrow powers'},
 //  {name: 'Coregal', desc: 'Two royal pieces'},

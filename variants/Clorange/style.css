@@ -1,0 +1,33 @@
+@import url("/base_pieces.css");
+
+piece.white.nv-pawn {
+  background-image: url('/pieces/yellow_pawn.svg');
+}
+piece.white.nv-rook {
+  background-image: url('/pieces/yellow_rook.svg');
+}
+piece.white.nv-knight {
+  background-image: url('/pieces/yellow_knight.svg');
+}
+piece.white.nv-bishop {
+  background-image: url('/pieces/yellow_bishop.svg');
+}
+piece.white.nv-queen {
+  background-image: url('/pieces/yellow_queen.svg');
+}
+
+piece.black.nv-pawn {
+  background-image: url('/pieces/red_pawn.svg');
+}
+piece.black.nv-rook {
+  background-image: url('/pieces/red_rook.svg');
+}
+piece.black.nv-knight {
+  background-image: url('/pieces/red_knight.svg');
+}
+piece.black.nv-bishop {
+  background-image: url('/pieces/red_bishop.svg');
+}
+piece.black.nv-queen {
+  background-image: url('/pieces/red_queen.svg');
+}
