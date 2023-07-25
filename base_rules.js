@@ -1188,7 +1188,7 @@ export default class ChessRules {
   }
 
   pieces(color, x, y) {
-    const pawnShift = this.getPawnShift(color);
+    const pawnShift = this.getPawnShift(color || 'w');
     return {
       'p': {
         "class": "pawn",
