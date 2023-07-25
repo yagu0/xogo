@@ -76,6 +76,7 @@ export default class ConvertRules extends ChessRules {
       );
     }
     mv.converted = destPiece; //easier (no need to detect it)
+//    mv.drag = {c: this.turn, p: initPiece}; //TODO: doesn't work
     return mv;
   }
 

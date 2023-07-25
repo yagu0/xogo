@@ -75,6 +75,7 @@ export default class ChainingRules extends ChessRules {
       );
     }
     mv.chained = destPiece; //easier (no need to detect it)
+//    mv.drag = {c: this.turn, p: initPiece}; //TODO: doesn't work
     return mv;
   }
 
@@ -103,7 +104,7 @@ export default class ChainingRules extends ChessRules {
 
   postPlay(move) {
     super.postPlay(move);
-    if (!!move.converted) {
+    if (!!move.chained) {
       this.lastMoveEnd.push({
         x: move.end.x,
         y: move.end.y,
