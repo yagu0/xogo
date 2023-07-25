@@ -97,6 +97,14 @@ export default class ChessRules {
     return true;
   }
 
+  // Allow to take (moving: not disappearing) own pieces?
+  get hasSelfCaptures() {
+    return (
+      this.options["recycle"] ||
+      (this.options["teleport"] && this.subTurnTeleport == 1)
+    );
+  }
+
   get hasReserve() {
     return (
       !!this.options["crazyhouse"] ||
@@ -1720,10 +1728,7 @@ export default class ChessRules {
       });
       Array.prototype.push.apply(squares, zenCaptures);
     }
-    if (
-      this.options["recycle"] ||
-      (this.options["teleport"] && this.subTurnTeleport == 1)
-    ) {
+    if (this.hasSelfCaptures) {
       const selfCaptures = this.findDestSquares(
         [x, y],
         {

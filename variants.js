@@ -25,6 +25,7 @@ const variants = [
   {name: 'Cannibal', desc: 'Capture powers'},
   {name: 'Capablanca', desc: 'Capablanca Chess', disp: 'Capablanca'},
   {name: 'Capture', desc: 'Mandatory captures'},
+  {name: 'Chaining', desc: 'Speed-up development'},
   {name: 'Chakart', desc: 'Capture the princess'},
   {name: 'Checkered', desc: 'Shared pieces'},
   {name: 'Checkless', desc: 'No-check mode'},
