@@ -1838,6 +1838,8 @@ export default class ChessRules {
     }
   }
 
+  // TODO here: should/could use getPotentialMovesFrom ?! (not sure)
+  // --> would be useful for variants like Copycat.
   // Search for enemy (or not) pieces attacking [x, y]
   findCapturesOn([x, y], o, allowed) {
     if (!o.byCol)
