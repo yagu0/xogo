@@ -43,7 +43,7 @@ export default class GiveawayRules extends ChessRules {
       diffCol: ['b']
     };
     if (this.options["mode"] == "losers") {
-      setupOpts["between"] = ['k', 'r'];
+      setupOpts["between"] = [{p1: 'k', p2: 'r'}];
       setupOpts["flags"] = ['r'];
     }
     const s = FenUtil.setupPieces(

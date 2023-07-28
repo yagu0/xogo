@@ -233,7 +233,7 @@ export default class ChessRules {
       ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
       {
         randomness: this.options["randomness"],
-        between: {p1: 'k', p2: 'r'},
+        between: [{p1: 'k', p2: 'r'}],
         diffCol: ['b'],
         flags: ['r']
       }

@@ -60,7 +60,7 @@ export default class CapablancaRules extends ChessRules {
       ['r', 'n', 's', 'b', 'q', 'k', 'b', 'e', 'n', 'r'],
       {
         randomness: this.options["randomness"],
-        between: {p1: 'k', p2: 'r'},
+        between: [{p1: 'k', p2: 'r'}],
         diffCol: ['b'],
         flags: ['r']
       }

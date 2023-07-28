@@ -38,17 +38,19 @@ export const FenUtil = {
         });
       }
       if (o.between) {
-        // Locate p1. If appearing first, exchange with first p2.
-        // If appearing last, exchange with last p2.
-        const p1 = res.indexOf(o.between["p1"]);
-        const firstP2 = res.indexOf(o.between["p2"]),
-              lastP2 = res.lastIndexOf(o.between["p2"]);
-        if (p1 < firstP2 || p1 > lastP2) {
-          res[p1] = o.between["p2"];
-          if (p1 < firstP2)
-            res[firstP2] = o.between["p1"];
-          else //p1 > lastP2
-            res[lastP2] = o.between["p1"];
+        o.between.forEach(b => {
+          // Locate p1. If appearing first, exchange with first p2.
+          // If appearing last, exchange with last p2.
+          const p1 = res.indexOf(b["p1"]);
+          const firstP2 = res.indexOf(b["p2"]),
+                lastP2 = res.lastIndexOf(b["p2"]);
+          if (p1 < firstP2 || p1 > lastP2) {
+            res[p1] = b["p2"];
+            if (p1 < firstP2)
+              res[firstP2] = b["p1"];
+            else //p1 > lastP2
+              res[lastP2] = b["p1"];
+          }
         }
       }
     }
