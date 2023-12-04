@@ -1520,12 +1520,8 @@ export default class ChessRules {
     let moves = this.getPotentialMovesOf(piece, [x, y]);
     if (piece == "p" && this.hasEnpassant && this.epSquare)
       Array.prototype.push.apply(moves, this.getEnpassantCaptures([x, y]));
-    if (
-      this.isKing(0, 0, piece) && this.hasCastle &&
-      this.castleFlags[color || this.turn].some(v => v < this.size.y)
-    ) {
+    if (this.isKing(0, 0, piece) && this.hasCastle)
       Array.prototype.push.apply(moves, this.getCastleMoves([x, y]));
-    }
     return this.postProcessPotentialMoves(moves);
   }
 
@@ -2015,8 +2011,9 @@ export default class ChessRules {
     return [];
   }
 
-  getCastleMoves([x, y], finalSquares, castleWith) {
+  getCastleMoves([x, y], finalSquares, castleWith, castleFlags) {
     const c = this.getColor(x, y);
+    castleFlags = castleFlags || this.castleFlags[c];
 
     // Castling ?
     const oppCols = this.getOppCols(c);
@@ -2030,12 +2027,12 @@ export default class ChessRules {
       castleSide < 2;
       castleSide++ //large, then small
     ) {
-      if (this.castleFlags[c][castleSide] >= this.size.y)
+      if (castleFlags[castleSide] >= this.size.y)
         continue;
       // If this code is reached, rook and king are on initial position
 
       // NOTE: in some variants this is not a rook
-      const rookPos = this.castleFlags[c][castleSide];
+      const rookPos = castleFlags[castleSide];
       const castlingPiece = this.getPiece(x, rookPos);
       if (
         this.board[x][rookPos] == "" ||
@@ -2238,11 +2235,20 @@ export default class ChessRules {
       this.board[psq.x][psq.y] = psq.c + psq.p;
   }
 
-  updateCastleFlags(move) {
+  // NOTE: arg "castleFlags" for Coregal or Twokings
+  updateCastleFlags(move, castleFlags) {
+    castleFlags = castleFlags || this.castleFlags;
+    // If flags already off, no need to re-check:
+    if (
+      Object.values(castleFlags).every(cvals =>
+        cvals.every(val => val >= this.size.y))
+    ) {
+      return;
+    }
     // Update castling flags if start or arrive from/at rook/king locations
     move.appear.concat(move.vanish).forEach(psq => {
       if (this.isKing(0, 0, psq.p))
-        this.castleFlags[psq.c] = [this.size.y, this.size.y];
+        castleFlags[psq.c] = [this.size.y, this.size.y];
       // NOTE: not "else if" because king can capture enemy rook...
       let c = "";
       if (psq.x == 0)
@@ -2250,22 +2256,16 @@ export default class ChessRules {
       else if (psq.x == this.size.x - 1)
         c = "w";
       if (c != "") {
-        const fidx = this.castleFlags[c].findIndex(f => f == psq.y);
+        const fidx = castleFlags[c].findIndex(f => f == psq.y);
         if (fidx >= 0)
-          this.castleFlags[c][fidx] = this.size.y;
+          castleFlags[c][fidx] = this.size.y;
       }
     });
   }
 
   prePlay(move) {
-    if (
-      this.hasCastle &&
-      // If flags already off, no need to re-check:
-      Object.values(this.castleFlags).some(cvals =>
-        cvals.some(val => val < this.size.y))
-    ) {
+    if (this.hasCastle)
       this.updateCastleFlags(move);
-    }
     if (this.options["crazyhouse"]) {
       move.vanish.forEach(v => {
         const square = C.CoordsToSquare({x: v.x, y: v.y});

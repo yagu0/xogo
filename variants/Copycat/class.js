@@ -1,5 +1,7 @@
 import ChessRules from "/base_rules.js";
 
+// TODO: there was an issue: I forgot which.. TOFIND and TOFIX :)
+
 export default class CopycatRules extends ChessRules {
 
   static get Options() {
