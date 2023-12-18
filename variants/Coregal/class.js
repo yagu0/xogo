@@ -1,8 +1,6 @@
-import { ChessRules, Move, PiPo } from "@/base_rules";
-import { ArrayFun } from "@/utils/array";
-import { randInt, sample } from "@/utils/alea";
+import ChessRules from "/base_rules.js";
 
-export class CoregalRules extends ChessRules {
+export default class CoregalRules extends ChessRules {
 
   genRandInitBaseFen() {
     const s = FenUtil.setupPieces(
