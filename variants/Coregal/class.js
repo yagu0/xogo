@@ -22,7 +22,7 @@ export default class CoregalRules extends ChessRules {
       const col = (c == 0 ? 'w' : 'b');
       let first = "";
       for (let i=4*c; i<4*(c+1); i++) {
-        const pos = parseInt(flags.charAt(i), 10);
+        const pos = parseInt(s.flags.charAt(i), 10);
         const symb = s[col][pos];
         if (['k', 'l'].includes(symb)) {
           if (!first) {
@@ -33,7 +33,7 @@ export default class CoregalRules extends ChessRules {
             relPos[col][symb] = '1'; //right
         }
         else
-          flags += flags.charAt(i);
+          flags += s.flags.charAt(i);
       }
     }
     return {
@@ -41,25 +41,27 @@ export default class CoregalRules extends ChessRules {
            s.w.join("").toUpperCase(),
       o: {
         flags: flags + flags, //duplicate: one for each royal piece
-        relPos: (
-          relPos['w']['k'] + relPos['w']['l'] +
-          relPos['b']['k'] + relPos['b']['l']
-        )
+        relPos: this.getRelposFen(relPos)
       }
     };
   }
 
   getPartFen(o) {
     return (Object.assign(
-      {"relpos": o.relPos},
+      {"relpos": o.init ? o.relPos : this.getRelposFen()},
       super.getPartFen(o)
     ));
   }
 
+  getRelposFen(relPos) {
+    relPos = relPos || this.relPos;
+    return (
+      relPos['w']['k'] + relPos['w']['l'] +
+      relPos['b']['k'] + relPos['b']['l']
+    );
+  }
+
   setOtherVariables(fenParsed, pieceArray) {
-    
-//TODO: issue, relPos is set at init but doesn't persist --> see base_rules.js line 263
-console.log(fenParsed);
     super.setOtherVariables(fenParsed, pieceArray);
     this.relPos = {
       'w': {

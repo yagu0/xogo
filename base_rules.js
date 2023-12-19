@@ -1686,6 +1686,10 @@ export default class ChessRules {
   getPotentialMovesOf(piece, [x, y]) {
     const color = this.getColor(x, y);
     const stepSpec = this.getStepSpec(color, x, y, piece);
+
+    // TODO: pawns, coregal
+console.log(stepSpec);
+
     let squares = [];
     if (stepSpec.attack) {
       squares = this.findDestSquares(
@@ -1792,7 +1796,10 @@ export default class ChessRules {
               continue outerLoop;
             const oldIJ = [i, j];
             [i, j] = this.increment([i, j], step);
-            if (Math.abs(j - oldIJ[1]) > 1 || Math.abs(i - oldIJ[0]) > 1) {
+            if (
+              Math.abs(i - oldIJ[0]) != Math.abs(step[0]) ||
+              Math.abs(j - oldIJ[1]) != Math.abs(step[1])
+            ) {
               // Boundary between segments (cylinder or circular mode)
               segments.push([[segStart[0], segStart[1]], oldIJ]);
               segStart = [i, j];
