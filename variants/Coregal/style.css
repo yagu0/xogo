@@ -6,3 +6,10 @@ piece.black.royal_queen {
 piece.white.royal_queen {
   background-image: url('/pieces/Coregal/white_royal_queen.svg');
 }
+
+piece.black.castle {
+  background-image: url('/pieces/black_castle.svg');
+}
+piece.white.castle {
+  background-image: url('/pieces/white_castle.svg');
+}

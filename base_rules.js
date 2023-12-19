@@ -1686,10 +1686,6 @@ export default class ChessRules {
   getPotentialMovesOf(piece, [x, y]) {
     const color = this.getColor(x, y);
     const stepSpec = this.getStepSpec(color, x, y, piece);
-
-    // TODO: pawns, coregal
-console.log(stepSpec);
-
     let squares = [];
     if (stepSpec.attack) {
       squares = this.findDestSquares(
@@ -2254,7 +2250,7 @@ console.log(stepSpec);
     }
     // Update castling flags if start or arrive from/at rook/king locations
     move.appear.concat(move.vanish).forEach(psq => {
-      if ((!!king && psq.p == king) || this.isKing(0, 0, psq.p))
+      if ((king && psq.p == king) || (!king && this.isKing(0, 0, psq.p)))
         castleFlags[psq.c] = [this.size.y, this.size.y];
       // NOTE: not "else if" because king can capture enemy rook...
       let c = "";
