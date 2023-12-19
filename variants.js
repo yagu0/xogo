@@ -34,7 +34,7 @@ const variants = [
   {name: 'Clorange', desc: 'A Clockwork Orange', disp: 'Clockwork Orange'},
   {name: 'Convert', desc: 'Convert enemy pieces'},
   {name: 'Copycat', desc: 'Borrow powers'},
-//  {name: 'Coregal', desc: 'Two royal pieces'},
+  {name: 'Coregal', desc: 'Two royal pieces'},
 //  {name: 'Coronation', desc: 'Long live the Queen'},
   {name: 'Crazyhouse', desc: 'Captures reborn'},
 //  {name: 'Crossing', desc: 'Cross the river'},

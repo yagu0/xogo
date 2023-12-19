@@ -1,4 +1,5 @@
 import ChessRules from "/base_rules.js";
+import {FenUtil} from "/utils/setupPieces.js"
 
 export default class CoregalRules extends ChessRules {
 
@@ -13,12 +14,62 @@ export default class CoregalRules extends ChessRules {
         flags: ['r', 'k', 'l']
       }
     );
+    // Re-arrange flags: king + royal queen positions are only
+    // useful to know ordering, and thus allowed castles.
+    let flags = "";
+    let relPos = { 'w': {}, 'b': {} };
+    for (let c of [0, 1]) {
+      const col = (c == 0 ? 'w' : 'b');
+      let first = "";
+      for (let i=4*c; i<4*(c+1); i++) {
+        const pos = parseInt(flags.charAt(i), 10);
+        const symb = s[col][pos];
+        if (['k', 'l'].includes(symb)) {
+          if (!first) {
+            relPos[col][symb] = '0'; //left
+            first = symb;
+          }
+          else
+            relPos[col][symb] = '1'; //right
+        }
+        else
+          flags += flags.charAt(i);
+      }
+    }
     return {
       fen: s.b.join("") + "/pppppppp/8/8/8/8/PPPPPPPP/" +
            s.w.join("").toUpperCase(),
-      // TODO: re-arrange flags, use another init variable "relPos" (in o)
-      // (maybe after FEN parsing, easier?)
-      o: {flags: s.flags + s.flags} //second set for royal queen
+      o: {
+        flags: flags + flags, //duplicate: one for each royal piece
+        relPos: (
+          relPos['w']['k'] + relPos['w']['l'] +
+          relPos['b']['k'] + relPos['b']['l']
+        )
+      }
+    };
+  }
+
+  getPartFen(o) {
+    return (Object.assign(
+      {"relpos": o.relPos},
+      super.getPartFen(o)
+    ));
+  }
+
+  setOtherVariables(fenParsed, pieceArray) {
+    
+//TODO: issue, relPos is set at init but doesn't persist --> see base_rules.js line 263
+console.log(fenParsed);
+    super.setOtherVariables(fenParsed, pieceArray);
+    this.relPos = {
+      'w': {
+        'k': fenParsed.relpos[0],
+        'l': fenParsed.relpos[1]
+      },
+      'b': {
+        'k': fenParsed.relpos[2],
+        'l': fenParsed.relpos[3]
+      }
     };
   }
 
@@ -30,22 +81,31 @@ export default class CoregalRules extends ChessRules {
     return res;
   }
 
-  // TODO: something like that indeed (+ flags to FEN)
   setFlags(fenflags) {
     this.castleFlags = {
-      'k': { 'w': [...Array(4)], b: [...Array(4)] },
-      'l': { 'w': [...Array(4)], b: [...Array(4)] }
+      k: {
+        w: [0, 1].map(i => parseInt(fenflags.charAt(i), 10)),
+        b: [2, 3].map(i => parseInt(fenflags.charAt(i), 10))
+      },
+      l: {
+        w: [4, 5].map(i => parseInt(fenflags.charAt(i), 10)),
+        b: [6, 7].map(i => parseInt(fenflags.charAt(i), 10))
+      }
     };
-    for (let i = 0; i < 8; i++) {
-      this.castleFlags[i < 4 ? "k" : "l"][i % 4 < 2 ? "w" : "b"] =
-        parseInt(fenflags.charAt(i), 10);
-    }
+  }
+
+  getFlagsFen() {
+    return ['k', 'l'].map(p => {
+      return ['w', 'b'].map(c => {
+        return this.castleFlags[p][c].map(x => x.toString(10)).join("");
+      }).join("")
+    }).join("");
   }
 
   isKing(x, y, p) {
     if (!p)
       p = this.getPiece(x, y);
-    ['k', 'l'].includes(p); //no cannibal mode
+    return ['k', 'l'].includes(p); //no cannibal mode
   }
 
   getCastleMoves([x, y]) {
@@ -55,14 +115,17 @@ export default class CoregalRules extends ChessRules {
     // If left: small castle left, large castle right.
     // If right: usual situation.
     const finalSquares = [
-      this.relPos[c][p] == "left" ? [1, 2] : [2, 3],
-      this.relPos[c][p] == "right" ? [6, 5] : [5, 4]
+      this.relPos[c][p] == '0' ? [1, 2] : [2, 3], //0 == left
+      this.relPos[c][p] == '1' ? [6, 5] : [5, 4] //1 == right
     ];
     const moves =
-      super.getCastleMoves([x, y], finalSquares, null, this.castleFlags[p]);
+      super.getCastleMoves([x, y], finalSquares, null, this.castleFlags[p][c]);
     return moves;
   }
 
-  // TODO: updateFlags (just pass castleFlags arg)
+  updateCastleFlags(move) {
+    super.updateCastleFlags(move, this.castleFlags['k'], 'k');
+    super.updateCastleFlags(move, this.castleFlags['l'], 'l');
+  }
 
 };

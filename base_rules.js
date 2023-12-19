@@ -324,7 +324,7 @@ export default class ChessRules {
 
   // Flags part of the FEN string
   getFlagsFen() {
-    return ["w", "b"].map(c => {
+    return ['w', 'b'].map(c => {
       return this.castleFlags[c].map(x => x.toString(36)).join("");
     }).join("");
   }
@@ -340,7 +340,7 @@ export default class ChessRules {
     if (o.init)
       return "000000000000";
     return (
-      ["w","b"].map(c => Object.values(this.reserve[c]).join("")).join("")
+      ['w', 'b'].map(c => Object.values(this.reserve[c]).join("")).join("")
     );
   }
 
@@ -2236,7 +2236,7 @@ export default class ChessRules {
   }
 
   // NOTE: arg "castleFlags" for Coregal or Twokings
-  updateCastleFlags(move, castleFlags) {
+  updateCastleFlags(move, castleFlags, king) {
     castleFlags = castleFlags || this.castleFlags;
     // If flags already off, no need to re-check:
     if (
@@ -2247,7 +2247,7 @@ export default class ChessRules {
     }
     // Update castling flags if start or arrive from/at rook/king locations
     move.appear.concat(move.vanish).forEach(psq => {
-      if (this.isKing(0, 0, psq.p))
+      if ((!!king && psq.p == king) || this.isKing(0, 0, psq.p))
         castleFlags[psq.c] = [this.size.y, this.size.y];
       // NOTE: not "else if" because king can capture enemy rook...
       let c = "";

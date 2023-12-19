@@ -1,5 +1,5 @@
 #!/bin/sh
 
-nodemon ./server.js &
+nodemon -w server.js &
 echo $! > .pid
 php -S localhost:8000 &

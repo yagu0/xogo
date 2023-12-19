@@ -51,7 +51,7 @@ export const FenUtil = {
             else //p1 > lastP2
               res[lastP2] = b["p1"];
           }
-        }
+        });
       }
     }
     return {fen: res, flags: flags};
