@@ -1,0 +1,112 @@
+@import url("/base_pieces.css");
+
+piece.white.c_rook {
+  background-image: url('/pieces/Cwda/c_white_rook.svg');
+}
+piece.black.c_rook {
+  background-image: url('/pieces/Cwda/c_black_rook.svg');
+}
+piece.white.c_knight {
+  background-image: url('/pieces/Cwda/c_white_knight.svg');
+}
+piece.black.c_knight {
+  background-image: url('/pieces/Cwda/c_black_knight.svg');
+}
+piece.white.c_bishop {
+  background-image: url('/pieces/Cwda/c_white_bishop.svg');
+}
+piece.black.c_bishop {
+  background-image: url('/pieces/Cwda/c_black_bishop.svg');
+}
+piece.white.c_queen {
+  background-image: url('/pieces/Cwda/c_white_queen.svg');
+}
+piece.black.c_queen {
+  background-image: url('/pieces/Cwda/c_black_queen.svg');
+}
+piece.white.c_king {
+  background-image: url('/pieces/Cwda/c_white_king.svg');
+}
+piece.black.c_king {
+  background-image: url('/pieces/Cwda/c_black_king.svg');
+}
+piece.white.c_pawn {
+  background-image: url('/pieces/Cwda/c_white_pawn.svg');
+}
+piece.black.c_pawn {
+  background-image: url('/pieces/Cwda/c_black_pawn.svg');
+}
+
+piece.white.n_rook {
+  background-image: url('/pieces/Cwda/n_white_rook.svg');
+}
+piece.black.n_rook {
+  background-image: url('/pieces/Cwda/n_black_rook.svg');
+}
+piece.white.n_knight {
+  background-image: url('/pieces/Cwda/n_white_knight.svg');
+}
+piece.black.n_knight {
+  background-image: url('/pieces/Cwda/n_black_knight.svg');
+}
+piece.white.n_bishop {
+  background-image: url('/pieces/Cwda/n_white_bishop.svg');
+}
+piece.black.n_bishop {
+  background-image: url('/pieces/Cwda/n_black_bishop.svg');
+}
+piece.white.n_queen {
+  background-image: url('/pieces/Cwda/n_white_queen.svg');
+}
+piece.black.n_queen {
+  background-image: url('/pieces/Cwda/n_black_queen.svg');
+}
+piece.white.n_king {
+  background-image: url('/pieces/Cwda/n_white_king.svg');
+}
+piece.black.n_king {
+  background-image: url('/pieces/Cwda/n_black_king.svg');
+}
+piece.white.n_pawn {
+  background-image: url('/pieces/Cwda/n_white_pawn.svg');
+}
+piece.black.n_pawn {
+  background-image: url('/pieces/Cwda/n_black_pawn.svg');
+}
+
+piece.white.r_rook {
+  background-image: url('/pieces/Cwda/r_white_rook.svg');
+}
+piece.black.r_rook {
+  background-image: url('/pieces/Cwda/r_black_rook.svg');
+}
+piece.white.r_knight {
+  background-image: url('/pieces/Cwda/r_white_knight.svg');
+}
+piece.black.r_knight {
+  background-image: url('/pieces/Cwda/r_black_knight.svg');
+}
+piece.white.r_bishop {
+  background-image: url('/pieces/Cwda/r_white_bishop.svg');
+}
+piece.black.r_bishop {
+  background-image: url('/pieces/Cwda/r_black_bishop.svg');
+}
+piece.white.r_queen {
+  background-image: url('/pieces/Cwda/r_white_queen.svg');
+}
+piece.black.r_queen {
+  background-image: url('/pieces/Cwda/r_black_queen.svg');
+}
+piece.white.r_king {
+  background-image: url('/pieces/Cwda/r_white_king.svg');
+}
+piece.black.r_king {
+  background-image: url('/pieces/Cwda/r_black_king.svg');
+}
+piece.white.r_pawn {
+  background-image: url('/pieces/Cwda/r_white_pawn.svg');
+}
+piece.black.r_pawn {
+  background-image: url('/pieces/Cwda/r_black_pawn.svg');
+}

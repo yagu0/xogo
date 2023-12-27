@@ -39,7 +39,7 @@ const variants = [
   {name: 'Crazyhouse', desc: 'Captures reborn'},
   {name: 'Crossing', desc: 'Cross the river'},
   {name: 'Cylinder', desc: 'Neverending rows'},
-//  {name: 'Cwda', desc: 'New teams', disp: 'Different armies'},
+  {name: 'Cwda', desc: 'New teams', disp: 'Different armies'},
   {name: 'Dark', desc: 'In the shadow'},
 //  {name: 'Diamond', desc: 'Rotating board'},
 //  {name: 'Dice', desc: 'Roll the dice'},

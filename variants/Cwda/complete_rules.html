@@ -1,0 +1,128 @@
+<html>
+<head>
+  <title>Different Armies Rules</title>
+  <link href="/common.css" rel="stylesheet"/>
+  <link href="/variants/Cwda/style.css" rel="stylesheet"/>
+</head>
+<body>
+
+<div class="full-rules">
+<h1>Different Armies Rules</h1>
+
+<div>
+  <p>White and black pieces are replaced by different armies.</p>
+  <p>
+    Pawns and kings move as usual, but the other pieces generally do not.
+    Indeed, before the game start you must select two armies, defining
+    new movements for "rooks", "knights", "bishops" and "queens".
+  </p>
+  <p>Pieces movements are described using these simple pieces:</p>
+  <ul>
+    <li>Dabbabah = jump two squares orthogonally</li>
+    <li>Alfil = jump two squares diagonally</li>
+    <li>Wazir = one square orthogonally</li>
+    <li>Ferz = one square diagonally</li>
+    <li>Three leaper (L3) = jump three squares orthogonally</li>
+    <li>Narrow knight = knight without "2+1 lateral moves"</li>
+  </ul>
+  <p>Pawns can be promoted into a piece of any of the two armies playing.</p>
+</div>
+
+<h3>The Colorbound Clobberers</h3>
+
+<figure class="showPieces text-center"><img src="/images/pieces/Cwda/bd.svg"/><img src="/images/pieces/Cwda/ww.svg"/><img src="/images/pieces/Cwda/bf.svg"/><img src="/images/pieces/Cwda/wc.svg"/></figure>
+
+<ul>
+  <li>Rook = bishop + dabbabah = "bede" (D),</li>
+  <li>Knight = wazir + alfil = "waffle" (W),</li>
+  <li>Bishop = ferz + alfil + dabbabah = "fad" (F),</li>
+  <li>Queen = bishop + knight = "cardinal" (C).</li>
+</ul>
+
+<figure>
+  <div class="diag left"
+       data-fen='8/8/8/3D4/8/8/8/8 ...',
+       data-mks='a8,b7,c6,e4,f3,g2,h1,c4,b3,a2,e6,f7,g8,f5,d3,b5,d7'>
+  </div>
+  <div class="diag right"
+       data-fen='8/8/8/4w3/8/8/8/8 ...',
+       data-mks="e6,f5,e4,d5,c7,g7,g3,c3">
+  </div>
+  <figcaption>
+    Moves of the Bede on the left, and of the Waffle on the right.
+  </figcaption>
+</figure>
+
+<figure class="diagram-container">
+  <div class="diagram">fen:8/8/8/3F4/8/8/8/8 b7,c6,b5,f5,d3,d7,b3,c4,e4,f3,e6,f7:</div>
+  <figcaption>
+    Moves of the Fad.
+  </figcaption>
+</figure>
+
+<p>
+  When castling large, the king and rook arrive respectively on
+  b1/b8 and c1/c8 so that the rook remains on the same color.
+</p>
+
+<h3>The Nutty Knights</h3>
+
+<figure class="showPieces text-center"><img src="/images/pieces/Cwda/bg.svg"/><img src="/images/pieces/Cwda/wi.svg"/><img src="/images/pieces/Cwda/bt.svg"/><img src="/images/pieces/Cwda/wl.svg"/></figure>
+
+<ul>
+  <li>Rook = rook forward and sideways + king backwards = "charging rook" (G),</li>
+  <li>Knight = narrow knight + ferz = "fibnif" (I),</li>
+  <li>
+    Bishop = knight forward + king sideways and backwards =
+    "charging knight" (T),
+  </li>
+  <li>Queen = rook forward and sideways + knight forward + king = "colonel" (L).</li>
+</ul>
+
+<figure class="diagram-container">
+  <div class="diagram diag12">fen:8/8/8/8/3G4/8/8/8 d5,d6,d7,d8,c4,b4,a4,e4,f4,g4,h4,c3,d3,e3:</div>
+  <div class="diagram diag22">fen:8/8/8/8/4i3/8/8/8 d6,d2,f6,f2,d3,d5,f5,f3:</div>
+  <figcaption>
+    Moves of the Charging rook on the left, and of the Fibnif on the right.
+  </figcaption>
+</figure>
+
+<figure class="diagram-container">
+  <div class="diagram diag12">fen:8/8/8/8/3T4/8/8/8 b5,c6,e6,f5,c4,e4,c3,d3,e3:</div>
+  <div class="diagram diag22">fen:8/8/8/8/4c3/8/8/8 e5,e6,e7,e8,d4,c4,b4,a4,f4,g4,h4,d6,c5,f6,g5,d5,f5,d3,e3,f3:</div>
+  <figcaption>
+    Moves of the Charging knight on the left, and of the Colonel on the right.
+  </figcaption>
+</figure>
+
+<h3>The Remarkable Rookies</h3>
+
+<figure class="showPieces text-center"><img src="/images/pieces/Cwda/bs.svg"/><img src="/images/pieces/Cwda/wy.svg"/><img src="/images/pieces/Cwda/bh.svg"/><img src="/images/pieces/Cwda/wo.svg"/></figure>
+
+<ul>
+  <li>Rook = rook limited to 4 squares = "short rook" (S),</li>
+  <li>Knight = dabbabah + wazir = "woody rook" (Y),</li>
+  <li>Bishop = dabbabah + ferz + L3 = "half-duck" (H),</li>
+  <li>Queen = rook + knight = "chancellor" (O).</li>
+</ul>
+
+<figure class="diagram-container">
+  <div class="diagram diag12">fen:8/8/8/3y4/8/8/8/8 d3,b5,d7,f5,c5,d6,e5,d4:</div>
+  <div class="diagram diag22">fen:8/8/8/4H3/8/8/8/8 c5,e7,g5,e3,b5,e8,h5,e2,d4,d6,f6,f4:</div>
+  <figcaption>
+    Moves of the Woody rook on the left, and of the Half-duck on the right.
+  </figcaption>
+</figure>
+
+<h3>Fide army</h3>
+
+<p>The standard chess pieces.</p>
+
+<h3>Source</h3>
+
+<p><a href="https://www.chessvariants.com/unequal.dir/cwda.html">Chess with different armies</a>&nbsp;on chessvariants.com.</p>
+
+</body>
+<script src="/utils/drawDiagrams.js"></script>
+<script>fenToDiag("Cwda");</script>
+</html>

@@ -1,4 +1,5 @@
 import ChessRules from "/base_rules.js";
+import {FenUtil} from "/utils/setupPieces.js"
 
 export default class CwdaRules extends ChessRules {
 
@@ -76,21 +77,21 @@ export default class CwdaRules extends ChessRules {
       }
     );
     let pawnLines = {
-      w: "pppppppp",
-      b: "pppppppp"
+      w: Array(8).fill('p'),
+      b: Array(8).fill('p')
     };
     for (const c of ['w', 'b']) {
       const army = "army" + (c == 'w' ? "1" : "2");
       if (this.options[army] != 'F') {
-        for (let obj of [s, pawnLines]) {
-          obj[c] = obj[c].split("")
-            .map(p => V.PiecesMap[this.options[army]][p]).join("");
-        }
+        for (let obj of [s, pawnLines])
+          obj[c] = obj[c].map(p => V.PiecesMap[this.options[army]][p]);
       }
     }
     return {
       fen: s.b.join("") + "/" +
-           pawnLines['b'] + "/8/8/8/8/" + pawnLines['w'].toUpperCase() +
+           pawnLines['b'].join("") +
+           "/8/8/8/8/" +
+           pawnLines['w'].join("").toUpperCase() +
            "/" + s.w.join("").toUpperCase(),
       o: {flags: s.flags}
     };
@@ -105,8 +106,8 @@ export default class CwdaRules extends ChessRules {
 
   setOtherVariables(fenParsed) {
     super.setOtherVariables(fenParsed);
-    this.army1 = fenParsed.armies.charAt(0);
-    this.army2 = fenParsed.armies.charAt(1);
+    this.options["army1"] = fenParsed.armies.charAt(0);
+    this.options["army2"] = fenParsed.armies.charAt(1);
   }
 
   isKing(x, y, p) {
@@ -165,12 +166,14 @@ export default class CwdaRules extends ChessRules {
 
   pieces(color, x, y) {
     const res = super.pieces(color, x, y);
+    const backward = (color == 'w' ? 1 : -1);
+    const forward = -backward;
     return Object.assign(
       {
         'd': {
           "class": "c_rook",
           both: [
-            {steps: V.steps.b},
+            {steps: res['b'].both[0].steps},
             {steps: V.steps.d, range: 1}
           ]
         },
@@ -178,7 +181,7 @@ export default class CwdaRules extends ChessRules {
           "class": "c_knight",
           both: [
             {steps: V.steps.a, range: 1},
-            {steps: V.steps.r, range: 1}
+            {steps: res['r'].both[0].steps, range: 1}
           ]
         },
         'f': {
@@ -186,170 +189,122 @@ export default class CwdaRules extends ChessRules {
           both: [
             {steps: V.steps.d, range: 1},
             {steps: V.steps.a, range: 1},
-            {steps: V.steps.b, range: 1}
+            {steps: res['b'].both[0].steps, range: 1}
           ]
         },
         'c': {
           "class": "c_queen",
           both: [
-            {steps: V.steps.b},
-            {steps: V.steps.n, range: 1}
+            {steps: res['b'].both[0].steps},
+            {steps: res['n'].both[0].steps, range: 1}
           ]
         },
-        'm': { moveas: 'k' },
-        'z': { moveas: 'p' },
+        'm': { "class": "c_king", moveas: 'k' },
+        'z': { "class": "c_pawn", moveas: 'p' },
         'g': {
-
+          "class": "n_rook",
+          both: [
+            {steps: [[0, -1], [0, 1], [color == 'w' ? -1 : 1, 0]]},
+            {steps: [[backward, -1], [backward, 0], [backward, 1]], range: 1}
+          ]
         },
         'i': {
-
+          "class": "n_knight",
+          both: [
+            {steps: V.steps.$n, range: 1},
+            {steps: V.steps.f, range: 1}
+          ]
         },
         't': {
-
+          "class": "n_bishop",
+          both: [
+            {
+              steps: [[0, -1], [0, 1], [backward, -1],
+                     [backward, 0], [backward, 1]],
+              range: 1
+            },
+            {
+              steps: [[2*forward, -1], [2*forward, 1],
+                     [forward, -2], [forward, 2]],
+              range: 1
+            }
+          ]
         },
         'l': {
-
+          "class": "n_queen",
+          both: [
+            {steps: [[0, -1], [0, 1], [forward, 0]]},
+            {steps: [[forward, -1], [forward, 1],
+                    [backward, -1], [backward, 0], [backward, 1]], range: 1},
+            {steps: [[2*forward, -1], [2*forward, 1],
+                    [forward, -2], [forward, 2]], range: 1}
+          ]
         },
-        'e': { moveas: 'k' },
-        'v': { moveas: 'p' },
+        'e': { "class": "n_king", moveas: 'k' },
+        'v': { "class": "n_pawn", moveas: 'p' },
         's': {
-
+          "class": "r_rook",
+          both: [{steps: res['r'].both[0].steps, range: 4}]
         },
         'y': {
-
+          "class": "r_knight",
+          both: [
+            {steps: V.steps.d, range: 1},
+            {steps: V.steps.w, range: 1}
+          ]
         },
         'h': {
-
+          "class": "r_bishop",
+          both: [
+            {steps: V.steps.d, range: 1},
+            {steps: V.steps.f, range: 1},
+            {steps: V.steps.$3, range: 1}
+          ]
         },
         'o': {
-
+          "class": "r_queen",
+          both: [
+            {steps: res['r'].both[0].steps},
+            {steps: res['n'].both[0].steps, range: 1}
+          ]
         },
-        'a': { moveas: 'k' },
-        'u': { moveas: 'p' }
+        'a': { "class": "r_king", moveas: 'k' },
+        'u': { "class": "r_pawn", moveas: 'p' }
       },
       res
     );
-
-
-
-
-
-  getPotentialN_rookMoves(sq) {
-    const c = this.turn;
-    const rookSteps = [ [0, -1], [0, 1], [c == 'w' ? -1 : 1, 0] ];
-    const backward = (c == 'w' ? 1 : -1);
-    const kingSteps = [ [backward, -1], [backward, 0], [backward, 1] ];
-    return (
-      this.getSlideNJumpMoves(sq, rookSteps).concat(
-      this.getSlideNJumpMoves(sq, kingSteps, 1))
-    );
   }
 
-  getPotentialN_knightMoves(sq) {
-    return (
-      this.getSlideNJumpMoves(sq, V.steps.$n, 1).concat(
-      this.getSlideNJumpMoves(sq, V.steps.f, 1))
-    );
-  }
-
-  getPotentialN_bishopMoves(sq) {
-    const backward = (this.turn == 'w' ? 1 : -1);
-    const kingSteps = [
-      [0, -1], [0, 1], [backward, -1], [backward, 0], [backward, 1]
-    ];
-    const forward = -backward;
-    const knightSteps = [
-      [2*forward, -1], [2*forward, 1], [forward, -2], [forward, 2]
-    ];
-    return (
-      this.getSlideNJumpMoves(sq, knightSteps, 1).concat(
-      this.getSlideNJumpMoves(sq, kingSteps, 1))
-    );
-  }
-
-  getPotentialN_queenMoves(sq) {
-    const backward = (this.turn == 'w' ? 1 : -1);
-    const forward = -backward;
-    const kingSteps = [
-      [forward, -1], [forward, 1],
-      [backward, -1], [backward, 0], [backward, 1]
-    ];
-    const knightSteps = [
-      [2*forward, -1], [2*forward, 1], [forward, -2], [forward, 2]
-    ];
-    const rookSteps = [ [0, -1], [0, 1], [forward, 0] ];
-    return (
-      this.getSlideNJumpMoves(sq, rookSteps).concat(
-      this.getSlideNJumpMoves(sq, kingSteps, 1)).concat(
-      this.getSlideNJumpMoves(sq, knightSteps, 1))
-    );
-  }
-
-  getPotentialR_rookMoves(sq) {
-    return this.getSlideNJumpMoves(sq, V.steps.r, 4);
-  }
-
-  getPotentialR_knightMoves(sq) {
-    return (
-      this.getSlideNJumpMoves(sq, V.steps.d, 1).concat(
-      this.getSlideNJumpMoves(sq, V.steps.w, 1))
-    );
-  }
-
-  getPotentialR_bishopMoves(sq) {
-    return (
-      this.getSlideNJumpMoves(sq, V.steps.d, 1).concat(
-      this.getSlideNJumpMoves(sq, V.steps.f, 1)).concat(
-      this.getSlideNJumpMoves(sq, V.steps.$3, 1))
-    );
-  }
-
-  getPotentialR_queenMoves(sq) {
-    return (
-      this.getSlideNJumpMoves(sq, V.steps.r).concat(
-      this.getSlideNJumpMoves(sq, V.steps.n, 1))
-    );
-  }
-
-      case V.PAWN: {
-        // Can promote in anything from the two current armies
-        let promotions = [];
-        for (let army of ["army1", "army2"]) {
-          if (army == "army2" && this.army2 == this.army1) break;
-          switch (this[army]) {
-            case 'C': {
-              Array.prototype.push.apply(promotions,
-                [V.C_ROOK, V.C_KNIGHT, V.C_BISHOP, V.C_QUEEN]);
-              break;
-            }
-            case 'N': {
-              Array.prototype.push.apply(promotions,
-                [V.N_ROOK, V.N_KNIGHT, V.N_BISHOP, V.N_QUEEN]);
-              break;
-            }
-            case 'R': {
-              Array.prototype.push.apply(promotions,
-                [V.R_ROOK, V.R_KNIGHT, V.R_BISHOP, V.R_QUEEN]);
-              break;
-            }
-            case 'F': {
-              Array.prototype.push.apply(promotions,
-                [V.ROOK, V.KNIGHT, V.BISHOP, V.QUEEN]);
-              break;
-            }
-          }
-        }
-        return super.getPotentialPawnMoves(sq, promotions);
+  get pawnPromotions() {
+    // Can promote in anything from the two current armies
+    let promotions = [];
+    for (let army of ["army1", "army2"]) {
+      if (army == "army2" && this.options["army2"] == this.options["army1"])
+        break;
+      switch (this.options[army]) {
+        case 'C':
+          Array.prototype.push.apply(promotions, ['d', 'w', 'f', 'c']);
+          break;
+        case 'N':
+          Array.prototype.push.apply(promotions, ['g', 'i', 't', 'l']);
+          break;
+        case 'R':
+          Array.prototype.push.apply(promotions, ['s', 'y', 'h', 'o']);
+          break;
+        case 'F':
+          Array.prototype.push.apply(promotions, ['r', 'n', 'b', 'q']);
+          break;
       }
-      default: return super.getPotentialMovesFrom(sq);
     }
+    return promotions;
+  }
 
   getCastleMoves([x, y]) {
     const color = this.getColor(x, y);
-    let finalSquares = [ [2, 3], [V.size.y - 2, V.size.y - 3] ];
+    let finalSquares = [ [2, 3], [this.size.y - 2, this.size.y - 3] ];
     if (
-      (color == 'w' && this.army1 == 'C') ||
-      (color == 'b' && this.army2 == 'C')
+      (color == 'w' && this.options["army1"] == 'C') ||
+      (color == 'b' && this.options["army2"] == 'C')
     ) {
       // Colorbound castle long in an unusual way:
       finalSquares[0] = [1, 2];
