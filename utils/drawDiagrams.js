@@ -11,8 +11,12 @@ function fenToDiag(vname) {
 function getDiagSize(elt) {
   const baseWidth = Math.min(window.innerWidth, 800);
   let multFact = 1;
-  if (elt.classList.contains("left") || elt.classList.contains("right"))
-    multFact = 0.45;
+  if (elt.classList.contains("left") || elt.classList.contains("right")) {
+    if (baseWidth >= 551)
+      multFact = 0.45;
+    else
+      multFact = 0.7;
+  }
   else if (baseWidth > 630)
     multFact = 0.5;
   else
@@ -43,7 +47,7 @@ function re_drawDiagrams() {
         element: "diag_" + i,
         fen: diagrams[i].dataset.fen,
         marks: diagrams[i].dataset.mks
-                 ? JSON.parse('[' + diagrams[i].dataset.mks + ']')
+                 ? diagrams[i].dataset.mks.split(',')
                  : undefined,
         color: diagrams[i].dataset.col || 'w',
         options: {},

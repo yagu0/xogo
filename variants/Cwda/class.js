@@ -73,7 +73,7 @@ export default class CwdaRules extends ChessRules {
         randomness: this.options["randomness"],
         between: [{p1: 'k', p2: 'r'}],
         diffCol: ['b'],
-        flags: ['r', 'k']
+        flags: ['r']
       }
     );
     let pawnLines = {

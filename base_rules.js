@@ -235,7 +235,7 @@ export default class ChessRules {
         randomness: this.options["randomness"],
         between: [{p1: 'k', p2: 'r'}],
         diffCol: ['b'],
-        flags: ['r', 'k']
+        flags: ['r']
       }
     );
     return {
@@ -642,7 +642,13 @@ export default class ChessRules {
       else
         this[arrName] = ArrayFun.init(this.size.x, this.size.y, null);
       if (arrName == "d_pieces")
-        this.marks.forEach(([i, j]) => addPiece(i, j, arrName, "mark"));
+        this.marks.forEach((m) => {
+          const formattedSquare =
+            (this.size.x - parseInt(m.substring(1), 10)).toString(36) +
+            (m.charCodeAt(0) - 97).toString(36);
+          const mCoords = V.SquareToCoords(formattedSquare);
+          addPiece(mCoords.x, mCoords.y, arrName, "mark");
+        });
     };
     if (this.marks)
       conditionalReset("d_pieces");

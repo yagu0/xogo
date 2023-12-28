@@ -180,6 +180,14 @@ main > div {
   padding: 0 10px;
   overflow: auto;
 }
+.full-rules figure.show-pieces {
+  max-width: 90%;
+  text-align: center;
+  margin: 0 auto;
+}
+.full-rules figure.show-pieces > img {
+  max-width: 100px;
+}
 .full-rules > div {
   margin-bottom: 20px;
 }
@@ -233,6 +241,16 @@ piece.mark.transparent {
 }
 .full-rules .right {
   float: right;
+}
+@media screen and (max-width: 550px) {
+  .full-rules .left {
+    float: none;
+    margin-bottom: 10px;
+  }
+  .full-rules .right {
+    float: none;
+    margin-top: 10px;
+  }
 }
 .full-rules figcaption {
   display: block;
@@ -350,8 +368,6 @@ piece.mark.transparent {
 .chessboard {
   position: absolute;
   cursor: pointer;
-  min-width: 200px;
-  min-height: 200px;
 }
 piece {
   position: absolute;
