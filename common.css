@@ -260,6 +260,10 @@ piece.mark.transparent {
   color: #0D1C46;
   font-weight: bold;
 }
+.full-rules .img-center {
+  display: block;
+  margin: 0 auto;
+}
 /* TODO: use same CSS for rules and full-rules? */
 .full-rules p, .full-rules ul, .full-rules ol {
   margin: 10px 0;

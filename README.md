@@ -10,6 +10,7 @@ PHP + Node.js + npm.
 ## Usage
 
 ```wget https://xogo.live/assets.zip && unzip assets.zip``` <br/>
+```wget https://xogo.live/extras.zip && unzip extras.zip``` <br/>
 Rename parameters.js.dist &rarr; parameters.js, and edit file. <br/>
 ```npm i```
 

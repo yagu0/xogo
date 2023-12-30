@@ -3,5 +3,7 @@
 /node_modules/
 /assets/
 /assets.zip
+/extras/
+/extras.zip
 /.pid
 /parameters.js

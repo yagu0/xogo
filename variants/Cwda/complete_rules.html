@@ -5,7 +5,6 @@
   <link href="/variants/Cwda/style.css" rel="stylesheet"/>
 </head>
 <body>
-
 <div class="full-rules">
 <h1>Different Armies Rules</h1>
 
@@ -30,7 +29,12 @@
 
 <h3>The Colorbound Clobberers</h3>
 
-<figure class="show-pieces"><img src="/pieces/Cwda/c_black_rook.svg"/><img src="/pieces/Cwda/c_white_knight.svg"/><img src="/pieces/Cwda/c_black_bishop.svg"/><img src="/pieces/Cwda/c_white_queen.svg"/></figure>
+<figure class="show-pieces">
+  <img src="/pieces/Cwda/c_black_rook.svg"/>
+  <img src="/pieces/Cwda/c_white_knight.svg"/>
+  <img src="/pieces/Cwda/c_black_bishop.svg"/>
+  <img src="/pieces/Cwda/c_white_queen.svg"/>
+</figure>
 
 <ul>
   <li>Rook = bishop + dabbabah = "bede" (D),</li>
@@ -53,8 +57,11 @@
   </figcaption>
 </figure>
 
-<figure class="diagram-container">
-  <div class="diagram">fen:8/8/8/3F4/8/8/8/8 b7,c6,b5,f5,d3,d7,b3,c4,e4,f3,e6,f7:</div>
+<figure>
+  <div class="diag"
+       data-fen='8/8/8/3F4/8/8/8/8 w 0 {"armies":"CC","flags":"8888","enpassant":"-"}'
+       data-mks="b7,c6,b5,f5,d3,d7,b3,c4,e4,f3,e6,f7">
+  </div>
   <figcaption>
     Moves of the Fad.
   </figcaption>
@@ -67,7 +74,12 @@
 
 <h3>The Nutty Knights</h3>
 
-<figure class="showPieces text-center"><img src="/images/pieces/Cwda/bg.svg"/><img src="/images/pieces/Cwda/wi.svg"/><img src="/images/pieces/Cwda/bt.svg"/><img src="/images/pieces/Cwda/wl.svg"/></figure>
+<figure class="show-pieces">
+  <img src="/pieces/Cwda/n_black_rook.svg"/>
+  <img src="/pieces/Cwda/n_white_knight.svg"/>
+  <img src="/pieces/Cwda/n_black_bishop.svg"/>
+  <img src="/pieces/Cwda/n_white_queen.svg"/>
+</figure>
 
 <ul>
   <li>Rook = rook forward and sideways + king backwards = "charging rook" (G),</li>
@@ -79,17 +91,29 @@
   <li>Queen = rook forward and sideways + knight forward + king = "colonel" (L).</li>
 </ul>
 
-<figure class="diagram-container">
-  <div class="diagram diag12">fen:8/8/8/8/3G4/8/8/8 d5,d6,d7,d8,c4,b4,a4,e4,f4,g4,h4,c3,d3,e3:</div>
-  <div class="diagram diag22">fen:8/8/8/8/4i3/8/8/8 d6,d2,f6,f2,d3,d5,f5,f3:</div>
+<figure>
+  <div class="diag left"
+       data-fen='8/8/8/8/3G4/8/8/8 w 0 {"armies":"NN","flags":"8888","enpassant":"-"}'
+       data-mks="d5,d6,d7,d8,c4,b4,a4,e4,f4,g4,h4,c3,d3,e3">
+  </div>
+  <div class="diag right"
+       data-fen='8/8/8/8/4i3/8/8/8 w 0 {"armies":"NN","flags":"8888","enpassant":"-"}'
+       data-mks="d6,d2,f6,f2,d3,d5,f5,f3">
+  </div>
   <figcaption>
     Moves of the Charging rook on the left, and of the Fibnif on the right.
   </figcaption>
 </figure>
 
-<figure class="diagram-container">
-  <div class="diagram diag12">fen:8/8/8/8/3T4/8/8/8 b5,c6,e6,f5,c4,e4,c3,d3,e3:</div>
-  <div class="diagram diag22">fen:8/8/8/8/4c3/8/8/8 e5,e6,e7,e8,d4,c4,b4,a4,f4,g4,h4,d6,c5,f6,g5,d5,f5,d3,e3,f3:</div>
+<figure>
+  <div class="diag left"
+       data-fen='8/8/8/8/3T4/8/8/8 w 0 {"armies":"NN","flags":"8888","enpassant":"-"}'
+       data-mks="b5,c6,e6,f5,c4,e4,c3,d3,e3">
+  </div>
+  <div class="diag right"
+       data-fen='8/8/8/8/4c3/8/8/8 w 0 {"armies":"NN","flags":"8888","enpassant":"-"}'
+       data-mks="e5,e6,e7,e8,d4,c4,b4,a4,f4,g4,h4,d6,c5,f6,g5,d5,f5,d3,e3,f3">
+  </div>
   <figcaption>
     Moves of the Charging knight on the left, and of the Colonel on the right.
   </figcaption>
@@ -97,7 +121,12 @@
 
 <h3>The Remarkable Rookies</h3>
 
-<figure class="showPieces text-center"><img src="/images/pieces/Cwda/bs.svg"/><img src="/images/pieces/Cwda/wy.svg"/><img src="/images/pieces/Cwda/bh.svg"/><img src="/images/pieces/Cwda/wo.svg"/></figure>
+<figure class="show-pieces">
+  <img src="/pieces/Cwda/r_black_rook.svg"/>
+  <img src="/pieces/Cwda/r_white_knight.svg"/>
+  <img src="/pieces/Cwda/r_black_bishop.svg"/>
+  <img src="/pieces/Cwda/r_white_queen.svg"/>
+</figure>
 
 <ul>
   <li>Rook = rook limited to 4 squares = "short rook" (S),</li>
@@ -106,9 +135,15 @@
   <li>Queen = rook + knight = "chancellor" (O).</li>
 </ul>
 
-<figure class="diagram-container">
-  <div class="diagram diag12">fen:8/8/8/3y4/8/8/8/8 d3,b5,d7,f5,c5,d6,e5,d4:</div>
-  <div class="diagram diag22">fen:8/8/8/4H3/8/8/8/8 c5,e7,g5,e3,b5,e8,h5,e2,d4,d6,f6,f4:</div>
+<figure>
+  <div class="diag left"
+       data-fen='8/8/8/3y4/8/8/8/8 w 0 {"armies":"RR","flags":"8888","enpassant":"-"}'
+       data-mks="d3,b5,d7,f5,c5,d6,e5,d4">
+  </div>
+  <div class="diag right"
+       data-fen='8/8/8/4H3/8/8/8/8 w 0 {"armies":"RR","flags":"8888","enpassant":"-"}'
+       data-mks="c5,e7,g5,e3,b5,e8,h5,e2,d4,d6,f6,f4">
+  </div>
   <figcaption>
     Moves of the Woody rook on the left, and of the Half-duck on the right.
   </figcaption>
@@ -120,7 +155,12 @@
 
 <h3>Source</h3>
 
-<p><a href="https://www.chessvariants.com/unequal.dir/cwda.html">Chess with different armies</a>&nbsp;on chessvariants.com.</p>
+<p>
+  <a href="https://www.chessvariants.com/unequal.dir/cwda.html">
+    Chess with different armies
+  </a>
+  on chessvariants.com.
+</p>
 
 </body>
 <script src="/utils/drawDiagrams.js"></script>
