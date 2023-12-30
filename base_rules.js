@@ -579,11 +579,18 @@ export default class ChessRules {
 
   // Get SVG board (background, no pieces)
   getSvgChessboard() {
-    const flipped = this.flippedBoard;
     let board = `
       <svg
         viewBox="0 0 ${10*this.size.y} ${10*this.size.x}"
         class="chessboard_SVG">`;
+    board += this.getBaseSvgChessboard();
+    board += "</svg>";
+    return board;
+  }
+
+  getBaseSvgChessboard() {
+    let board = "";
+    const flipped = this.flippedBoard;
     for (let i=0; i < this.size.x; i++) {
       for (let j=0; j < this.size.y; j++) {
         if (!this.onBoard(i, j))
@@ -605,7 +612,6 @@ export default class ChessRules {
           />`;
       }
     }
-    board += "</svg>";
     return board;
   }
 
@@ -2341,10 +2347,11 @@ export default class ChessRules {
     if (this.options["teleport"]) {
       if (
         this.subTurnTeleport == 1 &&
-        move.vanish.length > move.appear.length &&
+        move.vanish.length == 2 &&
+        move.appear.length == 1 &&
         move.vanish[1].c == this.turn
       ) {
-        const v = move.vanish[move.vanish.length - 1];
+        const v = move.vanish[1];
         this.captured = {x: v.x, y: v.y, c: v.c, p: v.p};
         this.subTurnTeleport = 2;
         return;

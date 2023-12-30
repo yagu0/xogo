@@ -41,7 +41,7 @@ const variants = [
   {name: 'Cylinder', desc: 'Neverending rows'},
   {name: 'Cwda', desc: 'New teams', disp: 'Different armies'},
   {name: 'Dark', desc: 'In the shadow'},
-//  {name: 'Diamond', desc: 'Rotating board'},
+  {name: 'Diamond', desc: 'Rotating board'},
 //  {name: 'Dice', desc: 'Roll the dice'},
 //  {name: 'Discoduel', desc: 'Enter the disco', disp: 'Disco Duel'},
 //  {name: 'Dobutsu', desc: "Let's catch the Lion!"},
