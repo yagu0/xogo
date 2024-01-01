@@ -1,0 +1,12 @@
+@import url("/base_pieces.css");
+
+div.piece-text {
+  position: relative;
+  margin-top: 15px;
+  width: 100%;
+  text-align: center;
+  background-color: transparent;
+  color: darkred;
+  font-weight: bold;
+  font-size: 2em;
+}
