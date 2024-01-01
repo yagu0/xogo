@@ -54,7 +54,8 @@ export default class DiceRules extends ChessRules {
     this.afterPlay = (move_s, newTurn, ops) => {
       // Movestack contains only one move:
       move_s[0].toplay = this.getRandomPiece(this.turn);
-      super.displayMessage(this.message, move_s[0].toplay);
+      super.displayMessage(
+        this.message, "To play: " + move_s[0].toplay.toUpperCase());
       o.afterPlay(move_s, newTurn, ops);
     };
   }
@@ -64,7 +65,7 @@ export default class DiceRules extends ChessRules {
     this.toplay = fenParsed.toplay;
     this.message = document.createElement("div");
     C.AddClass_es(this.message, "piece-text");
-    this.message.innerHTML = this.toplay;
+    this.message.innerHTML = "To play: " + this.toplay.toUpperCase();
     let container = document.getElementById(this.containerId);
     container.appendChild(this.message);
   }
@@ -101,7 +102,8 @@ export default class DiceRules extends ChessRules {
 
   playReceivedMove(moves, callback) {
     this.toplay = moves[0].toplay; //only one move
-    super.displayMessage(this.message, this.toplay);
+    super.displayMessage(
+      this.message, "To play: " + this.toplay.toUpperCase());
     super.playReceivedMove(moves, callback);
   }
 
