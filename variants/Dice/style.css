@@ -1,5 +1,11 @@
 @import url("/base_pieces.css");
 
+/* doesn't work:
+@font-face {
+  font-family: chess-font;
+  src: url(/assets/FreeSerifBold-rdMp.otf);
+} */
+
 div.piece-text {
   position: relative;
   margin-top: 15px;
@@ -8,5 +14,10 @@ div.piece-text {
   background-color: transparent;
   color: darkred;
   font-weight: bold;
-  font-size: 2em;
+  font-size: 1.7em;
 }
+
+/*
+div.piece-text > span.symb {
+  font-family: chess-font;
+} */

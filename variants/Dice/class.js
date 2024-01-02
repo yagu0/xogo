@@ -54,10 +54,37 @@ export default class DiceRules extends ChessRules {
     this.afterPlay = (move_s, newTurn, ops) => {
       // Movestack contains only one move:
       move_s[0].toplay = this.getRandomPiece(this.turn);
-      super.displayMessage(
-        this.message, "To play: " + move_s[0].toplay.toUpperCase());
+      this.toplay = move_s[0].toplay;
+      this.displayMessage(move_s[0].toplay,
+                          C.GetOppTurn(move_s[0].appear[0].c));
       o.afterPlay(move_s, newTurn, ops);
     };
+  }
+
+  static get PieceToUnicode() {
+    return {
+      'K': "&#9812;",
+      'Q': "&#9813;",
+      'R': "&#9814;",
+      'B': "&#9815;",
+      'N': "&#9816;",
+      'P': "&#9817;",
+      'k': "&#9818;",
+      'q': "&#9819;",
+      'r': "&#9820;",
+      'b': "&#9821;",
+      'n': "&#9822;",
+      'p': "&#9823;"
+    };
+  }
+
+  displayMessage(piece, color) {
+    if (color == 'w')
+      piece = piece.toUpperCase();
+    super.displayMessage(this.message,
+      '<span>to play:</span> ' +
+      '<span class="symb">' + V.PieceToUnicode[piece] + '</span>'
+    );
   }
 
   setOtherVariables(fenParsed) {
@@ -65,9 +92,9 @@ export default class DiceRules extends ChessRules {
     this.toplay = fenParsed.toplay;
     this.message = document.createElement("div");
     C.AddClass_es(this.message, "piece-text");
-    this.message.innerHTML = "To play: " + this.toplay.toUpperCase();
     let container = document.getElementById(this.containerId);
     container.appendChild(this.message);
+    this.displayMessage(this.toplay, fenParsed.turn);
   }
 
   getRandomPiece(color) {
@@ -102,8 +129,7 @@ export default class DiceRules extends ChessRules {
 
   playReceivedMove(moves, callback) {
     this.toplay = moves[0].toplay; //only one move
-    super.displayMessage(
-      this.message, "To play: " + this.toplay.toUpperCase());
+    this.displayMessage(this.toplay, C.GetOppTurn(moves[0].appear[0].c));
     super.playReceivedMove(moves, callback);
   }
 
