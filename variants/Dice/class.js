@@ -61,29 +61,21 @@ export default class DiceRules extends ChessRules {
     };
   }
 
-  static get PieceToUnicode() {
-    return {
-      'K': "&#9812;",
-      'Q': "&#9813;",
-      'R': "&#9814;",
-      'B': "&#9815;",
-      'N': "&#9816;",
-      'P': "&#9817;",
-      'k': "&#9818;",
-      'q': "&#9819;",
-      'r': "&#9820;",
-      'b': "&#9821;",
-      'n': "&#9822;",
-      'p': "&#9823;"
-    };
-  }
-
   displayMessage(piece, color) {
-    if (color == 'w')
-      piece = piece.toUpperCase();
+    if (color == 'b') {
+      const blackPieceToCode = {
+        'k': 'l',
+        'p': 'o',
+        'n': 'm',
+        'b': 'v',
+        'q': 'w',
+        'r': 't'
+      };
+      piece = blackPieceToCode[piece];
+    }
     super.displayMessage(this.message,
       '<span>to play:</span> ' +
-      '<span class="symb">' + V.PieceToUnicode[piece] + '</span>'
+      '<span class="symb">' + piece + '</span>'
     );
   }
 
