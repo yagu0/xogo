@@ -338,7 +338,7 @@ export default class ChessRules {
 
   getReserveFen(o) {
     if (o.init)
-      return "000000000000";
+      return Array(2 * V.ReserveArray.length).fill('0').join("");
     return (
       ['w', 'b'].map(c => Object.values(this.reserve[c]).join("")).join("")
     );
@@ -416,14 +416,14 @@ export default class ChessRules {
   }
 
   // Some additional variables from FEN (variant dependant)
-  setOtherVariables(fenParsed, pieceArray) {
+  setOtherVariables(fenParsed) {
     // Set flags and enpassant:
     if (this.hasFlags)
       this.setFlags(fenParsed.flags);
     if (this.hasEnpassant)
       this.epSquare = this.getEpSquare(fenParsed.enpassant);
     if (this.hasReserve && !this.isDiagram)
-      this.initReserves(fenParsed.reserve, pieceArray);
+      this.initReserves(fenParsed.reserve);
     if (this.options["crazyhouse"])
       this.initIspawn(fenParsed.ispawn);
     if (this.options["teleport"]) {
@@ -441,14 +441,16 @@ export default class ChessRules {
   }
 
   // ordering as in pieces() p,r,n,b,q,k
-  initReserves(reserveStr, pieceArray) {
-    if (!pieceArray)
-      pieceArray = ['p', 'r', 'n', 'b', 'q', 'k'];
+  static get ReserveArray() {
+    return ['p', 'r', 'n', 'b', 'q', 'k'];
+  }
+
+  initReserves(reserveStr) {
     const counts = reserveStr.split("").map(c => parseInt(c, 36));
-    const L = pieceArray.length;
+    const L = V.ReserveArray.length;
     this.reserve = {
-      w: ArrayFun.toObject(pieceArray, counts.slice(0, L)),
-      b: ArrayFun.toObject(pieceArray, counts.slice(L, 2 * L))
+      w: ArrayFun.toObject(V.ReserveArray, counts.slice(0, L)),
+      b: ArrayFun.toObject(V.ReserveArray, counts.slice(L, 2 * L))
     };
   }
 

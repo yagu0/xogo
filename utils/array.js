@@ -5,8 +5,12 @@ export const ArrayFun = {
     return [...Array(size1)].map(() => Array(size2).fill(initElem));
   },
 
-  range: function(max) {
-    return [...Array(max).keys()];
+  range: function(min, max) {
+    if (!max) {
+      max = min;
+      min = 0;
+    }
+    return [...Array(max - min).keys()].map(k => k + min);
   },
 
   toObject: function(keys, values) {

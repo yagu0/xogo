@@ -20,8 +20,8 @@ export default class ChainingRules extends ChessRules {
     return true; //self captures induce chaining
   }
 
-  setOtherVariables(fenParsed, pieceArray) {
-    super.setOtherVariables(fenParsed, pieceArray);
+  setOtherVariables(fenParsed) {
+    super.setOtherVariables(fenParsed);
     // Stack of "last move" only for intermediate chaining
     this.lastMoveEnd = [];
   }

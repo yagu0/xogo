@@ -15,8 +15,8 @@ export default class ConvertRules extends ChessRules {
     return false;
   }
 
-  setOtherVariables(fenParsed, pieceArray) {
-    super.setOtherVariables(fenParsed, pieceArray);
+  setOtherVariables(fenParsed) {
+    super.setOtherVariables(fenParsed);
     // Stack of "last move" only for intermediate chaining
     this.lastMoveEnd = [];
   }

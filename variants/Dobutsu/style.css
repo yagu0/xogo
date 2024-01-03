@@ -1,0 +1,34 @@
+piece.chick {
+  background-image: url('/pieces/Dobutsu/chick.svg');
+}
+piece.rev-chick {
+  background-image: url('/pieces/Dobutsu/rev_chick.svg');
+}
+
+piece.hen {
+  background-image: url('/pieces/Dobutsu/hen.svg');
+}
+piece.rev-hen {
+  background-image: url('/pieces/Dobutsu/rev_hen.svg');
+}
+
+piece.elephant {
+  background-image: url('/pieces/Dobutsu/elephant.svg');
+}
+piece.rev-elephant {
+  background-image: url('/pieces/Dobutsu/rev_elephant.svg');
+}
+
+piece.giraffe {
+  background-image: url('/pieces/Dobutsu/giraffe.svg');
+}
+piece.rev-giraffe {
+  background-image: url('/pieces/Dobutsu/rev_giraffe.svg');
+}
+
+piece.lion {
+  background-image: url('/pieces/Dobutsu/lion.svg');
+}
+piece.rev-lion {
+  background-image: url('/pieces/Dobutsu/rev_lion.svg');
+}

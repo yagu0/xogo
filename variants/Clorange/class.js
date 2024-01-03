@@ -14,14 +14,6 @@ export default class ClorangeRules extends ChessRules {
     return true;
   }
 
-  getReserveFen(o) {
-    if (o.init)
-      return "00000000000000000000";
-    return (
-      ["w","b"].map(c => Object.values(this.reserve[c]).join("")).join("")
-    );
-  }
-
   pieces(color, x, y) {
     let res = super.pieces(color, x, y);
     res['s'] = {"class": "nv-pawn", moveas: "p"};
@@ -38,9 +30,8 @@ export default class ClorangeRules extends ChessRules {
   static get NV_PIECES() {
     return ['s', 'u', 'o', 'c', 't'];
   }
-
-  setOtherVariables(fen) {
-    super.setOtherVariables(fen, V.V_PIECES.concat(V.NV_PIECES));
+  static get ReserveArray() {
+    return V.V_PIECES.concat(V.NV_PIECES);
   }
 
   // Forbid non-violent pieces to capture

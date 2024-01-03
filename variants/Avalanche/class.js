@@ -167,7 +167,7 @@ export default class AvalancheRules extends ChessRules {
     }
   }
 
-  atLeastOneMove(color, lastMove) {
+  atLeastOneMove(color) {
     if (this.subTurn == 0)
       return true;
     return super.atLeastOneMove(color);

@@ -61,8 +61,8 @@ export default class CoregalRules extends ChessRules {
     );
   }
 
-  setOtherVariables(fenParsed, pieceArray) {
-    super.setOtherVariables(fenParsed, pieceArray);
+  setOtherVariables(fenParsed) {
+    super.setOtherVariables(fenParsed);
     this.relPos = {
       'w': {
         'k': fenParsed.relpos[0],
