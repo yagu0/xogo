@@ -19,7 +19,7 @@ export default class DobutsuRules extends ChessRules {
     // NOTE: classs change according to playerColor (orientation)
     const mySide = (this.playerColor == color);
     return {
-      'c': {
+      'p': {
         "class": (mySide ? "" : "rev-") + "chick",
         both: [{steps: [[pawnShift, 0]], range: 1}]
       },
@@ -43,7 +43,7 @@ export default class DobutsuRules extends ChessRules {
         "class": (mySide ? "" : "rev-") + "giraffe",
         both: [{steps: [[0, 1], [0, -1], [1, 0], [-1, 0]], range: 1}]
       },
-      'l': {
+      'k': {
         "class": (mySide ? "" : "rev-") + "lion",
         both: [{
           steps: [[-1, 1], [-1, -1], [1, 1], [1, -1],
@@ -54,14 +54,13 @@ export default class DobutsuRules extends ChessRules {
     };
   }
 
-  isKing(x, y, p) {
-    if (!p)
-      p = this.getPiece(x, y);
-    return (p == 'l');
-  }
-
   static get ReserveArray() {
     return ['p', 'h', 'e', 'g'];
+  }
+
+  updateReserve(color, piece, count) {
+    if (piece != 'k')
+      super.updateReserve(color, piece, count);
   }
 
   constructor(o) {
@@ -75,13 +74,13 @@ export default class DobutsuRules extends ChessRules {
 
   genRandInitBaseFen() {
     return {
-      fen: "gle/1c1/1C1/ELG",
+      fen: "gke/1p1/1P1/EKG",
       o: {}
     };
   }
 
   get size() {
-    return {x: 4, y: 4};
+    return {x: 4, y: 3};
   }
 
   getCurrentScore(move_s) {
@@ -91,7 +90,7 @@ export default class DobutsuRules extends ChessRules {
     const oppCol = C.GetOppTurn(this.turn);
     const oppLastRank = (oppCol == 'b' ? 3 : 0);
     for (let j=0; j < this.size.y; j++) {
-      if (this.board[oppLastRank][j] == oppCol + 'l')
+      if (this.board[oppLastRank][j] == oppCol + 'k')
         return (oppCol == 'w' ? "1-0" : "0-1");
     }
     return "*";

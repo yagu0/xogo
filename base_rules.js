@@ -465,7 +465,7 @@ export default class ChessRules {
   // VISUAL UTILS
 
   getPieceWidth(rwidth) {
-    return (rwidth / this.size.y);
+    return (rwidth / Math.max(this.size.x, this.size.y));
   }
 
   getReserveSquareSize(rwidth, nbR) {
@@ -856,9 +856,10 @@ export default class ChessRules {
       y = (this.playerColor == i ? y = r.height + 5 : - 5 - rsqSize);
     }
     else {
-      const sqSize = r.width / this.size.y;
+      const sqSize = r.width / Math.max(this.size.x, this.size.y);
       const flipped = this.flippedBoard;
-      x = (flipped ? this.size.y - 1 - j : j) * sqSize;
+      x = (flipped ? this.size.y - 1 - j : j) * sqSize +
+          Math.abs(this.size.x - this.size.y) * sqSize / 2;
       y = (flipped ? this.size.x - 1 - i : i) * sqSize;
     }
     return [r.x + x, r.y + y];
@@ -2284,11 +2285,6 @@ export default class ChessRules {
     if (this.hasCastle)
       this.updateCastleFlags(move);
     if (this.options["crazyhouse"]) {
-      move.vanish.forEach(v => {
-        const square = C.CoordsToSquare({x: v.x, y: v.y});
-        if (this.ispawn[square])
-          delete this.ispawn[square];
-      });
       if (move.appear.length > 0 && move.vanish.length > 0) {
         // Assumption: something is moving
         const initSquare = C.CoordsToSquare(move.start);
@@ -2307,6 +2303,11 @@ export default class ChessRules {
           delete this.ispawn[destSquare];
         }
       }
+      move.vanish.forEach(v => {
+        const square = C.CoordsToSquare({x: v.x, y: v.y});
+        if (this.ispawn[square])
+          delete this.ispawn[square];
+      });
     }
     const minSize = Math.min(move.appear.length, move.vanish.length);
     if (
