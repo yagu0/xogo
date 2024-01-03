@@ -130,6 +130,12 @@ export default class ChakartRules extends ChessRules {
     );
   }
 
+  isKing(x, y, p) {
+    if (!p)
+      p = this.getPiece(x, y);
+    return ['k', 'l'].includes(p);
+  }
+
   genRandInitBaseFen() {
     const s = FenUtil.setupPieces(
       ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
@@ -630,19 +636,25 @@ export default class ChakartRules extends ChessRules {
         });
         break;
       case "koopa":
-        // Reverse move
+        // Reverse move, if possible
         em = new Move({
-          appear: [
-            new PiPo({
-              x: move.start.x, y: move.start.y, c: color, p: move.appear[0].p
-            })
-          ],
+          appear: [],
           vanish: [
             new PiPo({
               x: move.end.x, y: move.end.y, c: color, p: move.appear[0].p
             })
-          ]
+          ],
+          end: {x: move.start.x, y: move.start.y} //may be irrelevant
         });
+        em.koopa = true; //avoid applying effect
+        if (move.vanish.length == 0)
+          // After toadette+drop, just erase piece
+          break;
+        em.appear.push(
+          new PiPo({
+            x: move.start.x, y: move.start.y, c: color, p: move.appear[0].p
+          })
+        );
         if (this.board[move.start.x][move.start.y] != "") {
           // Pawn or knight let something on init square
           em.vanish.push(new PiPo({
@@ -652,7 +664,6 @@ export default class ChakartRules extends ChessRules {
             p: this.getPiece(move.start.x, move.start.y)
           }));
         }
-        em.koopa = true; //avoid applying effect
         break;
       case "chomp":
         // Eat piece
