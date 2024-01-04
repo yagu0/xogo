@@ -1,0 +1,9 @@
+@import url("/base_pieces.css");
+
+piece.black.commoner {
+  background-image: url('/pieces/black_commoner.svg');
+}
+
+piece.white.commoner {
+  background-image: url('/pieces/white_commoner.svg');
+}

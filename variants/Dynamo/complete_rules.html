@@ -1,0 +1,142 @@
+<html>
+<head>
+  <title>Dynamo Rules</title>
+  <link href="/common.css" rel="stylesheet"/>
+  <link href="/variants/Dynamo/style.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="full-rules">
+<h1>Dynamo Rules</h1>
+
+<p>
+  Pieces have the same movement as in orthodox chess, but they cannot
+  take other pieces in the usual way. Instead of the normal captures, pieces
+  can pull or push other pieces, potentially off the board.
+  The goal is to send the enemy king off the board.
+</p>
+
+<p>Each turn, a player has the following options:</p>
+<ul>
+  <li>
+    Move one of his pieces normally, then optionally pull something as an
+    effect of this move.
+  </li>
+  <li>
+    Push any piece with one of his pieces, then optionally follow the pushed
+    piece.
+  </li>
+
+<p>
+  It seems easier to understand with some examples. For a detailed
+  introduction please visit
+  <a href="https://echekk.fr/spip.php?page=article&id_article=599">
+    this page
+  </a> (in French).
+</p>
+
+<figure>
+  <div class="diag"
+       data-fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR ...'
+       data-mks="e1,e3,e4,c3,f3,g4,h5,d3,c4,b5,a6">
+  </div>
+  <figcaption>Possible "pawn moves" in the initial position.</figcaption>
+</figure>
+
+<p>
+  The e2 pawn can move to e3 and e4 as usual. It can also slide diagonally,
+  being pushed by the bishop or the queen (which may or may not move along
+  this line afterward). It can also go to c3, being pushed by the knight from
+  g1; then the knight can move to e2, or stay motionless.
+  Finally, the pawn can "take the king": this is a special move indicating that
+  you want it to exit the board. Indeed it could be pushed off the board by the
+  bishop or the queen.
+</p>
+
+<p>
+  Note: if an action is possible but you don't want to play a second part in
+  a move, click on any empty square: this will send an empty move.
+</p>
+
+<figure>
+  <div class="diag left"
+       data-fen='rnbqkbnr/ppp1pppp/8/3p4/8/2N5/PPPPPPPP/R1BQKBNR ...'>
+  </div>
+  <div class="diag right"
+       data-fen='rnbqkbnr/ppp1pppp/8/8/8/2p5/PPPPPPPP/RNBQKBNR ...'>
+  </div>
+  <figcaption>
+    Pulling the d5 pawn to c3 (left: before, right: after).
+  </figcaption>
+</figure>
+
+<ul>
+  <li>Pawns cannot pull (because they only move forward).</li>
+  <li>
+    When they could reach the square beyond the edge,
+    pieces can exit the board by themselves, possibly dragging another piece
+    out (friendly or enemy).
+  </li>
+</ul>
+
+<figure>
+  <div class="diag"
+       data-fen='rnb1qbnr/pppkpppp/3p4/8/Q1P5/5NP1/PP1PPP1P/RNB1KB1R ...'>
+  </div>
+  <figcaption>
+    Check: the queen threatens to pull the king off the board
+    along the a4-e8 diagonal.
+  </figcaption>
+</figure>
+
+<p>
+  It is forbidden to undo a "move + action". For example here, white could
+  push back the black bishop on g7 but not return to d4 then.
+</p>
+
+<figure>
+  <div class="diag left"
+       data-fen='rnbqk1nr/ppppppbp/6p1/8/3B4/1P6/P1PPPPPP/RN1QKBNR ...'>
+  </div>
+  <div class="diag right"
+       data-fen='rnbqk1nr/pppppp1p/6p1/8/3b4/1P6/PBPPPPPP/RN1QKBNR ...'>
+  <figcaption>
+    Pushing the d4 bishop to b2 (left: before, right: after).
+  </figcaption>
+</figure>
+
+<p>
+  Castling is possible as long as the king and rook have not moved and
+  haven't been pushed or pulled (this differs from the chessvariants
+  description).
+</p>
+
+<h3>End of the game</h3>
+
+<p>
+  The game ends when a push or pull action threatens to send the king off the
+  board, and he has no way to escape it.
+</p>
+
+<figure>
+  <div class="diag"
+       data-fen='8/4B3/8/8/6Qk/8/4N3/K7 ...'>
+  </div>
+  <figcaption>Dynamo checkmate ("Dynamate" :) )</figcaption>
+</figure>
+
+<p>
+  The king cannot "take" on g4: this would just push the queen one step to the
+  left, and she would then push the king beyond the 'h' file.
+  There are no en-passant captures.
+</p>
+
+<h3>Source</h3>
+
+<p>
+  <a href="https://www.chessvariants.com/mvopponent.dir/dynamo.html">
+    Dynamo chess
+  </a>
+  on chessvariants.com. The short description given on 
+  <a href="http://www.pion.ch/echecs/variante.php?jeu=dynamo">this page</a>
+  might help too.
+</p>

@@ -9,12 +9,10 @@ PHP + Node.js + npm.
 
 ## Usage
 
-```wget https://xogo.live/assets.zip && unzip assets.zip``` <br/>
-```wget https://xogo.live/extras.zip && unzip extras.zip``` <br/>
-Rename parameters.js.dist &rarr; parameters.js, and edit file. <br/>
-```npm i```
+Initialisation (done once):
 
-Generate some pieces: <br/>
-```python generateSVG.py``` in pieces/Avalam
+```./initialize.sh```
+
+You may want to edit the parameters.js file. Then:
 
 ```./start.sh``` (and later, ```./stop.sh```)
