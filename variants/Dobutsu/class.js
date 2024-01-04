@@ -87,11 +87,16 @@ export default class DobutsuRules extends ChessRules {
     const res = super.getCurrentScore(move_s);
     if (res != '*')
       return res;
-    const oppCol = C.GetOppTurn(this.turn);
-    const oppLastRank = (oppCol == 'b' ? 3 : 0);
-    for (let j=0; j < this.size.y; j++) {
-      if (this.board[oppLastRank][j] == oppCol + 'k')
-        return (oppCol == 'w' ? "1-0" : "0-1");
+    for (let lastRank of [0, 3]) {
+      const color = (lastRank == 0 ? 'w' : 'b');
+      for (let j=0; j < this.size.y; j++) {
+        if (
+          this.board[lastRank][j] == color + 'k' &&
+          !this.underAttack([lastRank, j], [C.GetOppTurn(color)])
+        ) {
+          return (color == 'w' ? "1-0" : "0-1");
+        }
+      }
     }
     return "*";
   }

@@ -13,6 +13,14 @@ export default class Align4Rules extends ChessRules {
           {label: "Random", value: 1}
         ]
       }],
+      input: [
+        {
+          label: "Pawn first",
+          variable: "pawnfirst",
+          type: "checkbox",
+          defaut: false
+        }
+      ],
       styles: ["atomic", "capture", "cylinder"]
     };
   }
@@ -38,6 +46,17 @@ export default class Align4Rules extends ChessRules {
 
   // Just do not update any reserve (infinite supply)
   updateReserve() {}
+
+  canDrop([c, p], [i, j]) {
+    return (
+      this.board[i][j] == "" &&
+      (
+        p != "p" || this.options["pawnfirst"] ||
+        (c == 'w' && i < this.size.x - 1) ||
+        (c == 'b' && i > 0)
+      )
+    );
+  }
 
   getCurrentScore(move_s) {
     const score = super.getCurrentScore(move_s);
