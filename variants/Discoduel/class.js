@@ -38,7 +38,9 @@ export default class DiscoduelRules extends ChessRules {
     // No real winning condition (promotions count...)
     if (
       ArrayFun.range(1, this.size.x).every(row_idx => {
-        this.board[row_idx].every(square => square.charAt(0) != 'w')
+        return this.board[row_idx].every(square => {
+          return (!square || square.charAt(0) != 'w');
+        })
       })
       ||
       !this.atLeastOneMove(this.turn)
