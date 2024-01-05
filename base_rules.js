@@ -175,6 +175,22 @@ export default class ChessRules {
     return Object.values(cd).map(c => c.toString(36)).join("");
   }
 
+  // c10 --> 02 (assuming 10 rows)
+  static SquareFromUsual(sq) {
+    return (
+      (this.size.x - parseInt(sq.substring(1), 10)).toString(36) +
+      (sq.charCodeAt(0) - 97).toString(36)
+    );
+  }
+
+  // 02 --> c10
+  static UsualFromSquare(sq) {
+    return (
+      String.fromCharCode(parseInt(sq.charAt(1), 36) + 97) +
+      (this.size.x - parseInt(sq.charAt(0), 36)).toString(10)
+    );
+  }
+
   coordsToId(cd) {
     if (typeof cd.x == "number") {
       return (
@@ -651,10 +667,8 @@ export default class ChessRules {
         this[arrName] = ArrayFun.init(this.size.x, this.size.y, null);
       if (arrName == "d_pieces")
         this.marks.forEach((m) => {
-          const formattedSquare =
-            (this.size.x - parseInt(m.substring(1), 10)).toString(36) +
-            (m.charCodeAt(0) - 97).toString(36);
-          const mCoords = V.SquareToCoords(formattedSquare);
+          const formattedSquare = C.SquareFromUsual(m);
+          const mCoords = C.SquareToCoords(formattedSquare);
           addPiece(mCoords.x, mCoords.y, arrName, "mark");
         });
     };

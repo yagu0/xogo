@@ -2,110 +2,51 @@ import ChessRules from "/base_rules.js";
 
 export default class DynamoRules extends ChessRules {
 
-  // TODO? later, allow to push out pawns on a and h files
+  static get Options() {
+    // TODO
+  }
+
   get hasEnpassant() {
-    return false;
+    return this.options["enpassant"];
   }
 
-/// TODO:::
-
-  canIplay(side, [x, y]) {
+  canIplay(x, y) {
     // Sometimes opponent's pieces can be moved directly
-    return this.turn == side;
-  }
-
-  setOtherVariables(fen) {
-    super.setOtherVariables(fen);
-    this.subTurn = 1;
-    // Local stack of "action moves"
-    this.amoves = [];
-    const amove = V.ParseFen(fen).amove;
-    if (amove != "-") {
-      const amoveParts = amove.split("/");
-      let move = {
-        // No need for start & end
-        appear: [],
-        vanish: []
-      };
-      [0, 1].map(i => {
-        if (amoveParts[i] != "-") {
-          amoveParts[i].split(".").forEach(av => {
-            // Format is "bpe3"
-            const xy = V.SquareToCoords(av.substr(2));
-            move[i == 0 ? "appear" : "vanish"].push(
-              new PiPo({
-                x: xy.x,
-                y: xy.y,
-                c: av[0],
-                p: av[1]
-              })
-            );
-          });
-        }
-      });
-      this.amoves.push(move);
-    }
-    // Stack "first moves" (on subTurn 1) to merge and check opposite moves
-    this.firstMove = [];
-  }
-
-  static ParseFen(fen) {
-    return Object.assign(
-      ChessRules.ParseFen(fen),
-      { amove: fen.split(" ")[4] }
-    );
-  }
-
-  static IsGoodFen(fen) {
-    if (!ChessRules.IsGoodFen(fen)) return false;
-    const fenParts = fen.split(" ");
-    if (fenParts.length != 5) return false;
-    if (fenParts[4] != "-") {
-      // TODO: a single regexp instead.
-      // Format is [bpa2[.wpd3]] || '-'/[bbc3[.wrd5]] || '-'
-      const amoveParts = fenParts[4].split("/");
-      if (amoveParts.length != 2) return false;
-      for (let part of amoveParts) {
-        if (part != "-") {
-          for (let psq of part.split("."))
-            if (!psq.match(/^[a-z]{3}[1-8]$/)) return false;
-        }
-      }
-    }
-    return true;
-  }
-
-  getFen() {
-    return super.getFen() + " " + this.getAmoveFen();
-  }
-
-  getFenForRepeat() {
-    return super.getFenForRepeat() + "_" + this.getAmoveFen();
-  }
-
-  getAmoveFen() {
-    const L = this.amoves.length;
-    if (L == 0) return "-";
-    return (
-      ["appear","vanish"].map(
-        mpart => {
-          if (this.amoves[L-1][mpart].length == 0) return "-";
-          return (
-            this.amoves[L-1][mpart].map(
-              av => {
-                const square = V.CoordsToSquare({ x: av.x, y: av.y });
-                return av.c + av.p + square;
-              }
-            ).join(".")
-          );
-        }
-      ).join("/")
-    );
+    return this.playerColor == this.turn;
   }
 
   canTake() {
     // Captures don't occur (only pulls & pushes)
     return false;
+  }
+
+  setOtherVariables(fenParsed) {
+    super.setOtherVariables(fenParsed);
+    this.subTurn = 1;
+    // Last action format: e2h5/d1g4 for queen on d1 pushing pawn to h5
+    // for example, and moving herself to g4. If just move: e2h5
+    this.lastAction = [];
+    if (fenParsed.amove != '-') {
+      this.lastAction = fenParsed.amove.split('/').map(a => {
+        return {
+          c1: C.SquareToCoords(C.SquareFromUsual(a.substr(0, 2))),
+          c2: C.SquareToCoords(C.SquareFromUsual(a.substr(2, 2)))
+        };
+      });
+    }
+  }
+
+  getPartFen(o) {
+    let res = super.getPartFen(o);
+    if (o.init)
+      res["amove"] = '-';
+    else {
+      res["amove"] = this.lastAction.map(a => {
+        C.UsualFromSquare(C.CoordsToSquare(a.c1)) +
+        C.UsualFromSquare(C.CoordsToSquare(a.c2))
+      }).join('/');
+    }
+    return res;
   }
 
   // Step is right, just add (push/pull) moves in this direction
@@ -590,6 +531,7 @@ export default class DynamoRules extends ChessRules {
     );
   }
 
+  // TODO: just stack in this.lastAction instead
   getAmove(move1, move2) {
     // Just merge (one is action one is move, one may be empty)
     return {
@@ -641,105 +583,6 @@ export default class DynamoRules extends ChessRules {
         })
       )
     );
-  }
-
-  isAttackedBySlideNJump([x, y], color, piece, steps, oneStep) {
-    for (let step of steps) {
-      let rx = x + step[0],
-          ry = y + step[1];
-      while (V.OnBoard(rx, ry) && this.board[rx][ry] == V.EMPTY && !oneStep) {
-        rx += step[0];
-        ry += step[1];
-      }
-      if (
-        V.OnBoard(rx, ry) &&
-        this.getPiece(rx, ry) == piece &&
-        this.getColor(rx, ry) == color
-      ) {
-        // Continue some steps in the same direction (pull)
-        rx += step[0];
-        ry += step[1];
-        while (
-          V.OnBoard(rx, ry) &&
-          this.board[rx][ry] == V.EMPTY &&
-          !oneStep
-        ) {
-          rx += step[0];
-          ry += step[1];
-        }
-        if (!V.OnBoard(rx, ry)) return true;
-        // Step in the other direction (push)
-        rx = x - step[0];
-        ry = y - step[1];
-        while (
-          V.OnBoard(rx, ry) &&
-          this.board[rx][ry] == V.EMPTY &&
-          !oneStep
-        ) {
-          rx -= step[0];
-          ry -= step[1];
-        }
-        if (!V.OnBoard(rx, ry)) return true;
-      }
-    }
-    return false;
-  }
-
-  isAttackedByPawn([x, y], color) {
-    // The king can be pushed out by a pawn on last rank or near the edge
-    const pawnShift = (color == "w" ? 1 : -1);
-    for (let i of [-1, 1]) {
-      if (
-        V.OnBoard(x + pawnShift, y + i) &&
-        this.board[x + pawnShift][y + i] != V.EMPTY &&
-        this.getPiece(x + pawnShift, y + i) == V.PAWN &&
-        this.getColor(x + pawnShift, y + i) == color
-      ) {
-        if (!V.OnBoard(x - pawnShift, y - i)) return true;
-      }
-    }
-    return false;
-  }
-
-  static OnTheEdge(x, y) {
-    return (x == 0 || x == 7 || y == 0 || y == 7);
-  }
-
-  isAttackedByKing([x, y], color) {
-    // Attacked if I'm on the edge and the opponent king just next,
-    // but not on the edge.
-    if (V.OnTheEdge(x, y)) {
-      for (let step of V.steps[V.ROOK].concat(V.steps[V.BISHOP])) {
-        const [i, j] = [x + step[0], y + step[1]];
-        if (
-          V.OnBoard(i, j) &&
-          !V.OnTheEdge(i, j) &&
-          this.board[i][j] != V.EMPTY &&
-          this.getPiece(i, j) == V.KING
-          // NOTE: since only one king of each color, and (x, y) is occupied
-          // by our king, no need to check other king's color.
-        ) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  // No consideration of color: all pieces could be played
-  getAllPotentialMoves() {
-    let potentialMoves = [];
-    for (let i = 0; i < V.size.x; i++) {
-      for (let j = 0; j < V.size.y; j++) {
-        if (this.board[i][j] != V.EMPTY) {
-          Array.prototype.push.apply(
-            potentialMoves,
-            this.getPotentialMovesFrom([i, j])
-          );
-        }
-      }
-    }
-    return potentialMoves;
   }
 
   getEmptyMove() {
@@ -852,70 +695,6 @@ export default class DynamoRules extends ChessRules {
     // (Potentially) Reset king position
     for (let v of move.vanish)
       if (v.p == V.KING) this.kingPos[v.c] = [v.x, v.y];
-  }
-
-  getComputerMove() {
-    let moves = this.getAllValidMoves();
-    if (moves.length == 0) return null;
-    // "Search" at depth 1 for now
-    const maxeval = V.INFINITY;
-    const color = this.turn;
-    const emptyMove = {
-      start: { x: -1, y: -1 },
-      end: { x: -1, y: -1 },
-      appear: [],
-      vanish: []
-    };
-    moves.forEach(m => {
-      this.play(m);
-      if (this.turn != color) m.eval = this.evalPosition();
-      else {
-        m.eval = (color == "w" ? -1 : 1) * maxeval;
-        const moves2 = this.getAllValidMoves().concat([emptyMove]);
-        m.next = moves2[0];
-        moves2.forEach(m2 => {
-          this.play(m2);
-          const score = this.getCurrentScore();
-          let mvEval = 0;
-          if (score != "1/2") {
-            if (score != "*") mvEval = (score == "1-0" ? 1 : -1) * maxeval;
-            else mvEval = this.evalPosition();
-          }
-          if (
-            (color == 'w' && mvEval > m.eval) ||
-            (color == 'b' && mvEval < m.eval)
-          ) {
-            m.eval = mvEval;
-            m.next = m2;
-          }
-          this.undo(m2);
-        });
-      }
-      this.undo(m);
-    });
-    moves.sort((a, b) => {
-      return (color == "w" ? 1 : -1) * (b.eval - a.eval);
-    });
-    let candidates = [0];
-    for (let i = 1; i < moves.length && moves[i].eval == moves[0].eval; i++)
-      candidates.push(i);
-    const mIdx = candidates[randInt(candidates.length)];
-    if (!moves[mIdx].next) return moves[mIdx];
-    const move2 = moves[mIdx].next;
-    delete moves[mIdx]["next"];
-    return [moves[mIdx], move2];
-  }
-
-  getNotation(move) {
-    if (move.start.x < 0)
-      // A second move is always required, but may be empty
-      return "-";
-    const initialSquare = V.CoordsToSquare(move.start);
-    const finalSquare = V.CoordsToSquare(move.end);
-    if (move.appear.length == 0)
-      // Pushed or pulled out of the board
-      return initialSquare + "R";
-    return move.appear[0].p.toUpperCase() + initialSquare + finalSquare;
   }
 
 };
