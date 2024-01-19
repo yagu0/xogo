@@ -4,3 +4,7 @@ Otage, Emergo, Pacosako : fonction "buildPiece(arg1, arg2)" returns HTML element
 
 https://fr.wikipedia.org/wiki/Unlur
 Yoxii ?
+
+Idée new variant: "bed" random moves and "capture" (opponent?) pieces which cannot move on next turn (sleeping). (Crazybed ?)
+one "bed" per player.
+one turn = place bed (potentially with opponent piece), then normal move, then random bed move - dropping potential piece on initial square (awaken).
