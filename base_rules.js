@@ -2235,8 +2235,7 @@ export default class ChessRules {
 
   // 'color' arg because some variants (e.g. Refusal) check opponent moves
   filterValid(moves, color) {
-    if (!color)
-      color = this.turn;
+    color = color || this.turn;
     const oppCols = this.getOppCols(color);
     let kingPos = this.searchKingPos(color);
     return moves.filter(m => {

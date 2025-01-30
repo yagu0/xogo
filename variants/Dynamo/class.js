@@ -181,8 +181,8 @@ export default class DynamoRules extends ChessRules {
   // NOTE: for pushes, play the pushed piece first.
   //       for pulls: play the piece doing the action first
   // NOTE: to push a piece out of the board, make it slide until its king
-  getPotentialMovesFrom([x, y]) {
-    const color = this.turn;
+  getPotentialMovesFrom([x, y], color) {
+    const color = color || this.turn;
     const sqCol = this.getColor(x, y);
     const pawnShift = (color == 'w' ? -1 : 1);
     const pawnStartRank = (color == 'w' ? 6 : 1);
@@ -484,6 +484,10 @@ export default class DynamoRules extends ChessRules {
       );
     }
     return [];
+  }
+
+  getAllPotentialMoves(color) {
+    
   }
 
   getSlideNJumpMoves([x, y], steps, oneStep) {
