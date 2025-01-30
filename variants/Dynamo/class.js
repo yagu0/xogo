@@ -307,7 +307,7 @@ export default class DynamoRules extends ChessRules {
         const dir = this.getNormalizedDirection(
           [fm.start.x - x, fm.start.y - y]);
         const nbSteps =
-          [V.PAWN, V.KING, V.KNIGHT].includes(piece)
+          ['p', 'k', 'n'].includes(piece)
             ? 1
             : null;
         return this.getMovesInDirection([x, y], dir, nbSteps);
@@ -327,7 +327,7 @@ export default class DynamoRules extends ChessRules {
         const deltaX = Math.abs(fm.start.x - x);
         const deltaY = Math.abs(fm.start.y - y);
         switch (piece) {
-          case V.PAWN:
+          case 'p':
             if (x == pawnStartRank) {
               if (
                 (fm.start.x - x) * pawnShift < 0 ||
@@ -354,7 +354,7 @@ export default class DynamoRules extends ChessRules {
               }
             }
             break;
-          case V.KNIGHT:
+          case 'n':
             if (
               (deltaX + deltaY != 3 || (deltaX == 0 && deltaY == 0)) ||
               (fm.end.x - fm.start.x != fm.start.x - x) ||
@@ -363,7 +363,7 @@ export default class DynamoRules extends ChessRules {
               return [];
             }
             break;
-          case V.KING:
+          case 'k':
             if (
               (deltaX >= 2 || deltaY >= 2) ||
               (fm.end.x - fm.start.x != fm.start.x - x) ||
@@ -372,15 +372,15 @@ export default class DynamoRules extends ChessRules {
               return [];
             }
             break;
-          case V.BISHOP:
+          case 'b':
             if (deltaX != deltaY)
               return [];
             break;
-          case V.ROOK:
+          case 'r':
             if (deltaX != 0 && deltaY != 0)
               return [];
             break;
-          case V.QUEEN:
+          case 'q':
             if (deltaX != deltaY && deltaX != 0 && deltaY != 0)
               return [];
             break;
@@ -404,7 +404,7 @@ export default class DynamoRules extends ChessRules {
       // Note: kings cannot suicide, so fm.vanish[0].p is not KING.
       // Could be PAWN though, if a pawn was pushed out of board.
       if (
-        fm.vanish[0].p != V.PAWN && //pawns cannot pull
+        fm.vanish[0].p != 'p' && //pawns cannot pull
         this.isAprioriValidExit(
           [x, y],
           [fm.start.x, fm.start.y],
@@ -415,13 +415,13 @@ export default class DynamoRules extends ChessRules {
         // Seems so:
         const dir = this.getNormalizedDirection(
           [fm.start.x - x, fm.start.y - y]);
-        const nbSteps = (fm.vanish[0].p == V.KNIGHT ? 1 : null);
+        const nbSteps = (fm.vanish[0].p == 'n' ? 1 : null);
         return this.getMovesInDirection([x, y], dir, nbSteps);
       }
       return [];
     };
     const getPullMoves = () => {
-      if (fm.vanish[0].p == V.PAWN)
+      if (fm.vanish[0].p == 'p')
         // pawns cannot pull
         return [];
       const dirM = this.getNormalizedDirection(
@@ -434,8 +434,8 @@ export default class DynamoRules extends ChessRules {
         const deltaX = Math.abs(x - fm.start.x);
         const deltaY = Math.abs(y - fm.start.y);
         if (
-          (fm.vanish[0].p == V.KING && (deltaX > 1 || deltaY > 1)) ||
-          (fm.vanish[0].p == V.KNIGHT &&
+          (fm.vanish[0].p == 'k' && (deltaX > 1 || deltaY > 1)) ||
+          (fm.vanish[0].p == 'n' &&
             (deltaX + deltaY != 3 || deltaX == 0 || deltaY == 0))
         ) {
           return [];
@@ -444,7 +444,7 @@ export default class DynamoRules extends ChessRules {
         let [i, j] = [x + dir[0], y + dir[1]];
         while (
           (i != fm.start.x || j != fm.start.y) &&
-          this.board[i][j] == V.EMPTY
+          this.board[i][j] == ""
         ) {
           i += dir[0];
           j += dir[1];
@@ -493,20 +493,20 @@ export default class DynamoRules extends ChessRules {
     outerLoop: for (let step of steps) {
       let i = x + step[0];
       let j = y + step[1];
-      while (V.OnBoard(i, j) && this.board[i][j] == V.EMPTY) {
+      while (this.onBoard(i, j) && this.board[i][j] == "") {
         moves.push(this.getBasicMove([x, y], [i, j]));
         if (oneStep)
           continue outerLoop;
         i += step[0];
         j += step[1];
       }
-      if (V.OnBoard(i, j)) {
+      if (this.onBoard(i, j)) {
         if (this.canTake([x, y], [i, j]))
           moves.push(this.getBasicMove([x, y], [i, j]));
       }
       else {
         // Add potential board exit (suicide), except for the king
-        if (piece != V.KING) {
+        if (piece != 'k') {
           moves.push({
             start: { x: x, y: y},
             end: { x: this.kingPos[c][0], y: this.kingPos[c][1] },
@@ -563,7 +563,8 @@ export default class DynamoRules extends ChessRules {
     }
   }
 
-  // TODO ::
+// TODO: re-write just for here getAllPotentialMoves() ?
+
   filterValid(moves) {
     const color = this.turn;
     const La = this.amoves.length;
@@ -572,7 +573,7 @@ export default class DynamoRules extends ChessRules {
         // A move is valid either if it doesn't result in a check,
         // or if a second move is possible to counter the check
         // (not undoing a potential move + action of the opponent)
-        this.play(m);
+        this.playOnBoard(m);
         let res = this.underCheck(color);
         if (this.subTurn == 2) {
           let isOpposite = La > 0 && this.oppositeMoves(this.amoves[La-1], m);
@@ -580,7 +581,7 @@ export default class DynamoRules extends ChessRules {
             const moves2 = this.getAllPotentialMoves();
             for (let m2 of moves2) {
               this.play(m2);
-              const res2 = this.underCheck(color);
+              const res2 = this.underCheck(color); //TODO: + square
               const amove = this.getAmove(m, m2);
               isOpposite =
                 La > 0 && this.oppositeMoves(this.amoves[La-1], amove);
@@ -592,7 +593,7 @@ export default class DynamoRules extends ChessRules {
             }
           }
         }
-        this.undo(m);
+        this.undoOnBoard(m);
         return !res;
       });
     }
