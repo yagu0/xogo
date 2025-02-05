@@ -53,6 +53,17 @@ export default class DynamoRules extends ChessRules {
     return res;
   }
 
+  addExitMove(moves, [x, y], kp) {
+    moves.push(
+      new Move({
+        start: { x: x, y: y },
+        end: { x: kp[color][0], y: kp[color][1] },
+        appear: [],
+        vanish: [{ x: x, y: y, c: color, p: piece }]
+      })
+    );
+  }
+
   // Step is right, just add (push/pull) moves in this direction
   // Direction is assumed normalized.
   getMovesInDirection([x, y], [dx, dy], nbSteps, kp) {
@@ -78,17 +89,8 @@ export default class DynamoRules extends ChessRules {
       i += dx;
       j += dy;
     }
-    if (!this.onBoard(i, j) && piece != 'k') {
-      // Add special "exit" move, by "taking king"
-      moves.push(
-        new Move({
-          start: { x: x, y: y },
-          end: { x: kp[0], y: kp[1] },
-          appear: [],
-          vanish: [{ x: x, y: y, c: color, p: piece }]
-        })
-      );
-    }
+    if (!this.onBoard(i, j) && piece != 'k')
+      this.addExitMove(moves, [x, y], kp);
     return moves;
   }
 
@@ -178,6 +180,36 @@ export default class DynamoRules extends ChessRules {
     );
   }
 
+  // Test if a piece can suicide
+  canReachBorder(x, y) {
+    const p = this.getPiece(x, y);
+    switch (p) {
+      case 'p':
+      case 'k':
+        return false;
+      case 'n':
+        return (
+          x <= 1 || x >= this.size.x - 2 || y <= 1 || y >= this.size.y - 2
+        );
+    }
+    // Slider
+    let steps = [];
+    if (['r', 'q'].includes(p))
+      steps = steps.concat(this.pieces()['r'].both[0].steps);
+    if (['b', 'q'].includes(p))
+      steps = steps.concat(this.pieces()['b'].both[0].steps);
+    for (let s of steps) {
+      let [i, j] = [x + s[0], y + s[1]];
+      while (this.onBoard(i, j) && this.board[i][j] == "") {
+        i += s[0];
+        j += s[1];
+      }
+      if (!this.onBoard(i, j))
+        return true;
+    }
+    return false;
+  }
+
   // NOTE: for pushes, play the pushed piece first.
   //       for pulls: play the piece doing the action first
   // NOTE: to push a piece out of the board, make it slide until its king
@@ -190,7 +222,7 @@ export default class DynamoRules extends ChessRules {
       return C.CoordsToSquare(m.start) + C.CoordsToSquare(m.end);
     };
     if (this.subTurn == 1) {
-      const kp = this.searchKingPos(color);
+      const kp = [ this.searchKingPos('w')[0], this.searchKingPos('b')[0] ];
       const addMoves = (dir, nbSteps) => {
         const newMoves =
           this.getMovesInDirection([x, y], [-dir[0], -dir[1]], nbSteps, kp)
@@ -199,21 +231,12 @@ export default class DynamoRules extends ChessRules {
         Array.prototype.push.apply(moves, newMoves);
       };
       // Free to play any move (if piece of my color):
-      let moves =
-        sqCol == color
-          ? super.getPotentialMovesFrom([x, y])
-          : [];
-      // There may be several suicide moves: keep only one
-      let hasExit = false;
-      moves = moves.filter(m => {
-        const suicide = (m.appear.length == 0);
-        if (suicide) {
-          if (hasExit)
-            return false;
-          hasExit = true;
-        }
-        return true;
-      });
+      let moves = [];
+      if (sqCol == color) {
+        moves = super.getPotentialMovesFrom([x, y])
+        if (this.canReachBorder(x, y))
+          this.addSuicideMove(moves, [x, y], kp);
+      }
       // Structure to avoid adding moves twice (can be action & move)
       let movesHash = {};
       moves.forEach(m => { movesHash[getMoveHash(m)] = true; });
@@ -486,50 +509,6 @@ export default class DynamoRules extends ChessRules {
     return [];
   }
 
-  getAllPotentialMoves(color) {
-    
-  }
-
-  getSlideNJumpMoves([x, y], steps, oneStep) {
-    let moves = [];
-    const c = this.getColor(x, y);
-    const piece = this.getPiece(x, y);
-    outerLoop: for (let step of steps) {
-      let i = x + step[0];
-      let j = y + step[1];
-      while (this.onBoard(i, j) && this.board[i][j] == "") {
-        moves.push(this.getBasicMove([x, y], [i, j]));
-        if (oneStep)
-          continue outerLoop;
-        i += step[0];
-        j += step[1];
-      }
-      if (this.onBoard(i, j)) {
-        if (this.canTake([x, y], [i, j]))
-          moves.push(this.getBasicMove([x, y], [i, j]));
-      }
-      else {
-        // Add potential board exit (suicide), except for the king
-        if (piece != 'k') {
-          moves.push({
-            start: { x: x, y: y},
-            end: { x: this.kingPos[c][0], y: this.kingPos[c][1] },
-            appear: [],
-            vanish: [
-              new PiPo({
-                x: x,
-                y: y,
-                c: c,
-                p: piece
-              })
-            ]
-          });
-        }
-      }
-    }
-    return moves;
-  }
-
   // Does m2 un-do m1 ? (to disallow undoing actions)
   oppositeMoves(m1, m2) {
     const isEqual = (av1, av2) => {
@@ -567,7 +546,19 @@ export default class DynamoRules extends ChessRules {
     }
   }
 
-// TODO: re-write just for here getAllPotentialMoves() ?
+  getAllPotentialMoves() {
+    const color = this.turn;
+    let moves = [];
+    for (let i=0; i<this.size.x; i++) {
+      for (let j=0; j<this.size.y; j++) {
+        if (this.board[x][y] != "") {
+          Array.prototype.push.apply(
+            moves, this.getPotentialMovesFrom([i, j], color));
+        }
+      }
+    }
+    return moves;
+  }
 
   filterValid(moves) {
     const color = this.turn;
@@ -577,7 +568,7 @@ export default class DynamoRules extends ChessRules {
         // A move is valid either if it doesn't result in a check,
         // or if a second move is possible to counter the check
         // (not undoing a potential move + action of the opponent)
-        this.playOnBoard(m);
+        this.play(m);
         let res = this.underCheck(color);
         if (this.subTurn == 2) {
           let isOpposite = La > 0 && this.oppositeMoves(this.amoves[La-1], m);
@@ -597,7 +588,7 @@ export default class DynamoRules extends ChessRules {
             }
           }
         }
-        this.undoOnBoard(m);
+        this.undo(m);
         return !res;
       });
     }
@@ -659,19 +650,11 @@ export default class DynamoRules extends ChessRules {
     }
   }
 
-  play(move) {
-//    if (this.subTurn == 1 && move.vanish.length == 0) {
-//      // Patch to work with old format: (TODO: remove later)
-//      move.ignore = true;
-//      return;
-//    }
-
-    // In preplay ?
-    this.updateCastleFlags(move);
-
-    const oppCol = C.GetOppTurn(color);
-
+  play(move, filterValid) {
+    if (!filterValid)
+      this.updateCastleFlags(move);
     const color = this.turn;
+    const oppCol = C.GetOppTurn(color);
     const gotoNext = (mv) => {
       const L = this.firstMove.length;
       this.amoves.push(this.getAmove(this.firstMove[L-1], mv));
@@ -686,7 +669,7 @@ export default class DynamoRules extends ChessRules {
       this.subTurn = 2;
       this.firstMove.push(move);
       if (
-        // Condition is true on empty arrays: //TODO: getAllPotentialMoves doesn't exist
+        // Condition is true on empty arrays:
         this.getAllPotentialMoves().every(m => {
           this.playOnBoard(m);
           const res = this.underCheck([kp], oppCol); //TODO: find kp first
@@ -698,7 +681,18 @@ export default class DynamoRules extends ChessRules {
         gotoNext(this.getEmptyMove());
       }
     }
-    this.postPlay(move);
+  }
+
+  undo(move) {
+    this.undoOnBoard(this.board, move);
+    if (this.subTurn == 1) {
+      this.amoves.pop();
+      this.turn = V.GetOppCol(this.turn);
+      this.movesCount--;
+    }
+    if (move.subTurn == 1) this.firstMove.pop();
+    this.subTurn = move.subTurn;
+    this.toOldKingPos(move);
   }
 
 };
