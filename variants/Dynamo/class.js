@@ -1,3 +1,4 @@
+import Move from "/utils/Move.js";
 import ChessRules from "/base_rules.js";
 
 export default class DynamoRules extends ChessRules {
@@ -57,9 +58,10 @@ export default class DynamoRules extends ChessRules {
     moves.push(
       new Move({
         start: { x: x, y: y },
-        end: { x: kp[color][0], y: kp[color][1] },
+        end: { x: kp[0], y: kp[1] },
         appear: [],
-        vanish: [{ x: x, y: y, c: color, p: piece }]
+        vanish: [
+          { x: x, y: y, c: this.getColor(x, y), p: this.getPiece(x, y) }]
       })
     );
   }
@@ -214,7 +216,7 @@ export default class DynamoRules extends ChessRules {
   //       for pulls: play the piece doing the action first
   // NOTE: to push a piece out of the board, make it slide until its king
   getPotentialMovesFrom([x, y], color) {
-    const color = color || this.turn;
+    color = color || this.turn;
     const sqCol = this.getColor(x, y);
     const pawnShift = (color == 'w' ? -1 : 1);
     const pawnStartRank = (color == 'w' ? 6 : 1);
@@ -222,7 +224,7 @@ export default class DynamoRules extends ChessRules {
       return C.CoordsToSquare(m.start) + C.CoordsToSquare(m.end);
     };
     if (this.subTurn == 1) {
-      const kp = [ this.searchKingPos('w')[0], this.searchKingPos('b')[0] ];
+      const kp = this.searchKingPos(color)[0];
       const addMoves = (dir, nbSteps) => {
         const newMoves =
           this.getMovesInDirection([x, y], [-dir[0], -dir[1]], nbSteps, kp)
@@ -235,7 +237,7 @@ export default class DynamoRules extends ChessRules {
       if (sqCol == color) {
         moves = super.getPotentialMovesFrom([x, y])
         if (this.canReachBorder(x, y))
-          this.addSuicideMove(moves, [x, y], kp);
+          this.addExitMove(moves, [x, y], kp);
       }
       // Structure to avoid adding moves twice (can be action & move)
       let movesHash = {};
@@ -562,13 +564,14 @@ export default class DynamoRules extends ChessRules {
 
   filterValid(moves) {
     const color = this.turn;
-    const La = this.amoves.length;
+    const La = this.amoves.length; //TODO: debug
     if (this.subTurn == 1) {
       return moves.filter(m => {
         // A move is valid either if it doesn't result in a check,
         // or if a second move is possible to counter the check
         // (not undoing a potential move + action of the opponent)
         this.play(m);
+        const kp = this.searchKingPos(color);
         let res = this.underCheck(color);
         if (this.subTurn == 2) {
           let isOpposite = La > 0 && this.oppositeMoves(this.amoves[La-1], m);
@@ -576,7 +579,10 @@ export default class DynamoRules extends ChessRules {
             const moves2 = this.getAllPotentialMoves();
             for (let m2 of moves2) {
               this.play(m2);
-              const res2 = this.underCheck(color); //TODO: + square
+              let cur_kp = kp;
+              if (m2.appear[0].p == 'k')
+                cur_kp = [m2.appear[0].x, m2.appear[0].y];
+              const res2 = this.underCheck(cur_kp, color);
               const amove = this.getAmove(m, m2);
               isOpposite =
                 La > 0 && this.oppositeMoves(this.amoves[La-1], amove);
@@ -668,11 +674,15 @@ export default class DynamoRules extends ChessRules {
     else {
       this.subTurn = 2;
       this.firstMove.push(move);
+      const kp = this.searchKingPos(color);
       if (
         // Condition is true on empty arrays:
         this.getAllPotentialMoves().every(m => {
           this.playOnBoard(m);
-          const res = this.underCheck([kp], oppCol); //TODO: find kp first
+          let cur_kp = kp;
+          if (m.appear[0].p == 'k')
+            cur_kp = [m.appear[0].x, m.appear[0].y];
+          const res = this.underCheck(cur_kp, oppCol);
           this.undoOnBoard(m);
           return res;
         })
@@ -683,14 +693,16 @@ export default class DynamoRules extends ChessRules {
     }
   }
 
+  // For filterValid()
   undo(move) {
     this.undoOnBoard(this.board, move);
     if (this.subTurn == 1) {
       this.amoves.pop();
-      this.turn = V.GetOppCol(this.turn);
+      this.turn = C.GetOppTurn(this.turn);
       this.movesCount--;
     }
-    if (move.subTurn == 1) this.firstMove.pop();
+    if (move.subTurn == 1)
+      this.firstMove.pop();
     this.subTurn = move.subTurn;
     this.toOldKingPos(move);
   }
