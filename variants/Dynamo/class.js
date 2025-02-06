@@ -30,27 +30,14 @@ export default class DynamoRules extends ChessRules {
     this.subTurn = 1;
     // Last action format: e2h5/d1g4 for queen on d1 pushing pawn to h5
     // for example, and moving herself to g4. If just move: e2h5
-    this.lastAction = [];
-    if (fenParsed.amove != '-') {
-      this.lastAction = fenParsed.amove.split('/').map(a => {
-        return {
-          c1: C.SquareToCoords(C.SquareFromUsual(a.substr(0, 2))),
-          c2: C.SquareToCoords(C.SquareFromUsual(a.substr(2, 2)))
-        };
-      });
-    }
+    this.amove = [];
+    if (fenParsed.amove != '-')
+      this.amove = JSON.parse(fenParsed.amove);
   }
 
   getPartFen(o) {
     let res = super.getPartFen(o);
-    if (o.init)
-      res["amove"] = '-';
-    else {
-      res["amove"] = this.lastAction.map(a => {
-        C.UsualFromSquare(C.CoordsToSquare(a.c1)) +
-        C.UsualFromSquare(C.CoordsToSquare(a.c2))
-      }).join('/');
-    }
+    res["amove"] = (o.init ? '-' : JSON.stringify(this.amove));
     return res;
   }
 
@@ -539,7 +526,6 @@ export default class DynamoRules extends ChessRules {
     );
   }
 
-  // TODO: just stack in this.lastAction instead
   getAmove(move1, move2) {
     // Just merge (one is action one is move, one may be empty)
     return {
@@ -562,9 +548,10 @@ export default class DynamoRules extends ChessRules {
     return moves;
   }
 
+// TODO: I over-simplified, amove need to be saved for after undos
+
   filterValid(moves) {
     const color = this.turn;
-    const La = this.amoves.length; //TODO: debug
     if (this.subTurn == 1) {
       return moves.filter(m => {
         // A move is valid either if it doesn't result in a check,
@@ -574,7 +561,7 @@ export default class DynamoRules extends ChessRules {
         const kp = this.searchKingPos(color);
         let res = this.underCheck(color);
         if (this.subTurn == 2) {
-          let isOpposite = La > 0 && this.oppositeMoves(this.amoves[La-1], m);
+          let isOpposite = this.oppositeMoves(this.amove, m);
           if (res || isOpposite) {
             const moves2 = this.getAllPotentialMoves();
             for (let m2 of moves2) {
@@ -584,8 +571,7 @@ export default class DynamoRules extends ChessRules {
                 cur_kp = [m2.appear[0].x, m2.appear[0].y];
               const res2 = this.underCheck(cur_kp, color);
               const amove = this.getAmove(m, m2);
-              isOpposite =
-                La > 0 && this.oppositeMoves(this.amoves[La-1], amove);
+              isOpposite = this.oppositeMoves(this.amove, amove);
               this.undo(m2);
               if (!res2 && !isOpposite) {
                 res = false;
@@ -605,8 +591,8 @@ export default class DynamoRules extends ChessRules {
       super.filterValid(
         moves.filter(m => {
           // Move shouldn't undo another:
-          const amove = this.getAmove(this.firstMove[Lf-1], m);
-          return !this.oppositeMoves(this.amoves[La-1], amove);
+          const amove = this.getAmove(this.firstMove, m);
+          return !this.oppositeMoves(this.amove, amove);
         })
       )
     );
@@ -629,13 +615,12 @@ export default class DynamoRules extends ChessRules {
       return null;
     // If subTurn == 2 && square is empty && !underCheck && !isOpposite,
     // then return an empty move, allowing to "pass" subTurn2
-    const La = this.amoves.length;
-    const Lf = this.firstMove.length;
+    const kp = this.searchKingPos(this.turn);
     if (
       this.subTurn == 2 &&
-      this.board[square[0]][square[1]] == V.EMPTY &&
-      !this.underCheck(this.turn) &&
-      (La == 0 || !this.oppositeMoves(this.amoves[La-1], this.firstMove[Lf-1]))
+      this.board[square[0]][square[1]] == "" &&
+      !this.underCheck(kp, C.GetOppTurn(this.turn)) &&
+      !this.oppositeMoves(this.amove, this.firstMove))
     ) {
       return this.getEmptyMove();
     }
@@ -661,9 +646,9 @@ export default class DynamoRules extends ChessRules {
       this.updateCastleFlags(move);
     const color = this.turn;
     const oppCol = C.GetOppTurn(color);
+    move.subTurn = this.subTurn; //for undo
     const gotoNext = (mv) => {
-      const L = this.firstMove.length;
-      this.amoves.push(this.getAmove(this.firstMove[L-1], mv));
+      this.amove = this.getAmove(this.firstMove, mv);
       this.turn = oppCol;
       this.subTurn = 1;
       this.movesCount++;
@@ -673,7 +658,7 @@ export default class DynamoRules extends ChessRules {
       gotoNext(move);
     else {
       this.subTurn = 2;
-      this.firstMove.push(move);
+      this.firstMove = move;
       const kp = this.searchKingPos(color);
       if (
         // Condition is true on empty arrays:
@@ -697,14 +682,10 @@ export default class DynamoRules extends ChessRules {
   undo(move) {
     this.undoOnBoard(this.board, move);
     if (this.subTurn == 1) {
-      this.amoves.pop();
       this.turn = C.GetOppTurn(this.turn);
       this.movesCount--;
     }
-    if (move.subTurn == 1)
-      this.firstMove.pop();
     this.subTurn = move.subTurn;
-    this.toOldKingPos(move);
   }
 
 };
