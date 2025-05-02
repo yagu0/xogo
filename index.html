@@ -8,6 +8,18 @@
           content="width=device-width, initial-scale=1"/>
     <link id="_common_css"
           rel="stylesheet" href="/common.css"/>
+    <script type="text/javascript">
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        // Apple brightness in SVG workaround
+        // TODO: remove that.
+        let link = document.createElement("link");
+        link.href = "iOS_fix.css";
+        link.type = "text/css";
+        link.rel = "stylesheet";
+        link.media = "screen,print";
+        document.getElementsByTagName("head")[0].appendChild(link);
+      }
+    </script>
   </head>
 
   <body>
