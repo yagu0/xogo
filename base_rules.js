@@ -1184,7 +1184,7 @@ export default class ChessRules {
 
   // Get opponent color(s): may differ from turn (e.g. Checkered)
   getOppCols(color) {
-    return (color == "w" ? "b" : "w");
+    return [ (color == "w" ? "b" : "w") ];
   }
 
   // Is (x,y) on the chessboard?
