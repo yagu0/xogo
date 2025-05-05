@@ -7,7 +7,7 @@ export default class DynamoRules extends ChessRules {
     return {
       select: C.Options.select,
       input: [],
-      styles: ["cylinder", "doublemove", "progressive"]
+      styles: ["doublemove", "progressive"]
     };
   }
 
