@@ -1,110 +1,59 @@
 import ChessRules from "/base_rules.js";
-import PiPo from "/utils/PiPo.js";
-import Move from "/utils/Move.js";
 
 export default class SleepyRules extends ChessRules {
 
-  static get Options() {
-    return {
-      select: C.Options.select,
-      input: {},
-      styles: ["cylinder"] //TODO
-    };
+  pieces(color, x, y) {
+    let res = super.pieces(color, x, y);
+    res['s'] = {"class": "sleepy-pawn", moveas: "p"};
+    res['u'] = {"class": "sleepy-rook", moveas: "r"};
+    res['o'] = {"class": "sleepy-knight", moveas: "n"};
+    res['c'] = {"class": "sleepy-bishop", moveas: "b"};
+    res['t'] = {"class": "sleepy-queen", moveas: "q"};
+    return res;
   }
 
-  setOtherVariables(fenParsed) {
-    super.setOtherVariables(fenParsed);
-    // Stack of "last move" only for intermediate chaining
-    this.lastMoveEnd = [];
+  static get V_PIECES() {
+    return ['p', 'r', 'n', 'b', 'q'];
+  }
+  static get S_PIECES() {
+    return ['s', 'u', 'o', 'c', 't'];
   }
 
-  getBasicMove([sx, sy], [ex, ey], tr) {
-    const L = this.lastMoveEnd.length;
-    const piece = (L >= 1 ? this.lastMoveEnd[L-1].p : null);
-    if (
-      this.board[ex][ey] == "" ||
-      this.getColor(ex, ey) == C.GetOppTurn(this.turn)
-    ) {
-      if (piece && !tr)
-        tr = {c: this.turn, p: piece};
-      let mv = super.getBasicMove([sx, sy], [ex, ey], tr);
-      if (piece)
-        mv.vanish.pop(); //end of a chain: initial piece remains
-      return mv;
-    }
-    // (Self)Capture: initial, or inside a chain
-    const initPiece = (piece || this.getPiece(sx, sy)),
-          destPiece = this.getPiece(ex, ey);
-    let mv = new Move({
-      start: {x: sx, y: sy},
-      end: {x: ex, y: ey},
-      appear: [
-        new PiPo({
-          x: ex,
-          y: ey,
-          c: this.turn,
-          p: (!!tr ? tr.p : initPiece)
-        })
-      ],
-      vanish: [
-        new PiPo({
-          x: ex,
-          y: ey,
-          c: this.turn,
-          p: destPiece
-        })
-      ]
-    });
-    if (!piece) {
-      // Initial capture
-      mv.vanish.unshift(
-        new PiPo({
-          x: sx,
-          y: sy,
-          c: this.turn,
-          p: initPiece
-        })
-      );
-    }
-    mv.chained = destPiece; //easier (no need to detect it)
-//    mv.drag = {c: this.turn, p: initPiece}; //TODO: doesn't work
-    return mv;
+  // Forbid sleepy pieces to capture
+  canTake([x1, y1], [x2, y2]) {
+    return (
+      this.getColor(x1, y1) !== this.getColor(x2, y2) &&
+      (['k'].concat(V.V_PIECES)).includes(this.getPiece(x1, y1))
+    );
   }
 
-  getPiece(x, y) {
-    const L = this.lastMoveEnd.length;
-    if (L >= 1 && this.lastMoveEnd[L-1].x == x && this.lastMoveEnd[L-1].y == y)
-      return this.lastMoveEnd[L-1].p;
-    return super.getPiece(x, y);
-  }
 
-  getPotentialMovesFrom([x, y], color) {
-    const L = this.lastMoveEnd.length;
-    if (
-      L >= 1 &&
-      (x != this.lastMoveEnd[L-1].x || y != this.lastMoveEnd[L-1].y)
-    ) {
-      // A self-capture was played: wrong square
-      return [];
-    }
-    return super.getPotentialMovesFrom([x, y], color);
-  }
+  //TODO:
 
-  isLastMove(move) {
-    return !move.chained;
-  }
 
-  postPlay(move) {
-    super.postPlay(move);
-    if (!!move.chained) {
-      this.lastMoveEnd.push({
-        x: move.end.x,
-        y: move.end.y,
-        p: move.chained
+  pawnPostProcess(moves, color, oppCols) {
+    let res = super.pawnPostProcess(moves, color, oppCols);
+    if (res.length > 0 && res[0].vanish[0].p == 's') {
+      // Fix promotions of non-violent pawns (if any)
+      res.forEach(m => {
+        if (m.appear[0].p != 's')
+          m.appear[0].p = V.NV_PIECES[V.V_PIECES.indexOf(m.appear[0].p)];
       });
     }
-    else
-      this.lastMoveEnd = [];
+    return res;
+  }
+
+  prePlay(move) {
+    super.prePlay(move);
+    // NOTE: drop moves already taken into account in base prePlay()
+    if (move.vanish.length == 2 && move.appear.length == 1) {
+      const normal = V.V_PIECES.includes(move.vanish[1].p);
+      const pIdx =
+        (normal ? V.V_PIECES : V.NV_PIECES).indexOf(move.vanish[1].p);
+      const resPiece = (normal ? V.NV_PIECES : V.V_PIECES)[pIdx];
+      super.updateReserve(C.GetOppTurn(this.turn), resPiece,
+        this.reserve[C.GetOppTurn(this.turn)][resPiece] + 1);
+    }
   }
 
 };
