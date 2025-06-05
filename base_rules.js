@@ -175,6 +175,14 @@ export default class ChessRules {
     return Object.values(cd).map(c => c.toString(36)).join("");
   }
 
+  // b4 --> {x:4, y:1}
+  coordsFromUsual(sq) {
+    return {
+      x: this.size.x - parseInt(sq.charAt(1), 10),
+      y: sq.charCodeAt(0) - 97
+    };
+  }
+
   coordsToId(cd) {
     if (typeof cd.x == "number") {
       return (
@@ -651,8 +659,7 @@ export default class ChessRules {
         this[arrName] = ArrayFun.init(this.size.x, this.size.y, null);
       if (arrName == "d_pieces")
         this.marks.forEach((m) => {
-          const formattedSquare = C.SquareFromUsual(m);
-          const mCoords = C.SquareToCoords(formattedSquare);
+          const mCoords = this.coordsFromUsual(m);
           addPiece(mCoords.x, mCoords.y, arrName, "mark");
         });
     };

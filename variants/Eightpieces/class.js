@@ -1,98 +1,74 @@
-import { randInt, sample } from "@/utils/alea";
-import { ChessRules, PiPo, Move } from "@/base_rules";
+//import { randInt, sample } from "@/utils/alea";
+import ChessRules from "/base_rules.js";
+//PiPo, Move ?
 
-export class EightpiecesRules extends ChessRules {
+export default class EightpiecesRules extends ChessRules {
 
-  static get JAILER() {
-    return "j";
-  }
-  static get SENTRY() {
-    return "s";
-  }
-  static get LANCER() {
-    return "l";
-  }
-
-  static get IMAGE_EXTENSION() {
-    // Temporarily, for the time SVG pieces are being designed:
-    return ".png";
-  }
-
-  // Lancer directions *from white perspective*
-  static get LANCER_DIRS() {
+  static get Options() {
     return {
-      'c': [-1, 0], //north
-      'd': [-1, 1], //N-E
-      'e': [0, 1], //east
-      'f': [1, 1], //S-E
-      'g': [1, 0], //south
-      'h': [1, -1], //S-W
-      'm': [0, -1], //west
-      'o': [-1, -1] //N-W
+      select: C.Options.select,
+      input: [],
+      styles: ["doublemove", "progressive"]
     };
   }
 
-  static get PIECES() {
-    return ChessRules.PIECES
-      .concat([V.JAILER, V.SENTRY])
-      .concat(Object.keys(V.LANCER_DIRS));
+// TODO: variable (setupOthers) for lancers directions (x,y) => dir ("0, 1, 2, ...") 0 = top 1 = north east... / white viewpoint
+
+//variable lancer_orient ... --> array size 8 x 8 (TODO?)
+  //
+
+  static get LANCER_STEP() {
+    return {
+      'N': [-1, 0],
+      'NE': [-1, 1],
+      'E': [0, 1],
+      'SE': [1, 1],
+      'S': [1, 0],
+      'SO': [1, 61],
+      'O': [0, -1],
+      'NO': [-1, -1]
+    };
   }
 
-  getPiece(i, j) {
-    const piece = this.board[i][j].charAt(1);
-    // Special lancer case: 8 possible orientations
-    if (Object.keys(V.LANCER_DIRS).includes(piece)) return V.LANCER;
-    return piece;
-  }
-
-  getPpath(b, color, score, orientation) {
-    if ([V.JAILER, V.SENTRY].includes(b[1])) return "Eightpieces/tmp_png/" + b;
-    if (Object.keys(V.LANCER_DIRS).includes(b[1])) {
-      if (orientation == 'w') return "Eightpieces/tmp_png/" + b;
-      // Find opposite direction for adequate display:
-      let oppDir = '';
-      switch (b[1]) {
-        case 'c':
-          oppDir = 'g';
-          break;
-        case 'g':
-          oppDir = 'c';
-          break;
-        case 'd':
-          oppDir = 'h';
-          break;
-        case 'h':
-          oppDir = 'd';
-          break;
-        case 'e':
-          oppDir = 'm';
-          break;
-        case 'm':
-          oppDir = 'e';
-          break;
-        case 'f':
-          oppDir = 'o';
-          break;
-        case 'o':
-          oppDir = 'f';
-          break;
+  pieces(color, x, y) {
+    let basePieces = super.pieces(color, x, y);
+    const extension = {
+      'j': {
+        "class": "jailer",
+        moves: [
+          {
+            steps: [[1, 0], [0, 1], [-1, 0], [0, -1]]
+          }
+        ]
+      },
+      's': {
+        "class": "sentry",
+        moves: [
+          {
+            steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]]
+          }
+        ]
+      },
+      'l': {
+        "class": "lancer",
+        both: [
+          {
+            steps: [ V.LANCER_STEP [
+              this.lancer_orient[(x*this.size.y+y).toString()] ]
+            ]
+          }
+        ]
       }
-      return "Eightpieces/tmp_png/" + b[0] + oppDir;
-    }
-    // TODO: after we have SVG pieces, remove the folder and next prefix:
-    return "Eightpieces/tmp_png/" + b;
+    };
   }
 
-  getPPpath(m, orientation) {
-    return (
-      this.getPpath(
-        m.appear[0].c + m.appear[0].p,
-        null,
-        null,
-        orientation
-      )
-    );
+  // lorient : "{z1:NO,z2:SE, ...etc}"
+  setOtherVariables(fenParsed) {
+    super.setOtherVariables(fenParsed);
+    this.lancer_orient = JSON.parse(fenParsed.lorient);
   }
+
+  //TODO: from here
 
   static ParseFen(fen) {
     const fenParts = fen.split(" ");
@@ -100,19 +76,6 @@ export class EightpiecesRules extends ChessRules {
       ChessRules.ParseFen(fen),
       { sentrypush: fenParts[5] }
     );
-  }
-
-  static IsGoodFen(fen) {
-    if (!ChessRules.IsGoodFen(fen)) return false;
-    const fenParsed = V.ParseFen(fen);
-    // 5) Check sentry push (if any)
-    if (
-      fenParsed.sentrypush != "-" &&
-      !fenParsed.sentrypush.match(/^([a-h][1-8]){2,2}$/)
-    ) {
-      return false;
-    }
-    return true;
   }
 
   getFen() {

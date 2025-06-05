@@ -36,7 +36,7 @@
 
 <figure>
   <div class="diag"
-       data-fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR ...'
+       data-fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 {"flags":"0707","amove":"-"}'
        data-mks="e1,e3,e4,c3,f3,g4,h5,d3,c4,b5,a6">
   </div>
   <figcaption>Possible "pawn moves" in the initial position.</figcaption>
@@ -59,10 +59,10 @@
 
 <figure>
   <div class="diag left"
-       data-fen='rnbqkbnr/ppp1pppp/8/3p4/8/2N5/PPPPPPPP/R1BQKBNR ...'>
+       data-fen='rnbqkbnr/ppp1pppp/8/3p4/8/2N5/PPPPPPPP/R1BQKBNR w 0 {"flags":"0707","amove":"-"}'>
   </div>
   <div class="diag right"
-       data-fen='rnbqkbnr/ppp1pppp/8/8/8/2p5/PPPPPPPP/RNBQKBNR ...'>
+       data-fen='rnbqkbnr/ppp1pppp/8/8/8/2p5/PPPPPPPP/RNBQKBNR w 0 {"flags":"0707","amove":"-"}'>
   </div>
   <figcaption>
     Pulling the d5 pawn to c3 (left: before, right: after).
@@ -80,7 +80,7 @@
 
 <figure>
   <div class="diag"
-       data-fen='rnb1qbnr/pppkpppp/3p4/8/Q1P5/5NP1/PP1PPP1P/RNB1KB1R ...'>
+       data-fen='rnb1qbnr/pppkpppp/3p4/8/Q1P5/5NP1/PP1PPP1P/RNB1KB1R w 0 {"flags":"0707","amove":"-"}'>
   </div>
   <figcaption>
     Check: the queen threatens to pull the king off the board
@@ -95,10 +95,10 @@
 
 <figure>
   <div class="diag left"
-       data-fen='rnbqk1nr/ppppppbp/6p1/8/3B4/1P6/P1PPPPPP/RN1QKBNR ...'>
+       data-fen='rnbqk1nr/ppppppbp/6p1/8/3B4/1P6/P1PPPPPP/RN1QKBNR w 0 {"flags":"0707","amove":"-"}'>
   </div>
   <div class="diag right"
-       data-fen='rnbqk1nr/pppppp1p/6p1/8/3b4/1P6/PBPPPPPP/RN1QKBNR ...'>
+       data-fen='rnbqk1nr/pppppp1p/6p1/8/3b4/1P6/PBPPPPPP/RN1QKBNR w 0 {"flags":"0707","amove":"-"}'>
   <figcaption>
     Pushing the d4 bishop to b2 (left: before, right: after).
   </figcaption>
@@ -119,7 +119,7 @@
 
 <figure>
   <div class="diag"
-       data-fen='8/4B3/8/8/6Qk/8/4N3/K7 ...'>
+       data-fen='8/4B3/8/8/6Qk/8/4N3/K7 w 0 {"flags":"0707","amove":"-"}'>
   </div>
   <figcaption>Dynamo checkmate ("Dynamate" :) )</figcaption>
 </figure>
@@ -140,3 +140,8 @@
   <a href="http://www.pion.ch/echecs/variante.php?jeu=dynamo">this page</a>
   might help too.
 </p>
+
+</body>
+<script src="/utils/drawDiagrams.js"></script>
+<script>fenToDiag("Dynamo");</script>
+</html>
