@@ -1151,7 +1151,7 @@ export default class ChessRules {
   // Color of thing on square (i,j). '' if square is empty
   getColor(i, j) {
     if (typeof i == "string")
-      return i; //reserves
+      return i; //reserves : 'wb'
     return this.board[i][j].charAt(0);
   }
 
@@ -1166,7 +1166,7 @@ export default class ChessRules {
   // Piece on i,j. '' if square is empty
   getPiece(i, j) {
     if (typeof j == "string")
-      return j; //reserves
+      return j; //reserves : 'bq'
     return this.board[i][j].charAt(1);
   }
 

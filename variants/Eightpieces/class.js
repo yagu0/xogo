@@ -12,11 +12,6 @@ export default class EightpiecesRules extends ChessRules {
     };
   }
 
-// TODO: variable (setupOthers) for lancers directions (x,y) => dir ("0, 1, 2, ...") 0 = top 1 = north east... / white viewpoint
-
-//variable lancer_orient ... --> array size 8 x 8 (TODO?)
-  //
-
   static get LANCER_STEP() {
     return {
       'N': [-1, 0],
@@ -28,6 +23,10 @@ export default class EightpiecesRules extends ChessRules {
       'O': [0, -1],
       'NO': [-1, -1]
     };
+  }
+
+  encodeSquare(x, y) {
+    return (x*this.size.y+y).toString();
   }
 
   pieces(color, x, y) {
@@ -54,12 +53,17 @@ export default class EightpiecesRules extends ChessRules {
         both: [
           {
             steps: [ V.LANCER_STEP [
-              this.lancer_orient[(x*this.size.y+y).toString()] ]
+              this.lancer_orient[this.encodeSquare(x, y)] ]
             ]
           }
         ]
       }
     };
+  }
+
+  get pawnPromotions() {
+    // TODO: lancer orientation = backward vertical from promotion square?
+    return ['q', 'r', 'n', 'b', 'j', 's', 'l'];
   }
 
   // lorient : "{z1:NO,z2:SE, ...etc}"
@@ -68,24 +72,24 @@ export default class EightpiecesRules extends ChessRules {
     this.lancer_orient = JSON.parse(fenParsed.lorient);
   }
 
-  //TODO: from here
-
-  static ParseFen(fen) {
-    const fenParts = fen.split(" ");
-    return Object.assign(
-      ChessRules.ParseFen(fen),
-      { sentrypush: fenParts[5] }
+  getPartFen(o) {
+    return Object.assign({},
+      super.getPartFen(o),
+      {
+        "lorient": o.init ? "TODO" : this.getLorientFen(),
+        "sentrypush": o.init ? "-" : this.getSentrypushFen()
+      }
     );
   }
 
-  getFen() {
-    return super.getFen() + " " + this.getSentrypushFen();
+  getLorientFen() {
+    // TODO: use this.lancer_orient to output {z1:NO,z2:SE, ...etc}
+    return "";
   }
 
-  getFenForRepeat() {
-    return super.getFenForRepeat() + "_" + this.getSentrypushFen();
-  }
 
+
+  // TODO: from here --> L1500 in base -- moves generation
   getSentrypushFen() {
     const L = this.sentryPush.length;
     if (!this.sentryPush[L-1]) return "-";
@@ -96,6 +100,8 @@ export default class EightpiecesRules extends ChessRules {
       .map(i => V.CoordsToSquare(this.sentryPush[L-1][i]))
       .join("");
   }
+
+
 
   setOtherVariables(fen) {
     super.setOtherVariables(fen);
@@ -187,6 +193,12 @@ export default class EightpiecesRules extends ChessRules {
       return this.getColor(x1, y1) == this.getColor(x2, y2);
     return super.canTake([x1, y1], [x2, y2]);
   }
+
+
+
+
+
+
 
   // Is piece on square (x,y) immobilized?
   isImmobilized([x, y]) {
