@@ -39,6 +39,9 @@ export const FenUtil = {
       }
       if (o.between) {
         o.between.forEach(b => {
+          // p2 could be an array (EightPieces --> j, r)
+          if (!Array.isArray(b["p2"]))
+            b["p2"] = [ b["p2"] ];
           // Locate p1. If appearing first, exchange with first p2.
           // If appearing last, exchange with last p2.
           const p1 = res.indexOf(b["p1"]);

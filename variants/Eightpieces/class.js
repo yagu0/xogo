@@ -70,52 +70,17 @@ export default class EightpiecesRules extends ChessRules {
   setOtherVariables(fenParsed) {
     super.setOtherVariables(fenParsed);
     this.lancer_orient = JSON.parse(fenParsed.lorient);
-  }
-
-  getPartFen(o) {
-    return Object.assign({},
-      super.getPartFen(o),
-      {
-        "lorient": o.init ? "TODO" : this.getLorientFen(),
-        "sentrypush": o.init ? "-" : this.getSentrypushFen()
-      }
-    );
-  }
-
-  getLorientFen() {
-    // TODO: use this.lancer_orient to output {z1:NO,z2:SE, ...etc}
-    return "";
-  }
-
-
-
-  // TODO: from here --> L1500 in base -- moves generation
-  getSentrypushFen() {
-    const L = this.sentryPush.length;
-    if (!this.sentryPush[L-1]) return "-";
-    let res = "";
-    const spL = this.sentryPush[L-1].length;
-    // Condensate path: just need initial and final squares:
-    return [0, spL - 1]
-      .map(i => V.CoordsToSquare(this.sentryPush[L-1][i]))
-      .join("");
-  }
-
-
-
-  setOtherVariables(fen) {
-    super.setOtherVariables(fen);
     // subTurn == 2 only when a sentry moved, and is about to push something
     this.subTurn = 1;
     // Sentry position just after a "capture" (subTurn from 1 to 2)
     this.sentryPos = null;
     // Stack pieces' forbidden squares after a sentry move at each turn
-    const parsedFen = V.ParseFen(fen);
-    if (parsedFen.sentrypush == "-") this.sentryPush = [null];
+    if (fenParsed.sentrypush == "-")
+      this.sentryPush = [null];
     else {
       // Expand init + dest squares into a full path:
-      const init = V.SquareToCoords(parsedFen.sentrypush.substr(0, 2)),
-            dest = V.SquareToCoords(parsedFen.sentrypush.substr(2));
+      const init = C.SquareToCoords(fenParsed.sentrypush.substr(0, 2)),
+            dest = C.SquareToCoords(fenParsed.sentrypush.substr(2));
       let newPath = [init];
       const delta = ['x', 'y'].map(i => Math.abs(dest[i] - init[i]));
       // Check that it's not a knight movement:
@@ -135,6 +100,32 @@ export default class EightpiecesRules extends ChessRules {
       this.sentryPush = [newPath];
     }
   }
+
+  getPartFen(o) {
+    return Object.assign({},
+      super.getPartFen(o),
+      {
+        "lorient": o.init ? "TODO" : JSON.encode(this.lancer_orient),
+        "sentrypush": o.init ? "-" : this.getSentrypushFen()
+      }
+    );
+  }
+
+  // TODO: from here --> L1500 in base -- moves generation
+  getSentrypushFen() {
+    const L = this.sentryPush.length;
+    if (!this.sentryPush[L-1]) return "-";
+    let res = "";
+    const spL = this.sentryPush[L-1].length;
+    // Condensate path: just need initial and final squares:
+    return [0, spL - 1]
+      .map(i => V.CoordsToSquare(this.sentryPush[L-1][i]))
+      .join("");
+  }
+
+
+
+
 
   static GenRandInitFen(options) {
     if (options.randomness == 0)
