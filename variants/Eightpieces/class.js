@@ -61,8 +61,10 @@ export default class EightpiecesRules extends ChessRules {
     };
   }
 
+  // TODO: need argument x, y to know which orientations are allowed
   get pawnPromotions() {
     // TODO: lancer orientation = backward vertical from promotion square?
+    // So that user can choose orientation later when moving it.
     return ['q', 'r', 'n', 'b', 'j', 's', 'l'];
   }
 
