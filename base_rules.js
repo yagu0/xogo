@@ -79,7 +79,8 @@ export default class ChessRules {
     };
   }
 
-  get pawnPromotions() {
+  // Arguments x, y are useful for Eightpieces (maybe others?)
+  get pawnPromotions(x, y) {
     return ['q', 'r', 'n', 'b'];
   }
 
