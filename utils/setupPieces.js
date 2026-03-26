@@ -4,10 +4,23 @@ export const FenUtil = {
 
   // arg o (constraints): "between" with p1 and p2.
   //                      "flags", "diffCol": array of pieceType
+  //                      "range": restrict piece position to some interval
   setupRow: function(arr, o) {
     let res = JSON.parse(JSON.stringify(arr));
-    if (o.randomness >= 1)
+    if (o.randomness >= 1) {
       res = Random.shuffle(arr);
+      if (o.range) {
+        Object.keys(range).forEach(function(p) {
+          res.indexOf(p) //TODO : finish here
+          //
+          //
+          //
+          //
+          //
+          //
+        });
+      }
+    }
     let flags = "";
     if (o.flags) {
       res.forEach((p, i) => {
