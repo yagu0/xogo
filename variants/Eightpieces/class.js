@@ -1,6 +1,3 @@
-// TODO: not all !!!
-import {Random} from "/utils/alea.js";
-import {ArrayFun} from "/utils/array.js";
 import {FenUtil} from "/utils/setupPieces.js";
 import PiPo from "/utils/PiPo.js";
 import Move from "/utils/Move.js";
@@ -59,7 +56,8 @@ export default class EightpiecesRules extends ChessRules {
   }
 
   setOtherVariables(fenParsed) {
-    // TODO
+    super.setOtherVariables(fenParsed);
+    // TODO: state variables (sentry pushes, lancers?)
   }
 
   pieces(color, x, y) {
@@ -86,114 +84,99 @@ export default class EightpiecesRules extends ChessRules {
       'd': {
         "class": "lancer_NE",
         both: [
-          {steps: [[-1, 0]]}
+          {steps: [[-1, 1]]}
         ]
       },
       'e': {
         "class": "lancer_E",
         both: [
-          {steps: [[-1, 0]]}
+          {steps: [[0, 1]]}
         ]
       },
       'f': {
         "class": "lancer_SE",
         both: [
-          {steps: [[-1, 0]]}
+          {steps: [[1, 1]]}
         ]
       },
       'g': {
         "class": "lancer_S",
         both: [
-          {steps: [[-1, 0]]}
+          {steps: [[1, 0]]}
         ]
       },
       'h': {
         "class": "lancer_SO",
         both: [
-          {steps: [[-1, 0]]}
+          {steps: [[1, -1]]}
         ]
       },
       'm': {
         "class": "lancer_O",
         both: [
-          {steps: [[-1, 0]]}
+          {steps: [[0, -1]]}
         ]
       },
       'o': {
         "class": "lancer_NO",
         both: [
-          {steps: [[-1, 0]]}
+          {steps: [[-1, -1]]}
         ]
       },
     };
   }
 
-
-  //TODO:::
   isImmobilized([x, y]) {
     const color = this.getColor(x, y);
-    const oppCols = this.getOppCols(color);
-    const piece = this.getPieceType(x, y);
-    const stepSpec = this.getStepSpec(color, x, y, piece);
-    const attacks = stepSpec.both.concat(stepSpec.attack);
-    for (let a of attacks) {
-      outerLoop: for (let step of a.steps) {
-        let [i, j] = this.increment([x, y], step);
-        let stepCounter = 0;
-        while (this.onBoard(i, j) && this.board[i][j] == "") {
-          if (a.range <= stepCounter++)
-            continue outerLoop;
-          [i, j] = this.increment([i, j], step);
-        }
-        if (
-          this.onBoard(i, j) &&
-          oppCols.includes(this.getColor(i, j)) &&
-          this.getPieceType(i, j) == piece
-        ) {
+    const oppCol = C.getOppTurn(color);
+    const stepSpec = this.getStepSpec(color, x, y, 'j');
+    for (let step of stepSpec.both[0].steps) {
+      let [i, j] = this.increment([x, y], step);
+      if (
+        this.onBoard(i, j) &&
+        this.board[i][j] == 'j' &&
+        this.getColor(i, j) == oppCol
+      ) {
           return true;
-        }
       }
     }
     return false;
   }
 
-
-  // TODO::::::::
-  // All possible moves from selected square
-  // TODO: generalize usage if arg "color" (e.g. Checkered)
-  getPotentialMovesFrom([x, y], color) {
-    if (this.subTurnTeleport == 2)
-      return [];
-    if (typeof x == "string")
-      return this.getDropMovesFrom([x, y]);
-    if (this.isImmobilized([x, y]))
-      return [];
-    const piece = this.getPieceType(x, y);
-    let moves = this.getPotentialMovesOf(piece, [x, y]);
-    if (piece == "p" && this.hasEnpassant && this.epSquare)
-      Array.prototype.push.apply(moves, this.getEnpassantCaptures([x, y]));
-    if (this.isKing(0, 0, piece) && this.hasCastle)
-      Array.prototype.push.apply(moves, this.getCastleMoves([x, y]));
-    return this.postProcessPotentialMoves(moves);
+  getSentryPushes(x, y) {
+    // TODO: return all squares piece on x, y can be pushed to
+    // Simple
   }
 
-
-  // TODO::::: (sentry pushes [pawn to promotion] ?!)
+  // Post-process sentry pushes (if any)
   postProcessPotentialMoves(moves) {
-    /////////
+    let finalMoves = [];
+    for (const m of moves) {
+      if (m.vanish.length == m.appear.length || m.vanish[0].p != 's')
+        finalMoves.push(m);
+      else {
+        // Sentry "capture" --> turn into pushes
+        const [x, y] = [m.end.x, m.end.y]
+        const p = this.getPiece(x, y);
+        const c = this.getColor(x, y);
+        const squares = this.getSentryPushes(x, y);
+        for (const sq of squares) {
+          finalMoves.push( new Move({
+            appear: m.appear.concat(new PiPo({x:sq.x, y:sq.y, p:p, c:c})),
+            vanish: m.vanish
+          }) );
+        }
+      }
+    }
+    return finalMoves;
   }
 
-  // TODO:::: or edit this for sentry ???????
-  // Build a regular move from its initial and destination squares.
-  // tr: transformation
-  getBasicMove([sx, sy], [ex, ey], tr) {
-    super.getBasicMove(.......)
-  }
-
+//idée exception globle dans base_rules.js d'une pièce marquée comme "indirect attack" ?!
 
   // TODO:::::: under sentry attack?!
   // Is piece (or square) at given position attacked by "oppCol(s)" ?
   underAttack([x, y], oppCols) {
+    super.underAttack([x, y], oppCols)
     // An empty square is considered as king,
     // since it's used only in getCastleMoves (TODO?)
     const king = this.board[x][y] == "" || this.isKing(x, y);
