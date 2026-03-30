@@ -1,79 +1,79 @@
 @import url("/base_pieces.css");
 
-piece.white_jailer {
+piece.white.jailer {
   background-image: url('/pieces/Eightpieces/white_jailer.svg');
 }
-piece.black_jailer {
+piece.black.jailer {
   background-image: url('/pieces/Eightpieces/black_jailer.svg');
 }
 
-piece.white_sentry {
+piece.white.sentry {
   background-image: url('/pieces/Eightpieces/white_sentry.svg');
 }
-piece.black_sentry {
+piece.black.sentry {
   background-image: url('/pieces/Eightpieces/black_sentry.svg');
 }
 
-piece.white_lancer_N {
+piece.white.lancer_N {
   background-image: url('/pieces/Eightpieces/white_lancer.svg');
 }
-piece.white_lancer_NE {
+piece.white.lancer_NE {
   background-image: url('/pieces/Eightpieces/white_lancer.svg');
   transform: rotate(45deg);
 }
-piece.white_lancer_E {
+piece.white.lancer_E {
   background-image: url('/pieces/Eightpieces/white_lancer.svg');
   transform: rotate(90deg);
 }
-piece.white_lancer_SE {
+piece.white.lancer_SE {
   background-image: url('/pieces/Eightpieces/white_lancer.svg');
   transform: rotate(135deg);
 }
-piece.white_lancer_S {
+piece.white.lancer_S {
   background-image: url('/pieces/Eightpieces/white_lancer.svg');
   transform: rotate(180deg);
 }
-piece.white_lancer_SO {
+piece.white.lancer_SO {
   background-image: url('/pieces/Eightpieces/white_lancer.svg');
   transform: rotate(225deg);
 }
-piece.white_lancer_O {
+piece.white.lancer_O {
   background-image: url('/pieces/Eightpieces/white_lancer.svg');
   transform: rotate(270deg);
 }
-piece.white_lancer_NO {
+piece.white.lancer_NO {
   background-image: url('/pieces/Eightpieces/white_lancer.svg');
   transform: rotate(315deg);
 }
 
-piece.black_lancer_N {
+piece.black.lancer_N {
   background-image: url('/pieces/Eightpieces/black_lancer.svg');
 }
-piece.black_lancer_NE {
+piece.black.lancer_NE {
   background-image: url('/pieces/Eightpieces/black_lancer.svg');
   transform: rotate(45deg);
 }
-piece.black_lancer_E {
+piece.black.lancer_E {
   background-image: url('/pieces/Eightpieces/black_lancer.svg');
   transform: rotate(90deg);
 }
-piece.black_lancer_SE {
+piece.black.lancer_SE {
   background-image: url('/pieces/Eightpieces/black_lancer.svg');
   transform: rotate(135deg);
 }
-piece.black_lancer_S {
+piece.black.lancer_S {
   background-image: url('/pieces/Eightpieces/black_lancer.svg');
   transform: rotate(180deg);
 }
-piece.black_lancer_SO {
+piece.black.lancer_SO {
   background-image: url('/pieces/Eightpieces/black_lancer.svg');
   transform: rotate(225deg);
 }
-piece.black_lancer_O {
+piece.black.lancer_O {
   background-image: url('/pieces/Eightpieces/black_lancer.svg');
   transform: rotate(270deg);
 }
-piece.black_lancer_NO {
+piece.black.lancer_NO {
   background-image: url('/pieces/Eightpieces/black_lancer.svg');
   transform: rotate(315deg);
 }
