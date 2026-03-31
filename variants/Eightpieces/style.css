@@ -19,31 +19,31 @@ piece.white.lancer_N {
 }
 piece.white.lancer_NE {
   background-image: url('/pieces/Eightpieces/white_lancer.svg');
-  transform: rotate(45deg);
+  rotate: 45deg;
 }
 piece.white.lancer_E {
   background-image: url('/pieces/Eightpieces/white_lancer.svg');
-  transform: rotate(90deg);
+  rotate: 90deg;
 }
 piece.white.lancer_SE {
   background-image: url('/pieces/Eightpieces/white_lancer.svg');
-  transform: rotate(135deg);
+  rotate: 135deg;
 }
 piece.white.lancer_S {
   background-image: url('/pieces/Eightpieces/white_lancer.svg');
-  transform: rotate(180deg);
+  rotate: 180deg;
 }
 piece.white.lancer_SO {
   background-image: url('/pieces/Eightpieces/white_lancer.svg');
-  transform: rotate(225deg);
+  rotate: 225deg;
 }
 piece.white.lancer_O {
   background-image: url('/pieces/Eightpieces/white_lancer.svg');
-  transform: rotate(270deg);
+  rotate: 270deg;
 }
 piece.white.lancer_NO {
   background-image: url('/pieces/Eightpieces/white_lancer.svg');
-  transform: rotate(315deg);
+  rotate: 315deg;
 }
 
 piece.black.lancer_N {
@@ -51,29 +51,29 @@ piece.black.lancer_N {
 }
 piece.black.lancer_NE {
   background-image: url('/pieces/Eightpieces/black_lancer.svg');
-  transform: rotate(45deg);
+  rotate: 45deg;
 }
 piece.black.lancer_E {
   background-image: url('/pieces/Eightpieces/black_lancer.svg');
-  transform: rotate(90deg);
+  rotate: 90deg;
 }
 piece.black.lancer_SE {
   background-image: url('/pieces/Eightpieces/black_lancer.svg');
-  transform: rotate(135deg);
+  rotate: 135deg;
 }
 piece.black.lancer_S {
   background-image: url('/pieces/Eightpieces/black_lancer.svg');
-  transform: rotate(180deg);
+  rotate: 180deg;
 }
 piece.black.lancer_SO {
   background-image: url('/pieces/Eightpieces/black_lancer.svg');
-  transform: rotate(225deg);
+  rotate: 225deg;
 }
 piece.black.lancer_O {
   background-image: url('/pieces/Eightpieces/black_lancer.svg');
-  transform: rotate(270deg);
+  rotate: 270deg;
 }
 piece.black.lancer_NO {
   background-image: url('/pieces/Eightpieces/black_lancer.svg');
-  transform: rotate(315deg);
+  rotate: 315deg;
 }

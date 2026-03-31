@@ -922,7 +922,7 @@ export default class ChessRules {
             e.preventDefault();
             start = cd;
             curPiece = startPiece.cloneNode();
-            curPiece.style.transform = "none";
+            curPiece.style.translate = "0 0";
             curPiece.style.zIndex = 5;
             curPiece.style.width = pieceWidth + "px";
             curPiece.style.height = pieceWidth + "px";

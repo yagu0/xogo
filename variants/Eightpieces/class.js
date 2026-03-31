@@ -68,6 +68,7 @@ export default class EightpiecesRules extends ChessRules {
   // TODO: FEN utils pushFrom et afterPush
 
   pieces(color, x, y) {
+    const mirror = (this.playerColor == 'b');
     return Object.assign({
       'j': {
         "class": "jailer",
@@ -83,49 +84,49 @@ export default class EightpiecesRules extends ChessRules {
         ]
       },
       'c': {
-        "class": "lancer_N",
+        "class": mirror ? "lancer_S" : "lancer_N",
         both: [
           {steps: [[-1, 0]]}
         ]
       },
       'd': {
-        "class": "lancer_NE",
+        "class": mirror ? "lancer_SO" : "lancer_NE",
         both: [
           {steps: [[-1, 1]]}
         ]
       },
       'e': {
-        "class": "lancer_E",
+        "class": mirror ? "lancer_O" : "lancer_E",
         both: [
           {steps: [[0, 1]]}
         ]
       },
       'f': {
-        "class": "lancer_SE",
+        "class": mirror ? "lancer_NO" : "lancer_SE",
         both: [
           {steps: [[1, 1]]}
         ]
       },
       'g': {
-        "class": "lancer_S",
+        "class": mirror ? "lancer_N" : "lancer_S",
         both: [
           {steps: [[1, 0]]}
         ]
       },
       'h': {
-        "class": "lancer_SO",
+        "class": mirror ? "lancer_NE" : "lancer_SO",
         both: [
           {steps: [[1, -1]]}
         ]
       },
       'm': {
-        "class": "lancer_O",
+        "class": mirror ? "lancer_E" : "lancer_O",
         both: [
           {steps: [[0, -1]]}
         ]
       },
       'o': {
-        "class": "lancer_NO",
+        "class": mirror ? "lancer_SE" : "lancer_NO",
         both: [
           {steps: [[-1, -1]]}
         ]
