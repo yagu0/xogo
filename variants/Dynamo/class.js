@@ -65,7 +65,7 @@ export default class DynamoRules extends ChessRules {
     while (this.onBoard(i, j) && this.board[i][j] == "") {
       if (i == lastRank && piece == 'p') {
         // Promotion by push or pull (if suicide)
-        this.pawnPromotions.forEach(p => {
+        this.pawnPromotions().forEach(p => {
           let move = super.getBasicMove([x, y], [i, j], { c: color, p: p });
           moves.push(move);
         });

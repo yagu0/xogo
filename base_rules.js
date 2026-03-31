@@ -80,7 +80,7 @@ export default class ChessRules {
   }
 
   // Arguments x, y are useful for Eightpieces (maybe others?)
-  get pawnPromotions(x, y) {
+  pawnPromotions(x, y) {
     return ['q', 'r', 'n', 'b'];
   }
 
@@ -639,8 +639,7 @@ export default class ChessRules {
       this[arrName][i][j].style.height = pieceWidth + "px";
       let [ip, jp] = this.getPixelPosition(i, j, r);
       // Translate coordinates to use chessboard as reference:
-      this[arrName][i][j].style.transform =
-        `translate(${ip - r.x}px,${jp - r.y}px)`;
+      this[arrName][i][j].style.translate = `${ip - r.x}px ${jp - r.y}px`;
       chessboard.appendChild(this[arrName][i][j]);
     };
     const conditionalReset = (arrName) => {
@@ -809,8 +808,8 @@ export default class ChessRules {
             this.g_pieces[i][j].style.height = pieceWidth + "px";
             const [ip, jp] = this.getPixelPosition(i, j, newR);
             // Translate coordinates to use chessboard as reference:
-            this.g_pieces[i][j].style.transform =
-              `translate(${ip - newX}px,${jp - newY}px)`;
+            this.g_pieces[i][j].style.translate =
+              `${ip - newX}px ${jp - newY}px`;
           }
         }
       }
@@ -1667,7 +1666,7 @@ export default class ChessRules {
         finalPieces = [this.getPieceType(x2, y2)];
       }
       else
-        finalPieces = this.pawnPromotions;
+        finalPieces = this.pawnPromotions(x2, y2);
       m.appear[0].p = finalPieces[0];
       if (initPiece == "!") //cannibal king-pawn
         m.appear[0].p = C.CannibalKingCode[finalPieces[0]];
@@ -1692,10 +1691,12 @@ export default class ChessRules {
         m.appear[0].x == m.start.x &&
         m.appear[0].y == m.start.y
       ) {
-        m.appear[0].p = this.pawnPromotions[0];
-        for (let i=1; i<this.pawnPromotions.length; i++) {
+        const promotions = this.pawnPromotions(m.start.x, m.start.y);
+        m.appear[0].p = promotions[0];
+        for (let i = 1; i < promotions.length; i++)
+        {
           let newMv = JSON.parse(JSON.stringify(m));
-          newMv.appear[0].p = this.pawnPromotions[i];
+          newMv.appear[0].p = promotions[i];
           newMoves.push(newMv);
         }
       }
@@ -1876,6 +1877,8 @@ export default class ChessRules {
           if (this.canStepOver(x, y, apparentPiece))
             continue;
           const stepSpec = this.getStepSpec(colIJ, i, j);
+          if (stepSpec.indirectAttack) //e.g. 8-pieces (only?)
+            continue;
           const attacks = stepSpec.attack.concat(stepSpec.both);
           for (let a of attacks) {
             for (let s of a.steps) {
@@ -2476,8 +2479,7 @@ export default class ChessRules {
       this.g_pieces[a.x][a.y].style.height = pieceWidth + "px";
       const [ip, jp] = this.getPixelPosition(a.x, a.y, r);
       // Translate coordinates to use chessboard as reference:
-      this.g_pieces[a.x][a.y].style.transform =
-        `translate(${ip - r.x}px,${jp - r.y}px)`;
+      this.g_pieces[a.x][a.y].style.translate = `${ip - r.x}px ${jp - r.y}px`;
       if (this.enlightened && !this.enlightened[a.x][a.y])
         this.g_pieces[a.x][a.y].classList.add("hidden");
       chessboard.appendChild(this.g_pieces[a.x][a.y]);
@@ -2564,7 +2566,7 @@ export default class ChessRules {
       const dep = this.getPixelPosition(i1, j1, r);
       const arr = this.getPixelPosition(i2, j2, r);
       movingPiece.style.transitionDuration = "0s";
-      movingPiece.style.transform = `translate(${dep[0]}px, ${dep[1]}px)`;
+      movingPiece.style.translate = `${dep[0]}px ${dep[1]}px`;
       const distance =
         Math.sqrt((arr[0] - dep[0]) ** 2 + (arr[1] - dep[1]) ** 2);
       const duration = 0.2 + (distance / maxDist) * 0.3;
@@ -2572,7 +2574,7 @@ export default class ChessRules {
       setTimeout(() => {
         movingPiece.style.transitionDuration = duration + "s";
         // movingPiece is child of container: no need to adjust coordinates
-        movingPiece.style.transform = `translate(${arr[0]}px, ${arr[1]}px)`;
+        movingPiece.style.translate = `${arr[0]}px ${arr[1]}px`;
         setTimeout(cb, duration * 1000);
       }, 50);
     };

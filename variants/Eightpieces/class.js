@@ -1,4 +1,5 @@
 import {FenUtil} from "/utils/setupPieces.js";
+import ChessRules from "/base_rules.js";
 import PiPo from "/utils/PiPo.js";
 import Move from "/utils/Move.js";
 
@@ -13,7 +14,7 @@ export default class EightpiecesRules extends ChessRules {
     };
   }
 
-  get pawnPromotions(x, y) {
+  pawnPromotions(x, y) {
     const base_pieces = ['q', 'r', 'n', 'b', 'j', 's'];
     let lancers = [];
     if (y > 0)
@@ -27,18 +28,18 @@ export default class EightpiecesRules extends ChessRules {
       if (y < this.size.y)
         lancers.push('f');
     }
-    else { //x == this.size.x (8)
+    else { //x == this.size.x-1 (7)
       lancers.push('c');
       if (y > 0)
         lancers.push('o');
       if (y < this.size.y)
         lancers.push('d');
     }
-    return ['q', 'r', 'n', 'b', 'j', 's', 'l'];
+    return base_pieces.concat(lancers);
   }
 
   genRandInitBaseFen() {
-    const s = FenUtil.setupPieces(
+    let s = FenUtil.setupPieces(
       ['j', 'l', 's', 'q', 'k', 'b', 'n', 'r'],
       {
         randomness: this.options["randomness"],
@@ -48,21 +49,26 @@ export default class EightpiecesRules extends ChessRules {
         flags: ['r', 'j']
       }
     );
+    const random = (this.options["randomness"] > 0);
+    const fen = s.b.join("").replace('l', random ? 'g' : 'f') +
+      "/pppppppp/8/8/8/8/PPPPPPPP/" +
+      s.w.join("").replace('l', random > 0 ? 'c' : 'd').toUpperCase();
     return {
-      fen: s.b.join("") + "/pppppppp/8/8/8/8/PPPPPPPP/" +
-           s.w.join("").toUpperCase(),
+      fen: fen,
       o: {flags: s.flags}
     };
   }
 
   setOtherVariables(fenParsed) {
     super.setOtherVariables(fenParsed);
-    // TODO: state variables (sentry pushes, lancers?)
+    //this.pushFrom = 
+    //this.afterPush = 
   }
 
+  // TODO: FEN utils pushFrom et afterPush
+
   pieces(color, x, y) {
-    const base_pieces = super.pieces(color, x, y);
-    return {
+    return Object.assign({
       'j': {
         "class": "jailer",
         moves: [
@@ -71,6 +77,7 @@ export default class EightpiecesRules extends ChessRules {
       },
       's': {
         "class": "sentry",
+        indirectAttack: true,
         both: [
           {steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]]}
         ]
@@ -123,14 +130,14 @@ export default class EightpiecesRules extends ChessRules {
           {steps: [[-1, -1]]}
         ]
       },
-    };
+    }, super.pieces(color, x, y));
   }
 
   isImmobilized([x, y]) {
     const color = this.getColor(x, y);
-    const oppCol = C.getOppTurn(color);
+    const oppCol = C.GetOppTurn(color);
     const stepSpec = this.getStepSpec(color, x, y, 'j');
-    for (let step of stepSpec.both[0].steps) {
+    for (let step of stepSpec.moves[0].steps) {
       let [i, j] = this.increment([x, y], step);
       if (
         this.onBoard(i, j) &&
@@ -143,9 +150,18 @@ export default class EightpiecesRules extends ChessRules {
     return false;
   }
 
+  getPotentialMovesFrom([x, y], color) {
+    if (!this.pushFrom)
+      return super.getPotentialMovesFrom([x, y], color);
+    if (x != this.pushFrom.x || y != this.pushFrom.y)
+      return [];
+    // After sentry "attack": move enemy as if it was ours
+    return []; //TODO
+  }
+
   getSentryPushes(x, y) {
     // TODO: return all squares piece on x, y can be pushed to
-    // Simple
+    return [{x: x+1, y: y-1}];
   }
 
   // Post-process sentry pushes (if any)
@@ -171,56 +187,18 @@ export default class EightpiecesRules extends ChessRules {
     return finalMoves;
   }
 
-//idée exception globle dans base_rules.js d'une pièce marquée comme "indirect attack" ?!
 
-  // TODO:::::: under sentry attack?!
-  // Is piece (or square) at given position attacked by "oppCol(s)" ?
-  underAttack([x, y], oppCols) {
-    super.underAttack([x, y], oppCols)
-    // An empty square is considered as king,
-    // since it's used only in getCastleMoves (TODO?)
-    const king = this.board[x][y] == "" || this.isKing(x, y);
-    return (
-      (
-        (!this.options["zen"] || king) &&
-        this.findCapturesOn(
-          [x, y],
-          {
-            byCol: oppCols,
-            one: true
-          }
-        )
-      )
-      ||
-      (
-        (!!this.options["zen"] && !king) &&
-        this.findDestSquares(
-          [x, y],
-          {
-            attackOnly: true,
-            one: true
-          },
-          ([i1, j1], [i2, j2]) => oppCols.includes(this.getColor(i2, j2))
-        )
-      )
-    );
-  }
-
-
-  // TODO::: sentry subturn ???
-  // 'color' arg because some variants (e.g. Refusal) check opponent moves
+  // Lazy sentry attacks check: after push move
   filterValid(moves, color) {
-    color = color || this.turn;
-    const oppCols = this.getOppCols(color);
-    let kingPos = this.searchKingPos(color);
-    return moves.filter(m => {
-      this.playOnBoard(m);
-      const res = this.trackKingWrap(m, kingPos, (kp) => {
-        return !this.underCheck(kp, oppCols);
-      });
-      this.undoOnBoard(m);
-      return res;
+    let sentryAttack = [];
+    moves = moves.filter(m => {
+      if (m.appear.length == 0) {
+        sentryAttack.push(m);
+        return false;
+      }
+      return true;
     });
+    return super.filterValid(moves, color).concat(sentryAttack);
   }
 
 };

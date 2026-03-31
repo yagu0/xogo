@@ -3,7 +3,7 @@ import {FenUtil} from "/utils/setupPieces.js";
 
 export default class BalaklavaRules extends ChessRules {
 
-  get pawnPromotions() {
+  pawnPromotions() {
     return ['r', 'm', 'b', 'q'];
   }
 

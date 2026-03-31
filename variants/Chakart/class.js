@@ -25,7 +25,7 @@ export default class ChakartRules extends ChessRules {
     };
   }
 
-  get pawnPromotions() {
+  pawnPromotions() {
     return ['q', 'r', 'n', 'b', 'k'];
   }
 
@@ -404,7 +404,7 @@ export default class ChakartRules extends ChessRules {
       this.reserve = { w: {}, b: {} };
       // Randomly select a piece in pawnPromotions
       if (!move.toadette)
-        move.toadette = Random.sample(this.pawnPromotions);
+        move.toadette = Random.sample( this.pawnPromotions() );
       this.reserve[color][move.toadette] = 1;
       this.re_drawReserve([color]);
     }

@@ -7,7 +7,7 @@ export default class DiscoduelRules extends ChessRules {
     return {}; //nothing would make sense
   }
 
-  get pawnPromotions() {
+  pawnPromotions() {
     return ['p'];
   }
 

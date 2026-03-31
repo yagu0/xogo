@@ -17,7 +17,7 @@ export default class ApocalypseRules extends ChessRules {
     return true;
   }
 
-  get pawnPromotions() {
+  pawnPromotions() {
     return ['n', 'p'];
   }
 

@@ -21,7 +21,7 @@ export default class SuctionRules extends ChessRules {
     };
   }
 
-  get pawnPromotions() {
+  pawnPromotions() {
     return ['p']; //no promotions
   }
 

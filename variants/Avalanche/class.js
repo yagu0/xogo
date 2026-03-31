@@ -58,7 +58,7 @@ export default class AvalancheRules extends ChessRules {
       return null;
     }
     let moves = [];
-    this.pawnPromotions.forEach(pr => {
+    this.pawnPromotions().forEach(pr => {
       moves.push(
         new Move({
           vanish: [new PiPo({x: coords.x, y: coords.y, c: this.turn, p: 'p'})],

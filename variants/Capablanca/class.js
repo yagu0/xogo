@@ -3,7 +3,7 @@ import {FenUtil} from "/utils/setupPieces.js";
 
 export default class CapablancaRules extends ChessRules {
 
-  get pawnPromotions() {
+  pawnPromotions() {
     return ['q', 'e', 's', 'r', 'n', 'b'];
   }
 

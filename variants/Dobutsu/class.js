@@ -68,7 +68,7 @@ export default class DobutsuRules extends ChessRules {
     super(o);
   }
 
-  get pawnPromotions() {
+  pawnPromotions() {
     return ['h'];
   }
 

@@ -275,7 +275,7 @@ export default class CwdaRules extends ChessRules {
     );
   }
 
-  get pawnPromotions() {
+  pawnPromotions() {
     // Can promote in anything from the two current armies
     let promotions = [];
     for (let army of ["army1", "army2"]) {

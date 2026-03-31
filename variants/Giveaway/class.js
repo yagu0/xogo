@@ -30,7 +30,7 @@ export default class GiveawayRules extends ChessRules {
     return this.options["mode"] == "losers";
   }
 
-  get pawnPromotions() {
+  pawnPromotions() {
     let res = ['q', 'r', 'n', 'b'];
     if (this.options["mode"] == "suicide")
       res.push('k');
