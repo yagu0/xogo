@@ -142,10 +142,10 @@ export default class EightpiecesRules extends ChessRules {
       let [i, j] = this.increment([x, y], step);
       if (
         this.onBoard(i, j) &&
-        this.board[i][j] == 'j' &&
+        this.getPiece(i, j) == 'j' &&
         this.getColor(i, j) == oppCol
       ) {
-          return true;
+        return true;
       }
     }
     return false;
@@ -188,6 +188,10 @@ export default class EightpiecesRules extends ChessRules {
     return finalMoves;
   }
 
+  underAttack() {
+    // TODO: check enemy sentry(ies), for each, check all of our own pieces which attack the square (if belonging to opponent!). Then, call :
+    return super.undeerAttack();
+  }
 
   // Lazy sentry attacks check: after push move
   filterValid(moves, color) {
