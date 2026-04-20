@@ -1028,8 +1028,10 @@ export default class ChessRules {
     chessboard.style.opacity = "0.5";
     container.appendChild(choices);
     const squareWidth = r.width / this.size.y;
-    const firstUpLeft = (r.width - (moves.length * squareWidth)) / 2;
-    const firstUpTop = (r.height - squareWidth) / 2;
+    const firstUpLeft =
+      (r.width - (Math.min(moves.length, this.size.y) * squareWidth)) / 2;
+    const firstUpTop =
+      (r.height - Math.ceil(moves.length / this.size.y) * squareWidth) / 2;
     const color = moves[0].appear[0].c;
     const callback = (m) => {
       chessboard.style.opacity = "1";
@@ -1041,8 +1043,10 @@ export default class ChessRules {
       choice.classList.add("choice");
       choice.style.width = squareWidth + "px";
       choice.style.height = squareWidth + "px";
-      choice.style.left = (firstUpLeft + i * squareWidth) + "px";
-      choice.style.top = firstUpTop + "px";
+      choice.style.left =
+        (firstUpLeft + (i % this.size.y) * squareWidth) + "px";
+      choice.style.top =
+        firstUpTop + Math.floor(i / this.size.y) * squareWidth + "px";
       choice.style.backgroundColor = "lightyellow";
       choice.onclick = () => callback(moves[i]);
       const piece = document.createElement("piece");

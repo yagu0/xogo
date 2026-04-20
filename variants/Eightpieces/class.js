@@ -14,28 +14,33 @@ export default class EightpiecesRules extends ChessRules {
     };
   }
 
+  getLancerOptions(x, y) {
+    let options = [];
+    if (y > 0)
+      options.push('m');
+    if (y < this.size.y)
+      options.push('e');
+    if (x < this.size.x) {
+      options.push('g');
+      if (y > 0)
+        options.push('h');
+      if (y < this.size.y)
+        options.push('f');
+    }
+    if (x > 0) {
+      options.push('c');
+      if (y > 0)
+        options.push('o');
+      if (y < this.size.y)
+        options.push('d');
+    }
+    return options;
+  }
+
   pawnPromotions(x, y) {
     const base_pieces = ['q', 'r', 'n', 'b', 'j', 's'];
-    let lancers = [];
-    if (y > 0)
-      lancers.push('m');
-    if (y < this.size.y)
-      lancers.push('e');
-    if (x == 0) {
-      lancers.push('g');
-      if (y > 0)
-        lancers.push('h');
-      if (y < this.size.y)
-        lancers.push('f');
-    }
-    else { //x == this.size.x-1 (7)
-      lancers.push('c');
-      if (y > 0)
-        lancers.push('o');
-      if (y < this.size.y)
-        lancers.push('d');
-    }
-    return base_pieces.concat(lancers);
+    let lancer_orients = this.getLancerOptions(x, y);
+    return base_pieces.concat(lancer_orients);
   }
 
   genRandInitBaseFen() {
@@ -54,9 +59,13 @@ export default class EightpiecesRules extends ChessRules {
       "/pppppppp/8/8/8/8/PPPPPPPP/" +
       s.w.join("").replace('l', random > 0 ? 'c' : 'd').toUpperCase();
     return {
-      fen: fen,
+      fen: 'jfs1kb1r/1P3ppp/3p1q2/p7/2P5/8/P2PPPPP/J1SQKBNR', //     fen,
       o: {flags: s.flags}
     };
+  }
+
+  static get LANCERS() {
+    return ['c', 'd', 'e', 'f', 'g', 'h', 'm', 'o'];
   }
 
   setOtherVariables(fenParsed) {
@@ -165,32 +174,42 @@ export default class EightpiecesRules extends ChessRules {
     return [{x: x+1, y: y-1}];
   }
 
-  // Post-process sentry pushes (if any)
+  // Post-process sentry pushes (if any), regular lancer moves, lancer drops..
   postProcessPotentialMoves(moves) {
+    moves = super.postProcessPotentialMoves(moves);
     let finalMoves = [];
     for (const m of moves) {
-      if (m.vanish.length == m.appear.length || m.vanish[0].p != 's')
+      //if (m.vanish.length == 0 && ... TODO: drop
+      if (V.LANCERS.includes(m.vanish[0].p)) {
+        // TODO: how to know it's regular?
+        this.getLancerOptions(m.end.x, m.end.y).forEach(o => {
+          finalMoves.push( new Move({
+            appear: [new PiPo({x:m.end.x,y:m.end.y,c:m.appear[0].c,p:o})],
+            vanish: m.vanish
+          }) );
+        });
+      }
+      else if (m.vanish.length == m.appear.length || m.vanish[0].p != 's')
         finalMoves.push(m);
       else {
         // Sentry "capture" --> turn into pushes
         const [x, y] = [m.end.x, m.end.y]
         const p = this.getPiece(x, y);
         const c = this.getColor(x, y);
-        const squares = this.getSentryPushes(x, y);
-        for (const sq of squares) {
+        this.getSentryPushes(x, y).forEach(sq => {
           finalMoves.push( new Move({
             appear: m.appear.concat(new PiPo({x:sq.x, y:sq.y, p:p, c:c})),
             vanish: m.vanish
           }) );
-        }
+        });
       }
     }
     return finalMoves;
   }
 
-  underAttack() {
+  underAttack([x, y], oppCols) {
     // TODO: check enemy sentry(ies), for each, check all of our own pieces which attack the square (if belonging to opponent!). Then, call :
-    return super.undeerAttack();
+    return super.underAttack([x, y], oppCols);
   }
 
   // Lazy sentry attacks check: after push move
@@ -204,6 +223,12 @@ export default class EightpiecesRules extends ChessRules {
       return true;
     });
     return super.filterValid(moves, color).concat(sentryAttack);
+  }
+
+  updateReserve(color, piece, count) {
+    if (V.LANCERS.includes(piece))
+      piece = 'c'; //TODO: orientation, or new drawing?
+    super.updateReserve(color, piece, count);
   }
 
 };
