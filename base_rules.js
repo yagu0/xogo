@@ -1375,7 +1375,8 @@ export default class ChessRules {
     return !this.isKing(x2, y2);
   }
 
-  canStepOver(i, j, p) {
+    // Can piece p (of color c) step over square i, j ?
+  canStepOver(i, j, p, c) {
     // In some variants, objects on boards don't stop movement (Chakart)
     return this.board[i][j] == "";
   }
@@ -1778,6 +1779,7 @@ export default class ChessRules {
     if (!allowed)
       allowed = (sq1, sq2) => this.canTake(sq1, sq2);
     const apparentPiece = this.getPiece(x, y); //how it looks
+    const c = this.getColor(x, y);
     let res = [];
     // Next 3 for Cylinder mode or circular (useless otherwise)
     let explored = {};
@@ -1798,7 +1800,7 @@ export default class ChessRules {
           let stepCounter = 0;
           while (
             this.onBoard(i, j) &&
-            ((i == x && j == y) || this.canStepOver(i, j, apparentPiece))
+            ((i == x && j == y) || this.canStepOver(i, j, apparentPiece, c))
           ) {
             if (!explored[i + "." + j] && (i != x || j != y)) {
               explored[i + "." + j] = true;
@@ -1878,7 +1880,7 @@ export default class ChessRules {
         ) {
           const apparentPiece = this.getPiece(i, j);
           // Quick check: does this potential attacker target x,y ?
-          if (this.canStepOver(x, y, apparentPiece))
+          if (this.canStepOver(x, y, apparentPiece, colIJ))
             continue;
           const stepSpec = this.getStepSpec(colIJ, i, j);
           if (stepSpec.indirectAttack) //e.g. 8-pieces (only?)

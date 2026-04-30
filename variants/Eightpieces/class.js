@@ -9,8 +9,7 @@ export default class EightpiecesRules extends ChessRules {
     return {
       select: C.Options.select,
       input: C.Options.input,
-      styles: ["crazyhouse", "cylinder", "doublemove", "progressive",
-        "recycle", "rifle", "teleport", "zen"]
+      styles: ["crazyhouse", "cylinder", "recycle", "teleport"]
     };
   }
 
@@ -143,6 +142,11 @@ export default class EightpiecesRules extends ChessRules {
     }, super.pieces(color, x, y));
   }
 
+  canStepOver(i, j, p, c) {
+    const colIJ = this.getColor(i, j);
+    return this.board[i][j] == "" || (V.LANCERS.includes(p) && c == colIJ);
+  }
+
   isImmobilized([x, y]) {
     const color = this.getColor(x, y);
     const oppCol = C.GetOppTurn(color);
@@ -160,9 +164,40 @@ export default class EightpiecesRules extends ChessRules {
     return false;
   }
 
+  getPassMoves(x, y) {
+    const col = this.getColor(x, y);
+    let res = [];
+    if (this.getPiece(x, y) == 'k') {
+      for (let i of [-1, 1]) {
+        for (let j of [-1, 1]) {
+          if (
+            this.onBoard(x + i, y + j) &&
+            this.getPiece(x + i, y + j) == 'j' &&
+            this.getColor(x + i, y + j) != col
+          ) {
+            res.push( new Move({
+              appear: [],
+              vanish: [],
+              start: {x: x, y: y},
+              end: {x: x + i, y: y + j}
+            }) );
+          }
+        }
+      }
+    }
+    return res;
+  }
+
+
+// TODO: finish lancers
+  // http://ftp.chessvariants.com/rules/8-piece-chess
+
+
   getPotentialMovesFrom([x, y], color) {
-    if (!this.pushFrom)
-      return super.getPotentialMovesFrom([x, y], color);
+    if (!this.pushFrom) {
+      return this.getPassMoves(x, y).concat(
+        super.getPotentialMovesFrom([x, y], color) );
+    }
     if (x != this.pushFrom.x || y != this.pushFrom.y)
       return [];
     // After sentry "attack": move enemy as if it was ours
@@ -180,8 +215,8 @@ export default class EightpiecesRules extends ChessRules {
     let finalMoves = [];
     for (const m of moves) {
       //if (m.vanish.length == 0 && ... TODO: drop
-      if (V.LANCERS.includes(m.vanish[0].p)) {
-        // TODO: how to know it's regular?
+      if (m.vanish.length > 0 && V.LANCERS.includes(m.vanish[0].p)) {
+        // TODO: how to know it's regular? (not sentry push)
         this.getLancerOptions(m.end.x, m.end.y).forEach(o => {
           finalMoves.push( new Move({
             appear: [new PiPo({x:m.end.x,y:m.end.y,c:m.appear[0].c,p:o})],
