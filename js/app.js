@@ -3,12 +3,12 @@ let $ = document; //shortcut
 ///////////////////
 // Initialisations
 
-// https://stackoverflow.com/a/27747377/12660887
-function generateId (len) {
-  const dec2hex = (dec) => dec.toString(16).padStart(2, "0");
-  let arr = new Uint8Array(len / 2); //len/2 because 2 chars per hex value
-  window.crypto.getRandomValues(arr); //fill with random integers
-  return Array.from(arr, dec2hex).join('');
+function generateId(len) {
+  const chars =
+    "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const arr = new Uint8Array(len);
+  window.crypto.getRandomValues(arr);
+  return Array.from(arr, (byte) => chars[byte % chars.length]).join('');
 }
 
 // Populate variants dropdown list
@@ -50,9 +50,30 @@ inputName.onfocus = () => setActive(true);
 /////////
 // Utils
 
+function h(tag, attrs, children) {
+  const el = document.createElement(tag);
+  if (attrs) {
+    Object.keys(attrs).forEach(k => {
+      // Special treatment for events (ex: onclick)
+      if (k.startsWith("on"))
+        el[k.toLowerCase()] = attrs[k];
+      else
+        el.setAttribute(k, attrs[k]);
+    });
+  }
+  if (children) {
+    if (Array.isArray(children))
+      children.forEach(c => c && el.append(c));
+    else
+      el.append(children);
+  }
+  return el;
+}
+
 function setName() {
   // 'onChange' event on name input text field [HTML]
-  localStorage.setItem("name", $.getElementById("myName").value);
+  const name = $.getElementById("myName").value;
+  localStorage.setItem("name", sanitize(name, 30));
 }
 
 // Turn a "tab" on, and "close" all others
@@ -117,17 +138,86 @@ function showNewGameForm() {
     });
   }
 }
-function backToNormalSeek() {
+function backToNormalSeek() { //TODO: index.html......
   toggleVisible("newGame");
 }
 
-function toggleStyle(event, obj) {
-  const word = obj.innerHTML;
-  options[word] = !options[word];
-  event.target.classList.toggle("highlight-word");
+let options;
+function prepareOptions() {
+  options = {};
+  const container = $.getElementById("gameOptions");
+  container.innerHTML = "";
+  if (V.Options.select) {
+    V.Options.select.forEach(select => {
+      const selectEl = h('select', {
+        id: `var_${select.variable}`,
+        onchange: (e) => { options[select.variable] = e.target.value; }
+      }, select.options.map(opt =>
+        h('option', {
+          value: opt.value,
+          selected: opt.value == select.defaut
+        }, opt.label)
+      ));
+      container.append(
+        h('div', { class: 'option-select' }, [
+          h('label', { for: `var_${select.variable}` }, select.label),
+          h('div', { class: 'select' }, [
+            selectEl,
+            h('span', { class: 'focus' })
+          ])
+        ])
+      );
+    });
+  }
+  if (V.Options.input) {
+    V.Options.input.forEach(input => {
+      const inputAttrs = {
+        id: `var_${input.variable}`,
+        type: input.type,
+        onchange: (e) => {
+          options[input.variable] =
+            (input.type == "checkbox" ? e.target.checked : e.target.value);
+        }
+      };
+      if (input.type == "checkbox" && input.defaut)
+        inputAttrs.checked = true;
+      else if (input.defaut)
+        inputAttrs.value = input.defaut;
+      container.append(
+        h('div', { class: 'option-input' }, [
+          h('label', { class: 'input' }, [
+            h('input', inputAttrs),
+            h('span', { class: 'spacer' }),
+            h('span', { textContent: input.label })
+          ])
+        ])
+      );
+    });
+  }
+  if (V.Options.styles) {
+    const wordsDiv = h('div', { class: 'words' });
+    let i = 0;
+    while (i < V.Options.styles.length) {
+      const row = h('div', { class: 'row' });
+      for (let j = i; j < i + 4 && j < V.Options.styles.length; j++) {
+        const styleName = V.Options.styles[j];
+        row.append(
+          h('span', {
+            textContent: styleName,
+            onclick: (e) => {
+              options[styleName] = !options[styleName];
+              e.target.classList.toggle("highlight-word");
+            }
+          })
+        );
+      }
+      wordsDiv.append(row);
+      i += 4;
+    }
+    container.append(wordsDiv);
+  }
 }
 
-let options;
 function prepareOptions() {
   options = {};
   let optHtml = "";
@@ -210,6 +300,64 @@ function getGameLink() {
   });
 }
 
+
+
+
+function fillGameInfos(gameInfos, oppIndex) {
+  fetch(`/variants/${gameInfos.vname}/rules.html`)
+    .then(res => res.text())
+    .then(txt => {
+      const container = $.getElementById("gameInfos");
+      container.innerHTML = ""; // Nettoyage initial
+
+      // 1. Infos Joueurs
+      const playerDiv = h('div', { class: 'players-info' }, [
+        h('p', null, [
+          h('span', { class: 'bold', textContent: gameInfos.vdisp }),
+          h('span', { textContent: ` vs. ${gameInfos.players[oppIndex].name}` })
+        ])
+      ]);
+
+      // 2. Traitement des Options (Filtrage + Groupement par 4)
+      const optionsInfos = h('div', { class: 'options-info' });
+      const activeOptions = Object.entries(gameInfos.options).filter(opt => !!opt[1]);
+      
+      let i = 0;
+      while (i < activeOptions.length) {
+        const row = h('div', { class: 'row' });
+        for (let j = i; j < i + 4 && j < activeOptions.length; j++) {
+          const [key, val] = activeOptions[j];
+          const label = (val === true ? key : `${key}:${val}`);
+          row.append(h('span', { class: 'option', textContent: label + " " }));
+        }
+        optionsInfos.append(row);
+        i += 4;
+      }
+
+      // 3. Règles (on garde innerHTML ici car le HTML vient de ton fichier local rules.html)
+      const rulesDiv = h('div', { class: 'rules' });
+      rulesDiv.innerHTML = txt;
+
+      // 4. Bouton de retour
+      const btnWrap = h('div', { class: 'btn-wrap' }, [
+        h('button', { 
+          onclick: toggleGameInfos, 
+          textContent: "Back to game" 
+        })
+      ]);
+
+      // Assemblage final
+      container.append(
+        playerDiv, 
+        activeOptions.length > 0 ? optionsInfos : null, 
+        rulesDiv, 
+        btnWrap
+      );
+    });
+}
+
+
+
 function fillGameInfos(gameInfos, oppIndex) {
   fetch(`/variants/${gameInfos.vname}/rules.html`)
   .then(res => res.text())
@@ -221,16 +369,16 @@ function fillGameInfos(gameInfos, oppIndex) {
           <span>vs. ${gameInfos.players[oppIndex].name}</span>
         </p>
       </div>`;
-    const options = Object.entries(gameInfos.options);
-    if (options.length > 0) {
+    const _options = Object.entries(gameInfos.options);
+    if (_options.length > 0) {
       htmlContent += '<div class="options-info">';
       let i = 0;
-      while (i < options.length) {
+      while (i < _options.length) {
         htmlContent += '<div class="row">';
         for (let j=i; j<i+4; j++) {
-          if (j == options.length)
+          if (j == _options.length)
             break;
-          const opt = options[j];
+          const opt = _options[j];
           if (!opt[1]) //includes 0 and false (lighter display)
             continue;
           htmlContent +=
@@ -372,6 +520,7 @@ const messageCenter = (msg) => {
         break;
       if (document.hidden)
         notifyMe("move");
+      // TODO: moves not sanitized (most likely: won't "fix"...)
       vr.playReceivedMove(obj.moves, () => {
         if (vr.getCurrentScore(obj.moves) != "*") {
           localStorage.removeItem("gid");
@@ -491,6 +640,30 @@ const afterPlay = (move_s, newTurn, ops) => {
     }
   }
 };
+
+
+
+
+
+
+
+function initializeGame(obj) {
+  const container = $.getElementById("boardContainer");
+  container.innerHTML = ""; // Nettoyage
+
+  // Créer les boutons de contrôle proprement
+  const infoBtn = createSVGButton("upLeftInfos", toggleGameInfos);
+  const stopBtn = createSVGButton("upRightStop", confirmStopGame);
+  const board = $.createElement("div");
+  board.className = "chessboard";
+
+  container.append(infoBtn, stopBtn, board);
+
+
+
+
+
+
 
 let vr = null, playerColor, lastVname = undefined;
 function initializeGame(obj) {

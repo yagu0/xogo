@@ -1,4 +1,4 @@
-@import url("/base_pieces.css");
+@import url("/css/base_pieces.css");
 
 piece.white.c_rook {
   background-image: url('/pieces/Cwda/c_white_rook.svg');

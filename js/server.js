@@ -1,4 +1,5 @@
-const params = require("./parameters.js");
+const params = require("./js/parameters.js");
+const sanitize = require("./js/sanitize.js");
 const WebSocket = require("ws");
 const wss = new WebSocket.Server({
   port: params.socket_port,
@@ -17,16 +18,16 @@ function send(sid, code, data) {
   // If a player deletes local infos and then tries to resume a game,
   // sockets[oppSid] will probably not exist anymore:
   if (socket)
-    socket.send(JSON.stringify(Object.assign({code: code}, data)));
+    socket.send(JSON.stringify({code, ...data}));
 }
 
 function initializeGame(vname, players, options) {
   const gid =
     Crypto.randomBytes(randstrSize).toString("hex").slice(0, randstrSize);
   games[gid] = {
-    vname: vname,
-    players: players,
-    options: options,
+    vname,
+    players,
+    options,
     time: Date.now(),
     moveHash: {} //set of moves hashes seen so far
   };
@@ -35,11 +36,12 @@ function initializeGame(vname, players, options) {
 
 // Provide seed in case of, so that both players initialize with same FEN
 function launchGame(gid) {
-  const gameInfo = Object.assign(
-    {seed: Math.floor(Math.random() * 19840), gid: gid},
-    games[gid]
-  );
-  // players array is supposed to be full:
+  const gameInfo = {
+    seed: Math.floor(Math.random() * 19840),
+    gid,
+    ...games[gid]
+  };
+  // Players array is supposed to be full:
   for (const p of games[gid].players)
     send(p.sid, "gamestart", gameInfo);
 }
@@ -50,20 +52,59 @@ function getRandomVariant() {
   return variants[index].name;
 }
 
+if (params.dev) {
+  const chokidar = require("chokidar");
+  const watcher = chokidar.watch(
+    ["*.js", "*.css", "utils/", "variants/"],
+    { persistent: true }
+  );
+
+  // When a file changes: notify each connected client
+  watcher.on("change", path => {
+    console.log(`File changed: ${path}. Notifying clients...`);
+    wss.clients.forEach(socket => {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          code: "filechange",
+          path
+        }));
+      }
+    });
+  });
+}
+
 wss.on("connection", (socket, req) => {
   const sid = req.url.split("=")[1]; //...?sid=...
+  if (sockets[sid]) {
+    // If SID is already taken, connexion is refused:
+    socket.send(JSON.stringify({ code: "ECONNREFUSED" }));
+    setTimeout(() => socket.terminate(), 100);
+    return;
+  }
   sockets[sid] = socket;
   socket.isAlive = true;
   socket.on("pong", () => socket.isAlive = true);
-  if (params.dev == true) {
-    const chokidar = require("chokidar");
-    const watcher = chokidar.watch(
-      ["*.js", "*.css", "utils/", "variants/"],
-      {persistent: true});
-    watcher.on("change", path => send(sid, "filechange", {path: path}));
-  }
   socket.on("message", (msg) => {
-    const obj = JSON.parse(msg);
+    let obj;
+    try {
+      obj = JSON.parse(msg);
+    } catch (e) {
+      return; //ignore les messages JSON malformés
+    }
+
+    // Basic security on recurrent fields
+    if (obj.vname) {
+      obj.vname = sanitize(obj.vname, 50);
+      if (obj.vname != "_random" && !variants.find(v => v.name == obj.vname))
+        return; //unknown variant name
+    }
+    if (obj.name)
+      obj.name = sanitize(obj.name, 30);
+    if (obj.fen)
+      obj.fen = sanitize(obj.fen, 500);
+    if (obj.gid)
+      obj.gid = sanitize(obj.gid, 20);
+
     switch (obj.code) {
       // Send challenge (may trigger game creation)
       case "seekgame": {
@@ -96,7 +137,7 @@ wss.on("connection", (socket, req) => {
           // Launch game
           let players = [
             {sid: sid, name: obj.name, randvar: randvar},
-            Object.assign({}, challenges[oppIndex])
+            {...challenges[oppIndex]}
           ];
           delete challenges[oppIndex];
           if (Math.random() < 0.5)
@@ -141,7 +182,7 @@ wss.on("connection", (socket, req) => {
               vname = getRandomVariant();
             games[obj.gid].players.forEach(p => p.randvar = allrand);
             const gid = initializeGame(vname,
-                                       games[obj.gid].players.reverse(),
+                                       [...games[obj.gid].players].reverse(),
                                        games[obj.gid].options);
             launchGame(gid);
           }
@@ -196,6 +237,14 @@ wss.on("connection", (socket, req) => {
         break;
       // Relay a move + update games object
       case "newmove":
+        // Basic sanitizing on moves sent:
+        if (
+          !games[obj.gid] ||
+          !Array.isArray(obj.moves) ||
+          obj.moves.length > 20
+        ) {
+          return;
+        }
         // NOTE: still potential racing issues, but... fingers crossed
         const hash = Crypto.createHash("md5")
                      .update(JSON.stringify(obj.fen))
@@ -229,7 +278,7 @@ wss.on("connection", (socket, req) => {
         break; //only one challenge per player
       }
     }
-    for (let g of Object.values(games)) {
+    for (const g of Object.values(games)) {
       const myIndex = g.players.findIndex(p => p && p.sid == sid);
       if (myIndex >= 0) {
         if (g.rematch && g.rematch[myIndex] > 0) g.rematch[myIndex] = 0;

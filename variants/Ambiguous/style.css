@@ -1,4 +1,4 @@
-@import url("/base_pieces.css");
+@import url("/css/base_pieces.css");
 
 piece.white.target {
   background-image: url('/pieces/Ambiguous/yellow_target.svg');

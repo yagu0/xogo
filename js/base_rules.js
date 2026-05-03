@@ -1482,7 +1482,7 @@ export default class ChessRules {
         // Zero step but non-zero interval => impossible
         (!Number.isFinite(rx) && !Number.isNaN(rx)) ||
         (!Number.isFinite(ry) && !Number.isNaN(ry)) ||
-        // Negative number of step (impossible)
+        // Negative number of steps (impossible)
         (rx < 0 || ry < 0) ||
         // Not the same number of steps in both directions:
         (!Number.isNaN(rx) && !Number.isNaN(ry) && Math.abs(rx - ry) > epsilon)

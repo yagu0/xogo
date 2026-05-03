@@ -1,4 +1,4 @@
-@import url("/base_pieces.css");
+@import url("/css/base_pieces.css");
 
 piece.black.royal_queen {
   background-image: url('/pieces/Coregal/black_royal_queen.svg');

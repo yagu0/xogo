@@ -1,1 +1,8 @@
-../_Antiking/style.css
+@import url("/css/css/base_pieces.css");
+
+piece.black.antiking {
+  background-image: url('/pieces/_Antiking/black_antiking.svg');
+}
+piece.white.antiking {
+  background-image: url('/pieces/_Antiking/white_antiking.svg');
+}

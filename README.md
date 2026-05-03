@@ -9,10 +9,15 @@ PHP + Node.js + npm.
 
 ## Usage
 
-Initialisation (done once):
+Initialisation (done once): retrieve 'binaries'
+(files binary or not which never change).
 
 ```./initialize.sh```
 
-You may want to edit the parameters.js file. Then:
+Rename and edit the parameters.js.dist file:
+
+```cp js/parameters.js.dist js/parameters.js```
+
+Finally:
 
 ```./start.sh``` (and later, ```./stop.sh```)

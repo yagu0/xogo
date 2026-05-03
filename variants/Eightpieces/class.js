@@ -67,13 +67,30 @@ export default class EightpiecesRules extends ChessRules {
     return ['c', 'd', 'e', 'f', 'g', 'h', 'm', 'o'];
   }
 
-  setOtherVariables(fenParsed) {
-    super.setOtherVariables(fenParsed);
-    //this.pushFrom = 
-    //this.afterPush = 
+  // obj == "-", {-1,-1} or ["]{x,y}["]
+  static convertPush(obj) {
+    if (typeof obj === "string")
+      // Reading from FEN
+      return obj == "-" ? {x: -1, y: -1} : JSON.parse(obj);
+    // Sending to FEN
+    return obj.x < 0 ? "-" : JSON.stringify(obj);
   }
 
-  // TODO: FEN utils pushFrom et afterPush
+  getPartFen(o) {
+    return Object.assign(
+      {
+        pushFrom: o.init ? "-" : V.convertPush(this.pushFrom),
+        pushedTo: o.init ? "-" : V.convertPush(this.pushedTo)
+      },
+      super.getPartFen(o)
+    );
+  }
+
+  setOtherVariables(fenParsed) {
+    super.setOtherVariables(fenParsed);
+    this.pushFrom = V.convertPush(fenParsed.pushFrom);
+    this.pushedTo = V.convertPush(fenParsed.pushedTo);
+  }
 
   pieces(color, x, y) {
     const mirror = (this.playerColor == 'b');
@@ -147,6 +164,16 @@ export default class EightpiecesRules extends ChessRules {
     return this.board[i][j] == "" || (V.LANCERS.includes(p) && c == colIJ);
   }
 
+  canIplay(x, y) {
+    if (
+      this.pushFrom.x == x && this.pushFrom.y == y &&
+      this.getColor(x, y) != this.playerColor
+    ) {
+      return true;
+    }
+    return super.canIplay(x, y);
+  }
+
   isImmobilized([x, y]) {
     const color = this.getColor(x, y);
     const oppCol = C.GetOppTurn(color);
@@ -188,35 +215,81 @@ export default class EightpiecesRules extends ChessRules {
     return res;
   }
 
-
-// TODO: finish lancers
-  // http://ftp.chessvariants.com/rules/8-piece-chess
-
-
   getPotentialMovesFrom([x, y], color) {
-    if (!this.pushFrom) {
-      return this.getPassMoves(x, y).concat(
-        super.getPotentialMovesFrom([x, y], color) );
+    if (this.pushFrom.x < 0 || this.pushedTo.x >= 0) {
+      let smoves = super.getPotentialMovesFrom([x, y], color);
+      // Forbid direction x,y --> pushFrom if x,y == pushedTo
+      if (x == this.pushedTo.x && y == this.pushedTo.y) {
+        smoves = smoves.filter(m => {
+          return ( !super.compatibleStep(
+            [x, y], [m.end.x, m.end.y],
+            [this.pushFrom.x - x, this.pushFrom.y - y]
+          ) );
+        });
+      }
+      return smoves.concat(this.getPassMoves(x, y));
     }
+    // pushFrom.x >= 0 && pushedTo.x < 0
     if (x != this.pushFrom.x || y != this.pushFrom.y)
       return [];
     // After sentry "attack": move enemy as if it was ours
-    return []; //TODO
+    const p = this.getPiece(x, y);
+    this.board[x][y] = this.turn + p;
+    let pmoves = super.getPotentialMovesFrom([x, y], this.turn);
+    const oppCol = C.GetOppTurn(this.turn)
+    this.board[x][y] = oppCol + p;
+    pmoves.forEach(m => {
+      m.appear[0].c = m.vanish[0].c = oppCol;
+      m.appear.push( new PiPo({x:x, y:y, p:'s', c:this.turn}) );
+    });
+    
+console.log(pmoves);
+
+    return pmoves;
+
+
+
   }
 
-  getSentryPushes(x, y) {
-    // TODO: return all squares piece on x, y can be pushed to
-    return [{x: x+1, y: y-1}];
+  postPlay(move) {
+    if (
+      move.vanish.length > 0 &&
+      move.vanish[0].p == 's' &&
+      move.appear[0].c != move.vanish[0].c
+    ) {
+      // Sentry push ("capturing" part)
+      this.pushFrom = {x: move.end.x, y: move.end.y};
+      this.pushedTo = {x: -1, y: -1};
+    }
+    else if (move.vanish.length > 0 && move.vanish[0].c != this.turn)
+      this.pushedTo = {x: move.end.x, y: move.end.y};
+    else {
+      // All other cases: just reset both push variables
+      this.pushFrom = {x: -1, y: -1};
+      this.pushedTo = {x: -1, y: -1};
+    }
+    super.postPlay(move);
   }
 
-  // Post-process sentry pushes (if any), regular lancer moves, lancer drops..
+  isLastMove(move) {
+    if (move.vanish[0].p == 's' && move.appear[0].c != move.vanish[0].c)
+      return false;
+    return super.isLastMove(move);
+  }
+
   postProcessPotentialMoves(moves) {
     moves = super.postProcessPotentialMoves(moves);
     let finalMoves = [];
     for (const m of moves) {
-      //if (m.vanish.length == 0 && ... TODO: drop
-      if (m.vanish.length > 0 && V.LANCERS.includes(m.vanish[0].p)) {
-        // TODO: how to know it's regular? (not sentry push)
+      // Reorient a lancer after drop or regular move
+      if (
+        (m.vanish.length == 0 && ['c', 'g'].includes(m.appear[0].p)) ||
+        (
+          (m.vanish.length > 0 && V.LANCERS.includes(m.vanish[0].p)) &&
+          // Next line test checks that the lancer wasn't just pushed away
+          (m.start.x != this.pushFrom.x || m.start.y != this.pushFrom.y)
+        )
+      ) {
         this.getLancerOptions(m.end.x, m.end.y).forEach(o => {
           finalMoves.push( new Move({
             appear: [new PiPo({x:m.end.x,y:m.end.y,c:m.appear[0].c,p:o})],
@@ -227,16 +300,14 @@ export default class EightpiecesRules extends ChessRules {
       else if (m.vanish.length == m.appear.length || m.vanish[0].p != 's')
         finalMoves.push(m);
       else {
-        // Sentry "capture" --> turn into pushes
+        // Sentry "capture" --> remove sentry from final square (TODO: blink?)
         const [x, y] = [m.end.x, m.end.y]
         const p = this.getPiece(x, y);
         const c = this.getColor(x, y);
-        this.getSentryPushes(x, y).forEach(sq => {
-          finalMoves.push( new Move({
-            appear: m.appear.concat(new PiPo({x:sq.x, y:sq.y, p:p, c:c})),
-            vanish: m.vanish
-          }) );
-        });
+        finalMoves.push( new Move({
+          appear: [new PiPo({x:m.end.x,y:m.end.y,c:c,p:p})],
+          vanish: [ m.vanish[0] ]
+        }) );
       }
     }
     return finalMoves;
@@ -262,7 +333,8 @@ export default class EightpiecesRules extends ChessRules {
 
   updateReserve(color, piece, count) {
     if (V.LANCERS.includes(piece))
-      piece = 'c'; //TODO: orientation, or new drawing?
+      // Show only one lancer orientation, and reorient when drop:
+      piece = color == 'w' ? 'c' : 'g';
     super.updateReserve(color, piece, count);
   }
 

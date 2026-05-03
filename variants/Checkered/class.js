@@ -165,7 +165,8 @@ export default class CheckeredRules extends ChessRules {
     super.setOtherVariables(fenParsed);
     // Non-capturing last checkered move (if any)
     const cmove = fenParsed.cmove;
-    if (cmove == "-") this.cmove = null;
+    if (cmove == "-")
+      this.cmove = null;
     else {
       this.cmove = {
         start: C.SquareToCoords(cmove.substr(0, 2)),
