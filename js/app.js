@@ -121,6 +121,15 @@ function cancelRematch() {
     toggleVisible("newGame");
 }
 
+let lastAliases = [];
+function replaceAliases() {
+  for (const k of lastAliases)
+    delete window[k];
+  for (const [k, v] of Object.entries(V.Aliases))
+    window[k] = v;
+  lastAliases = Object.keys(V.Aliases);
+}
+
 // Play with a friend (or not ^^)
 function showNewGameForm() {
   const vname = $.getElementById("selectVariant").value;
@@ -132,13 +141,12 @@ function showNewGameForm() {
     toggleVisible("newGameForm");
     import(`/variants/${vname}/class.js`).then(module => {
       window.V = module.default;
-      for (const [k, v] of Object.entries(V.Aliases))
-        window[k] = v;
+      replaceAliases();
       prepareOptions();
     });
   }
 }
-function backToNormalSeek() { //TODO: index.html......
+function backToNormalSeek() {
   toggleVisible("newGame");
 }
 
@@ -218,65 +226,6 @@ function prepareOptions() {
   }
 }
 
-function prepareOptions() {
-  options = {};
-  let optHtml = "";
-  if (V.Options.select) {
-    optHtml += V.Options.select.map(select => { return `
-      <div class="option-select">
-        <label for="var_${select.variable}">${select.label}</label>
-        <div class="select">
-          <select id="var_${select.variable}">` +
-          select.options.map(option => { return `
-            <option
-              value="${option.value}"
-              ${option.value == select.defaut ? " selected" : ""}
-            >
-              ${option.label}
-            </option>`;
-          }).join("") + `
-          </select>
-          <span class="focus"></span>
-        </div>
-      </div>`;
-    }).join("");
-  }
-  if (V.Options.input) {
-    optHtml += V.Options.input.map(input => { return `
-      <div class="option-input">
-        <label class="input">
-          <input id="var_${input.variable}"
-                 type="${input.type}"
-                 ${input.type == "checkbox" && input.defaut
-                   ? "checked"
-                   : 'value="' + input.defaut + '"'}
-          />
-          <span class="spacer"></span>
-          <span>${input.label}</span>
-        </label>
-      </div>`;
-    }).join("");
-  }
-  if (V.Options.styles) {
-    optHtml += '<div class="words">';
-    let i = 0;
-    const stylesLength = V.Options.styles.length;
-    while (i < stylesLength) {
-      optHtml += '<div class="row">';
-      for (let j=i; j<i+4; j++) {
-        if (j == stylesLength)
-          break;
-        const style = V.Options.styles[j];
-        optHtml += `<span onClick="toggleStyle(event, this)">${style}</span>`;
-      }
-      optHtml += "</div>";
-      i += 4;
-    }
-    optHtml += "</div>";
-  }
-  $.getElementById("gameOptions").innerHTML = optHtml;
-}
-
 function getGameLink() {
   const vname = $.getElementById("selectVariant").value;
   const color = $.getElementById("selectColor").value;
@@ -300,17 +249,14 @@ function getGameLink() {
   });
 }
 
-
-
-
 function fillGameInfos(gameInfos, oppIndex) {
   fetch(`/variants/${gameInfos.vname}/rules.html`)
     .then(res => res.text())
     .then(txt => {
       const container = $.getElementById("gameInfos");
-      container.innerHTML = ""; // Nettoyage initial
+      container.innerHTML = ""; //initial cleaning
 
-      // 1. Infos Joueurs
+      // 1. Players infos
       const playerDiv = h('div', { class: 'players-info' }, [
         h('p', null, [
           h('span', { class: 'bold', textContent: gameInfos.vdisp }),
@@ -318,9 +264,10 @@ function fillGameInfos(gameInfos, oppIndex) {
         ])
       ]);
 
-      // 2. Traitement des Options (Filtrage + Groupement par 4)
+      // 2. Options treatment (Filtering + Group by 4)
       const optionsInfos = h('div', { class: 'options-info' });
-      const activeOptions = Object.entries(gameInfos.options).filter(opt => !!opt[1]);
+      const activeOptions =
+        Object.entries(gameInfos.options).filter(opt => !!opt[1]);
       
       let i = 0;
       while (i < activeOptions.length) {
@@ -334,70 +281,26 @@ function fillGameInfos(gameInfos, oppIndex) {
         i += 4;
       }
 
-      // 3. Règles (on garde innerHTML ici car le HTML vient de ton fichier local rules.html)
+      // 3. Rules (keeping innerHTML here because trusted from file rules.html)
       const rulesDiv = h('div', { class: 'rules' });
       rulesDiv.innerHTML = txt;
 
-      // 4. Bouton de retour
+      // 4. Game infos button
       const btnWrap = h('div', { class: 'btn-wrap' }, [
-        h('button', { 
-          onclick: toggleGameInfos, 
-          textContent: "Back to game" 
+        h('button', {
+          onclick: toggleGameInfos,
+          textContent: "Back to game"
         })
       ]);
 
-      // Assemblage final
+      // Final assembling
       container.append(
-        playerDiv, 
-        activeOptions.length > 0 ? optionsInfos : null, 
-        rulesDiv, 
+        playerDiv,
+        activeOptions.length > 0 ? optionsInfos : null,
+        rulesDiv,
         btnWrap
       );
     });
-}
-
-
-
-function fillGameInfos(gameInfos, oppIndex) {
-  fetch(`/variants/${gameInfos.vname}/rules.html`)
-  .then(res => res.text())
-  .then(txt => {
-    let htmlContent = `
-      <div class="players-info">
-        <p>
-          <span class="bold">${gameInfos.vdisp}</span>
-          <span>vs. ${gameInfos.players[oppIndex].name}</span>
-        </p>
-      </div>`;
-    const _options = Object.entries(gameInfos.options);
-    if (_options.length > 0) {
-      htmlContent += '<div class="options-info">';
-      let i = 0;
-      while (i < _options.length) {
-        htmlContent += '<div class="row">';
-        for (let j=i; j<i+4; j++) {
-          if (j == _options.length)
-            break;
-          const opt = _options[j];
-          if (!opt[1]) //includes 0 and false (lighter display)
-            continue;
-          htmlContent +=
-            '<span class="option">' +
-            (opt[1] === true ? opt[0] : `${opt[0]}:${opt[1]}`) + " " +
-            "</span>";
-        }
-        htmlContent += "</div>";
-        i += 4;
-      }
-      htmlContent += "</div>";
-    }
-    htmlContent += `
-      <div class="rules">${txt}</div>
-      <div class="btn-wrap">
-        <button onClick="toggleGameInfos()">Back to game</button>
-      </div>`;
-    $.getElementById("gameInfos").innerHTML = htmlContent;
-  });
 }
 
 ////////////////
@@ -491,14 +394,20 @@ const messageCenter = (msg) => {
     // Game vs. friend just created on server: share link now
     case "gamecreated": {
       const link = `${Params.http_server}/#${obj.gid}`;
-      $.getElementById("gameLink").innerHTML = `
-        <p>
-          <a href="${getWhatsApp(link)}">WhatsApp</a>
-          /
-          <span onClick="copyClipboard('${link}')">ToClipboard</span>
-        </p>
-        <p>${link}</p>
-      `;
+      const container = $.getElementById("gameLink");
+      container.innerHTML = ""; //emptying
+      container.append(
+        h('p', null, [
+          h('a', { href: getWhatsApp(link), textContent: "WhatsApp" }),
+          " / ",
+          h('span', {
+            onclick: () => copyClipboard(link),
+            textContent: "ToClipboard",
+            //style: "cursor:pointer; text-decoration:underline"
+          })
+        ]),
+        h('p', { textContent: link })
+      );
       break;
     }
     // Game vs. friend joined after 1 minute (try again!)
@@ -641,100 +550,86 @@ const afterPlay = (move_s, newTurn, ops) => {
   }
 };
 
-
-
-
-
-
-
-function initializeGame(obj) {
-  const container = $.getElementById("boardContainer");
-  container.innerHTML = ""; // Nettoyage
-
-  // Créer les boutons de contrôle proprement
-  const infoBtn = createSVGButton("upLeftInfos", toggleGameInfos);
-  const stopBtn = createSVGButton("upRightStop", confirmStopGame);
-  const board = $.createElement("div");
-  board.className = "chessboard";
-
-  container.append(infoBtn, stopBtn, board);
-
-
-
-
-
-
-
 let vr = null, playerColor, lastVname = undefined;
 function initializeGame(obj) {
   const options = obj.options || {};
+
+  // 1. Dynamic loading of variant js module
   import(`/variants/${obj.vname}/class.js`).then(module => {
     window.V = module.default;
-    for (const [k, v] of Object.entries(V.Aliases))
-      window[k] = v;
-    if (lastVname != obj.vname) {
-      // Load CSS + unload potential previous one.
-      if (lastVname)
-        document.getElementById(lastVname + "_css").remove();
-      $.getElementsByTagName("head")[0].insertAdjacentHTML(
-        "beforeend",
-        `<link id="${obj.vname + '_css'}" rel="stylesheet"
-               href="/variants/${obj.vname}/style.css"/>`);
+
+    // Export aliases in global scope (used by variants classes)
+    replaceAliases();
+
+    // 2. Dynamic management of CSS (Unload old / Load new)
+    if (lastVname !== obj.vname) {
+      if (lastVname) {
+        const oldCss = $.getElementById(`${lastVname}_css`);
+        if (oldCss)
+          oldCss.remove();
+      }
+      $.head.append(
+        h('link', {
+          id: `${obj.vname}_css`,
+          rel: 'stylesheet',
+          href: `/variants/${obj.vname}/style.css`
+        })
+      );
       lastVname = obj.vname;
     }
-    playerColor = (sid == obj.players[0].sid ? "w" : "b");
-    // Init + remove potential extra DOM elements from a previous game:
-    document.getElementById("boardContainer").innerHTML = `
-      <div id="upLeftInfos"
-           onClick="toggleGameInfos()">
-        <svg version="1.1"
-             viewBox="0.5 0.5 100 100">
-          <g>
-            <path d="M50.5,0.5c-27.614,0-50,22.386-50,50c0,27.614,22.386,50,50,50s50-22.386,50-50C100.5,22.886,78.114,0.5,50.5,0.5z M60.5,85.5h-20v-40h20V85.5z M50.5,35.5c-5.523,0-10-4.477-10-10s4.477-10,10-10c5.522,0,10,4.477,10,10S56.022,35.5,50.5,35.5z"/>
-          </g>
-        </svg>
-      </div>
-      <div id="upRightStop"
-           onClick="confirmStopGame()">
-        <svg version="1.1"
-             viewBox="0 0 533.333 533.333">
-          <g>
-            <path d="M528.468,428.468c-0.002-0.002-0.004-0.004-0.006-0.005L366.667,266.666l161.795-161.797 c0.002-0.002,0.004-0.003,0.006-0.005c1.741-1.742,3.001-3.778,3.809-5.946c2.211-5.925,0.95-12.855-3.814-17.62l-76.431-76.43 c-4.765-4.763-11.694-6.024-17.619-3.812c-2.167,0.807-4.203,2.066-5.946,3.807c0,0.002-0.002,0.003-0.005,0.005L266.667,166.666 L104.87,4.869c-0.002-0.002-0.003-0.003-0.005-0.005c-1.743-1.74-3.778-3-5.945-3.807C92.993-1.156,86.065,0.105,81.3,4.869 L4.869,81.3c-4.764,4.765-6.024,11.694-3.813,17.619c0.808,2.167,2.067,4.205,3.808,5.946c0.002,0.001,0.003,0.003,0.005,0.005 l161.797,161.796L4.869,428.464c-0.001,0.002-0.003,0.003-0.004,0.005c-1.741,1.742-3,3.778-3.809,5.945 c-2.212,5.924-0.951,12.854,3.813,17.619L81.3,528.464c4.766,4.765,11.694,6.025,17.62,3.813c2.167-0.809,4.203-2.068,5.946-3.809 c0.001-0.002,0.003-0.003,0.005-0.005l161.796-161.797l161.795,161.797c0.003,0.001,0.005,0.003,0.007,0.004 c1.743,1.741,3.778,3.001,5.944,3.81c5.927,2.212,12.856,0.951,17.619-3.813l76.43-76.432c4.766-4.765,6.026-11.696,3.815-17.62 C531.469,432.246,530.209,430.21,528.468,428.468z"/>
-          </g>
-        </svg>
-      </div>
-      <div class="chessboard"></div>`;
+
+    playerColor = (sid == obj.players[0].sid ? 'w' : 'b');
+
+    // 3. Building Board Container
+    const container = $.getElementById("boardContainer");
+    container.innerHTML = ""; // On vide proprement l'ancien plateau
+
+    // Create SVG icons with a string, inserted securely.
+    const infoIcon = h('div', { id: 'upLeftInfos', onclick: toggleGameInfos });
+    infoIcon.innerHTML = `<svg viewBox="0.5 0.5 100 100"><path d="M50.5,0.5c-27.614,0-50,22.386-50,50c0,27.614,22.386,50,50,50s50-22.386,50-50C100.5,22.886,78.114,0.5,50.5,0.5z M60.5,85.5h-20v-40h20V85.5z M50.5,35.5c-5.523,0-10-4.477-10-10s4.477-10,10-10c5.522,0,10,4.477,10,10S56.022,35.5,50.5,35.5z"/></svg>`;
+
+    const stopIcon = h('div', { id: 'upRightStop', onclick: confirmStopGame });
+    stopIcon.innerHTML = `<svg viewBox="0 0 533.333 533.333"><path d="M528.468,428.468c-0.002-0.002-0.004-0.004-0.006-0.005L366.667,266.666l161.795-161.797c0.002-0.002,0.004-0.003,0.006-0.005c1.741-1.742,3.001-3.778,3.809-5.946c2.211-5.925,0.95-12.855-3.814-17.62l-76.431-76.43 c-4.765-4.763-11.694-6.024-17.619-3.812c-2.167,0.807-4.203,2.066-5.946,3.807L266.667,166.666 L104.87,4.869c-5.945-3.807-92.993-1.156-81.3,4.869 L4.869,81.3c-4.764,4.765-6.024,11.694-3.813,17.619l161.797,161.796L4.869,428.464c3.813,17.619,81.3,528.464,98.92,532.277c161.796-161.797l161.795,161.797c5.927,2.212,17.619-3.813l76.43-76.432c3.815-17.62 C531.469,432.246,528.468,428.468z"/></svg>`;
+
+    const board = h('div', { class: 'chessboard' });
+
+    container.append(infoIcon, stopIcon, board);
+
+    // 4. Initialize game engine (vr)
     if (vr)
-      // Avoid interferences:
       vr.removeListeners();
+
     vr = new V({
-      seed: obj.seed, //may be null if FEN already exists (running game)
+      seed: obj.seed,
       fen: obj.fen,
       element: "boardContainer",
       color: playerColor,
       afterPlay: afterPlay,
       options: options
     });
+
+    // 5. Handling game state
     const gameCreation = !obj.fen;
     if (gameCreation) {
-      // Both players set FEN, in case of one is offline
-      send("setfen", {gid: obj.gid, fen: vr.getFen()});
+      send("setfen", { gid: obj.gid, fen: vr.getFen() });
       localStorage.setItem("gid", obj.gid);
     }
-    const select = $.getElementById("selectVariant");
-    obj.vdisp = "";
-    for (let i=0; i<select.options.length; i++) {
-      if (select.options[i].value == obj.vname) {
-        obj.vdisp = select.options[i].text;
-        break;
-      }
-    }
+
+    // 6. Update variant's informations (vdisp)
+    const variantOption = Array.from($.getElementById("selectVariant").options)
+                               .find(opt => opt.value === obj.vname);
+    obj.vdisp = variantOption ? variantOption.text : obj.vname;
+
     const playerIndex = (playerColor == "w" ? 0 : 1);
     fillGameInfos(obj, 1 - playerIndex);
-    if (obj.players[playerIndex].randvar && gameCreation)
+
+    // 7. Final output
+    if (obj.players[playerIndex].randvar && gameCreation) {
       toggleVisible("gameInfos");
+    }
     else
       toggleVisible("boardContainer");
+
     toggleTurnIndicator(vr.turn == playerColor);
   });
 }

@@ -1,5 +1,5 @@
 {
-  "main": "server.js",
+  "main": "js/server.js",
   "dependencies": {
     "ws": "^7.5.3"
   },
@@ -8,6 +8,7 @@
     "stop": "./stop.sh"
   },
   "devDependencies": {
-    "chokidar": "^3.5.3"
+    "chokidar": "^3.5.3",
+    "nodemon": "^3.1.14"
   }
 }

@@ -1,5 +1,5 @@
-const params = require("./js/parameters.js");
-const sanitize = require("./js/sanitize.js");
+const params = require("./parameters.js");
+const sanitize = require("./sanitize.js");
 const WebSocket = require("ws");
 const wss = new WebSocket.Server({
   port: params.socket_port,
