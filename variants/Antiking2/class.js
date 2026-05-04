@@ -1,4 +1,4 @@
-import ChessRules from "/base_rules.js";
+import ChessRules from "/js/base_rules.js";
 import AbstractAntikingRules from "/variants/_Antiking/class.js";
 import {Random} from "/utils/alea.js";
 

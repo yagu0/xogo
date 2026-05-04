@@ -1,5 +1,5 @@
 import Move from "/utils/Move.js";
-import ChessRules from "/base_rules.js";
+import ChessRules from "/js/base_rules.js";
 
 export default class DynamoRules extends ChessRules {
 

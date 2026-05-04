@@ -1,4 +1,4 @@
-import { ChessRules } from "@/base_rules";
+import { ChessRules } from "@/js/base_rules";
 
 export class EmpireRules extends ChessRules {
 
@@ -211,7 +211,7 @@ export class EmpireRules extends ChessRules {
     });
   }
 
-  // TODO: some merging to do with Orda method (and into base_rules.js)
+  // TODO: some merging to do with Orda method (and into js/base_rules.js)
   getSlideNJumpMoves_([x, y], steps, oneStep) {
     let moves = [];
     outerLoop: for (let step of steps) {

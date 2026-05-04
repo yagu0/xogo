@@ -1,4 +1,4 @@
-import { ChessRules, Move, PiPo } from "@/base_rules";
+import { ChessRules, Move, PiPo } from "@/js/base_rules";
 import { randInt } from "@/utils/alea";
 
 export class FanoronaRules extends ChessRules {

@@ -1,4 +1,4 @@
-import ChessRules from "/base_rules.js";
+import ChessRules from "/js/base_rules.js";
 import {Random} from "/utils/alea.js";
 
 export default class DiceRules extends ChessRules {

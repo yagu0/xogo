@@ -1,4 +1,4 @@
-import { ChessRules } from "@/base_rules";
+import { ChessRules } from "@/js/base_rules";
 
 export class ExtinctionRules extends ChessRules {
 

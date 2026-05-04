@@ -1,4 +1,4 @@
-import ChessRules from "/base_rules.js";
+import ChessRules from "/js/base_rules.js";
 
 export default class DoublemoveRules extends ChessRules {
 

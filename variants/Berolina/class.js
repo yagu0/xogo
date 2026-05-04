@@ -1,4 +1,4 @@
-import ChessRules from "/base_rules.js";
+import ChessRules from "/js/base_rules.js";
 import BerolinaPawnSpec from "/variants/_Berolina/pawnSpec.js";
 
 export default class BerolinaRules extends ChessRules {

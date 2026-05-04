@@ -1,4 +1,4 @@
-import ChessRules from "/base_rules.js";
+import ChessRules from "/js/base_rules.js";
 import {FenUtil} from "/utils/setupPieces.js"
 
 export default class CwdaRules extends ChessRules {

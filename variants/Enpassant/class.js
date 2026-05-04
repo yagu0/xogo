@@ -1,4 +1,4 @@
-import { ChessRules, PiPo, Move } from "@/base_rules";
+import { ChessRules, PiPo, Move } from "@/js/base_rules";
 
 export class EnpassantRules extends ChessRules {
 
