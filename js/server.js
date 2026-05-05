@@ -98,10 +98,10 @@ wss.on("connection", (socket, req) => {
       if (obj.vname != "_random" && !variants.find(v => v.name == obj.vname))
         return; //unknown variant name
     }
-    if (obj.name)
+    if (obj.name) //TODO: probably overkill..
       obj.name = sanitize(obj.name, 30);
     if (obj.fen)
-      obj.fen = sanitize(obj.fen, 500);
+      obj.fen = sanitize(obj.fen, 500, true);
     if (obj.gid)
       obj.gid = sanitize(obj.gid, 20);
 

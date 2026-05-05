@@ -3,18 +3,22 @@
 import os
 import hashlib
 import shutil
+import json
+import re
 
 # --- Configuration ---
 SOURCE_DIR = "."
 DEST_DIR = "dist"
-EXTENSIONS_TO_HASH = [".js", ".css", ".svg"]
-EXTENSIONS_TO_UPDATE = [".html", ".js", ".css"]
+EXTENSIONS_TO_HASH = [".html", ".js", ".css", ".svg"] #all text files
+EXTENSIONS_TO_UPDATE = [".html", ".js", ".css"] #.svg don't contain refs
+DYNAMIC_LOAD_EXTENSIONS = (".html", ".js", ".css") #loaded from app.js
 
-# Fichiers et dossiers à ignorer totalement
+IGNORE_FILE_UPDATE = {"app.js"}
+# Files and folders to totally ignore
 IGNORE_FILES = {
-    "LICENSE", "README.md", "TODO", "bundle.py",
-    "initialize.sh", "package-lock.json", "package.json",
-    "start.sh", "stop.sh", ".gitignore"
+    "LICENSE", "README.md", "TODO", "bundle.py", "parameters.js.dist",
+    "initialize.sh", "package-lock.json", "package.json", "server.js",
+    "start.sh", "stop.sh", ".gitignore", "assets.zip", "extras.zip", ".pid"
 }
 IGNORE_DIRS = {".git", "node_modules", DEST_DIR}
 
@@ -26,30 +30,31 @@ def get_file_hash(filepath):
     return hasher.hexdigest()[:8]
 
 def run_bundle():
-    # Nettoyage propre du dossier de destination
+    # Clean destination folder
     if os.path.exists(DEST_DIR):
         shutil.rmtree(DEST_DIR)
     os.makedirs(DEST_DIR)
 
     hash_map = {}
 
-    # 1. Parcours et copie sélective
+    # 1. Walk the tree and do selective copies
     for root, dirs, files in os.walk(SOURCE_DIR):
-        # On filtre les dossiers à ignorer sur place pour que walk ne s'y aventure pas
+        # Filter folders to ignore so that walk() doesn't step in
         dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
-       
+
         for file in files:
             if file in IGNORE_FILES:
                 continue
-               
+            
             ext = os.path.splitext(file)[1]
             rel_path = os.path.relpath(os.path.join(root, file), SOURCE_DIR)
-           
-            # Déterminer le nom de destination (avec ou sans hash)
-            if ext in EXTENSIONS_TO_HASH:
+
+            # Determine dest name (with or without hash)
+            if ext in EXTENSIONS_TO_HASH and file != "index.html":
                 h = get_file_hash(os.path.join(root, file))
                 new_name = f"{os.path.splitext(file)[0]}.{h}{ext}"
-                hash_map[rel_path] = new_name
+                new_rel_path = os.path.relpath(os.path.join(root, new_name), SOURCE_DIR)
+                hash_map[rel_path] = new_rel_path
             else:
                 new_name = file
 
@@ -57,27 +62,33 @@ def run_bundle():
             os.makedirs(os.path.dirname(dest_path), exist_ok=True)
             shutil.copy2(os.path.join(root, file), dest_path)
 
-    # 2. Mise à jour des références
+    # 2. Update references
     for root, dirs, files in os.walk(DEST_DIR):
         for file in files:
-            if os.path.splitext(file)[1] in EXTENSIONS_TO_UPDATE:
+            print(file)
+            if os.path.splitext(file)[1] in EXTENSIONS_TO_UPDATE and not re.match(r'^app\.[^\.]+\.js$', file):
                 file_path = os.path.join(root, file)
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
 
-                # On remplace les anciennes références par les nouvelles
-                # On trie par longueur décroissante pour éviter de remplacer "style.css" dans "mon-style.css"
-                for old_rel_path in sorted(hash_map.keys(), key=len, reverse=True):
-                    old_name = os.path.basename(old_rel_path)
-                    new_hashed_name = hash_map[old_rel_path]
-                    if old_name in content:
-                        content = content.replace(old_name, new_hashed_name)
+                # Replace old refs with new ones
+                for old_rel_path in hash_map.keys():
+                    if old_rel_path in content:
+                        content = content.replace(old_rel_path, hash_map[old_rel_path])
 
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(content)
 
     print(f"Build terminé dans /{DEST_DIR}")
     print(f"Fichiers hashés : {len(hash_map)}")
+
+    # 3. Write hash_map to manifest file:
+    hash_manifest = {
+        k: v for k, v in hash_map.items()
+        if k.startswith("variants/") and k.endswith(DYNAMIC_LOAD_EXTENSIONS)
+    }
+    with open('dist/manifest.json', 'w') as f:
+        json.dump(hash_manifest, f, indent=2)
 
 if __name__ == "__main__":
     run_bundle()

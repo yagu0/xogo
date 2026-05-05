@@ -1,4 +1,4 @@
-const sanitize = function(str, maxLength = 100)
+const sanitize = function(str, maxLength = 100, relax = false)
 {
   if (typeof str !== 'string') return "";
   // 1. Cut string to avoid memory overload
@@ -11,7 +11,8 @@ const sanitize = function(str, maxLength = 100)
     '"': '&quot;',
     "'": '&#039;'
   };
-  return cleaned.replace(/[&<>"']/g, m => map[m]);
+  const regexp = relax ? /[<>]/g : /[&<>"']/g
+  return cleaned.replace(regexp, m => map[m]);
 }
 
 // Next line for usage on server (Node.js)
