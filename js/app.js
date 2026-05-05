@@ -259,7 +259,7 @@ function fillGameInfos(gameInfos, oppIndex) {
     .then(txt => {
       const container = $.getElementById("gameInfos");
       container.innerHTML = ""; //initial cleaning
-console.log(gameInfos);
+
       // 1. Players infos
       const playerDiv = h('div', { class: 'players-info' }, [
         h('p', null, [
