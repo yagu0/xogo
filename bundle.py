@@ -9,16 +9,16 @@ import re
 # --- Configuration ---
 SOURCE_DIR = "."
 DEST_DIR = "dist"
-EXTENSIONS_TO_HASH = [".html", ".js", ".css", ".svg"] #all text files
+EXTENSIONS_TO_HASH = [".html", ".js", ".css", ".svg"] #all edited files
 EXTENSIONS_TO_UPDATE = [".html", ".js", ".css"] #.svg don't contain refs
 DYNAMIC_LOAD_EXTENSIONS = (".html", ".js", ".css") #loaded from app.js
 
 IGNORE_FILE_UPDATE = {"app.js"}
 # Files and folders to totally ignore
 IGNORE_FILES = {
-    "LICENSE", "README.md", "TODO", "bundle.py", "parameters.js.dist",
-    "initialize.sh", "package-lock.json", "package.json", "server.js",
-    "start.sh", "stop.sh", ".gitignore", "assets.zip", "extras.zip", ".pid"
+    "LICENSE", "README.md", "TODO", "bundle.py", "js/parameters.js.dist",
+    "initialize.sh", "package-lock.json", "package.json", "js/server.js", ".gitignore"
+    "nginx_config.example", "start.sh", "stop.sh", "assets.zip", "extras.zip", ".pid"
 }
 IGNORE_DIRS = {".git", "node_modules", DEST_DIR}
 
@@ -40,16 +40,15 @@ def run_bundle():
     # 1. Walk the tree and do selective copies
     for root, dirs, files in os.walk(SOURCE_DIR):
         # Filter folders to ignore so that walk() doesn't step in
-        dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
+        dirs[:] = [d for d in dirs if os.path.relpath(os.path.join(root, d), SOURCE_DIR) not in IGNORE_DIRS]
 
         for file in files:
-            if file in IGNORE_FILES:
-                continue
-            
             ext = os.path.splitext(file)[1]
             rel_path = os.path.relpath(os.path.join(root, file), SOURCE_DIR)
+            if rel_path in IGNORE_FILES:
+                continue
 
-            # Determine dest name (with or without hash)
+            # Determine destination name (with or without hash)
             if ext in EXTENSIONS_TO_HASH and file != "index.html":
                 h = get_file_hash(os.path.join(root, file))
                 new_name = f"{os.path.splitext(file)[0]}.{h}{ext}"
@@ -79,8 +78,8 @@ def run_bundle():
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(content)
 
-    print(f"Build terminé dans /{DEST_DIR}")
-    print(f"Fichiers hashés : {len(hash_map)}")
+    print(f"Build completed in {DEST_DIR}.")
+    print(f"{len(hash_map)} hashed files.")
 
     # 3. Write hash_map to manifest file:
     hash_manifest = {

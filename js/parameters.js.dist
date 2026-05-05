@@ -6,10 +6,10 @@ const Params = {
 
   // Usage on (socket) server:
   socket_port: 8080, //...
-  dev: true,
 
   // Usage on both:
   socket_path: "/ws",
+  dev: true,
 
 };
 

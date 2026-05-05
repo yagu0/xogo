@@ -4,7 +4,7 @@ Simplified version of old vchess.club, to focus on the essential : the game.
 
 ## Requirements (dev)
 
-PHP + Node.js + npm.
+PHP + Python + Node.js + npm.
 ```npm i -g nodemon```
 
 ## Usage
