@@ -64,7 +64,6 @@ def run_bundle():
     # 2. Update references
     for root, dirs, files in os.walk(DEST_DIR):
         for file in files:
-            print(file)
             if os.path.splitext(file)[1] in EXTENSIONS_TO_UPDATE and not re.match(r'^app\.[^\.]+\.js$', file):
                 file_path = os.path.join(root, file)
                 with open(file_path, 'r', encoding='utf-8') as f:
