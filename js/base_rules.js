@@ -1470,6 +1470,7 @@ export default class ChessRules {
     return false;
   }
 
+  // Check if it's possible to go from x1,y1 to x2,y2 with 'range' steps
   compatibleStep([x1, y1], [x2, y2], step, range) {
     const epsilon = 1e-7; //arbitrary small value
     let shifts = [0];

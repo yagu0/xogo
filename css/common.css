@@ -305,7 +305,7 @@ piece.mark.transparent {
 }
 .option-input {
   display: inline-block;
-  margin-right: 10px;
+  margin-right: 15px;
 }
 .option-input input[type=number] {
   width: 64px;
@@ -546,11 +546,14 @@ select:focus + .focus {
   width: 100%;
 }
 
+label.input-checkbox {
+  cursor: pointer;
+}
 /* https://dev.to/kallmanation/styling-a-checkbox-with-only-css-3o3p */
-label.checkbox > input[type="checkbox"] {
+label.input-checkbox > input[type="checkbox"] {
   display: none;
 }
-label.checkbox > input[type="checkbox"] + *::before {
+label.input-checkbox > input[type="checkbox"] + *::before {
   content: "";
   display: inline-block;
   vertical-align: bottom;
@@ -562,21 +565,23 @@ label.checkbox > input[type="checkbox"] + *::before {
   border-width: 0.1rem;
   border-color: gray;
 }
-label.checkbox > input[type="checkbox"]:checked + *::before {
+label.input-checkbox > input[type="checkbox"]:checked + *::before {
   content: "✓";
   font-size: 1.1rem;
-  /*padding:10px;*/
   color: white;
   text-align: center;
   background: teal;
   border-color: teal;
 }
-label.checkbox > input[type="checkbox"]:checked + * {
+label.input-checkbox > input[type="checkbox"]:checked + * {
   color: teal;
 }
-label.checkbox > span.spacer {
+label.input-checkbox > span.spacer {
   width: 10px;
   content: " ";
+}
+label.input-checkbox > span.after-spacer {
+  padding-left: 5px;
 }
 
 /* https://theanam.github.io/css-only-loaders/ ("hour-glass") */

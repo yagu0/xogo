@@ -211,10 +211,10 @@ function prepareOptions() {
         inputAttrs.value = input.defaut;
       container.append(
         h('div', { class: 'option-input' }, [
-          h('label', { class: 'input' }, [
+          h('label', { class: "input-" + input.type }, [
             h('input', inputAttrs),
             h('span', { class: 'spacer' }),
-            h('span', { textContent: input.label })
+            h('span', { class: 'after-spacer', textContent: input.label })
           ])
         ])
       );
@@ -315,7 +315,7 @@ async function fillGameInfos(gameInfos, oppIndex) {
   // Final assembling
   container.append(
     playerDiv,
-    //activeOptions.length > 0 ? optionsInfos : null,
+    optionsInfos,
     rulesDiv,
     btnWrap
   );

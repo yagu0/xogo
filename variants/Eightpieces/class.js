@@ -13,6 +13,10 @@ export default class EightpiecesRules extends ChessRules {
     };
   }
 
+  static get LANCERS() {
+    return ['c', 'd', 'e', 'f', 'g', 'h', 'm', 'o'];
+  }
+
   getLancerOptions(x, y) {
     let options = [];
     if (y > 0)
@@ -61,10 +65,6 @@ export default class EightpiecesRules extends ChessRules {
       fen: 'jfs1kb1r/1P3ppp/3p1q2/p7/2P5/8/P2PPPPP/J1SQKBNR', //     fen,
       o: {flags: s.flags}
     };
-  }
-
-  static get LANCERS() {
-    return ['c', 'd', 'e', 'f', 'g', 'h', 'm', 'o'];
   }
 
   // obj == "-", {-1,-1} or ["]{x,y}["]
@@ -159,11 +159,6 @@ export default class EightpiecesRules extends ChessRules {
     }, super.pieces(color, x, y));
   }
 
-  canStepOver(i, j, p, c) {
-    const colIJ = this.getColor(i, j);
-    return this.board[i][j] == "" || (V.LANCERS.includes(p) && c == colIJ);
-  }
-
   canIplay(x, y) {
     if (
       this.pushFrom.x == x && this.pushFrom.y == y &&
@@ -172,6 +167,11 @@ export default class EightpiecesRules extends ChessRules {
       return true;
     }
     return super.canIplay(x, y);
+  }
+
+  canStepOver(i, j, p, c) {
+    const colIJ = this.getColor(i, j);
+    return this.board[i][j] == "" || (V.LANCERS.includes(p) && c == colIJ);
   }
 
   isImmobilized([x, y]) {
@@ -215,18 +215,33 @@ export default class EightpiecesRules extends ChessRules {
     return res;
   }
 
+// TODO: sentry nudge
+
+  // after pushedTo, if lancer : allow reorient + move, or just reorient (move to king) if stuck
+
+  // later, if stuck, allow reorient only (just click)
+ // doClick(coords) { TODO
+
   getPotentialMovesFrom([x, y], color) {
     if (this.pushFrom.x < 0 || this.pushedTo.x >= 0) {
       let smoves = super.getPotentialMovesFrom([x, y], color);
       // Forbid direction x,y --> pushFrom if x,y == pushedTo
       if (x == this.pushedTo.x && y == this.pushedTo.y) {
         smoves = smoves.filter(m => {
+          let sx = this.pushFrom.x - x,
+              sy = this.pushFrom.y - y;
+          let divideBy = sx != 0 && sy != 0 && Math.abs(sx) != Math.abs(sy)
+            ? 1
+            : Math.max(sx, sy);
           return ( !super.compatibleStep(
             [x, y], [m.end.x, m.end.y],
-            [this.pushFrom.x - x, this.pushFrom.y - y]
+            [sx / divideBy, sy / divideBy]
           ) );
         });
       }
+
+      // TODO: lancer special case, move as a queen after push
+
       return smoves.concat(this.getPassMoves(x, y));
     }
     // pushFrom.x >= 0 && pushedTo.x < 0
@@ -242,20 +257,48 @@ export default class EightpiecesRules extends ChessRules {
       m.appear[0].c = m.vanish[0].c = oppCol;
       m.appear.push( new PiPo({x:x, y:y, p:'s', c:this.turn}) );
     });
-    
-console.log(pmoves);
-
     return pmoves;
+  }
 
-
-
+  postProcessPotentialMoves(moves) {
+    moves = super.postProcessPotentialMoves(moves);
+    let finalMoves = [];
+    for (const m of moves) {
+      // Reorient a lancer after drop or regular move
+      if (
+        (m.vanish.length == 0 && ['c', 'g'].includes(m.appear[0].p)) ||
+        (
+          (m.vanish.length > 0 && V.LANCERS.includes(m.vanish[0].p)) &&
+          // Next line test checks that the lancer wasn't just pushed away
+          (m.start.x != this.pushedTo.x || m.start.y != this.pushedTo.y)
+        )
+      ) {
+        this.getLancerOptions(m.end.x, m.end.y).forEach(o => {
+          finalMoves.push( new Move({
+            appear: [new PiPo({x:m.end.x,y:m.end.y,c:m.appear[0].c,p:o})],
+            vanish: m.vanish
+          }) );
+        });
+      }
+      else if (m.vanish.length == 2 && m.vanish[0].p == 's') {
+        // Sentry "capture" --> remove sentry from final square (TODO: blink?)
+        finalMoves.push( new Move({
+          appear: [],
+          vanish: [ m.vanish[0] ],
+          end: m.end
+        }) );
+      }
+      else
+        finalMoves.push(m);
+    }
+    return finalMoves;
   }
 
   postPlay(move) {
     if (
+      move.appear.length == 0 &&
       move.vanish.length > 0 &&
-      move.vanish[0].p == 's' &&
-      move.appear[0].c != move.vanish[0].c
+      move.vanish[0].p == 's'
     ) {
       // Sentry push ("capturing" part)
       this.pushFrom = {x: move.end.x, y: move.end.y};
@@ -272,50 +315,33 @@ console.log(pmoves);
   }
 
   isLastMove(move) {
-    if (move.vanish[0].p == 's' && move.appear[0].c != move.vanish[0].c)
+    if (move.appear.length == 0) //move.vanish[0].p == 's'
       return false;
     return super.isLastMove(move);
   }
 
-  postProcessPotentialMoves(moves) {
-    moves = super.postProcessPotentialMoves(moves);
-    let finalMoves = [];
-    for (const m of moves) {
-      // Reorient a lancer after drop or regular move
-      if (
-        (m.vanish.length == 0 && ['c', 'g'].includes(m.appear[0].p)) ||
-        (
-          (m.vanish.length > 0 && V.LANCERS.includes(m.vanish[0].p)) &&
-          // Next line test checks that the lancer wasn't just pushed away
-          (m.start.x != this.pushFrom.x || m.start.y != this.pushFrom.y)
-        )
-      ) {
-        this.getLancerOptions(m.end.x, m.end.y).forEach(o => {
-          finalMoves.push( new Move({
-            appear: [new PiPo({x:m.end.x,y:m.end.y,c:m.appear[0].c,p:o})],
-            vanish: m.vanish
-          }) );
-        });
-      }
-      else if (m.vanish.length == m.appear.length || m.vanish[0].p != 's')
-        finalMoves.push(m);
-      else {
-        // Sentry "capture" --> remove sentry from final square (TODO: blink?)
-        const [x, y] = [m.end.x, m.end.y]
-        const p = this.getPiece(x, y);
-        const c = this.getColor(x, y);
-        finalMoves.push( new Move({
-          appear: [new PiPo({x:m.end.x,y:m.end.y,c:c,p:p})],
-          vanish: [ m.vanish[0] ]
-        }) );
+  underAttack([x, y], oppCols) {
+    if (super.underAttack([x, y], oppCols))
+      return true;
+    // TODO: check enemy sentry(ies), for each, check all of our own pieces which attack the square (if belonging to opponent!). Then, call :
+    const oppCol = oppCols[0];
+    for (let i=0; i < this.size.x; i++) {
+      for (let j=0; j < this.size.y; j++) {
+        if (
+          this.board[i][j] != "" &&
+          this.getPiece(i, j) == 's' &&
+          this.getColor(i, j) == oppCol
+        ) {
+          this.pieces()['s'].both[0].steps.forEach(s => {
+            let ii = i + s[0];
+            // TODO.........
+            if (true)
+              return true;
+          });
+        }
       }
     }
-    return finalMoves;
-  }
-
-  underAttack([x, y], oppCols) {
-    // TODO: check enemy sentry(ies), for each, check all of our own pieces which attack the square (if belonging to opponent!). Then, call :
-    return super.underAttack([x, y], oppCols);
+    return false;
   }
 
   // Lazy sentry attacks check: after push move
@@ -334,7 +360,7 @@ console.log(pmoves);
   updateReserve(color, piece, count) {
     if (V.LANCERS.includes(piece))
       // Show only one lancer orientation, and reorient when drop:
-      piece = color == 'w' ? 'c' : 'g';
+      piece = (color == 'w' ? 'c' : 'g');
     super.updateReserve(color, piece, count);
   }
 
