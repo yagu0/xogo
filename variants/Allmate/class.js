@@ -64,13 +64,13 @@ export default class AllmateRules extends ChessRules {
     for (let i=0; i<this.size.x; i++) {
       for (let j=0; j<this.size.y; j++) {
         if (this.getColor(i, j) == myColor) {
-          const movesIJ = super.getPotentialMovesFrom([i, j], myColor);
+          const movesIJ = super.getPotentialMovesFrom([i, j]); //, myColor);
           for (let move of movesIJ) {
             this.playOnBoard(move);
             let testSquare = [x, y];
-            if (i == x && j == y) {
+            if (i == x && j == y)
               // The mated-candidate has moved itself
-              testSquare = [move.end.x, move.end.y]; }
+              testSquare = [move.end.x, move.end.y];
             const res = this.underAttack(testSquare, [color]);
             this.undoOnBoard(move);
             if (!res)

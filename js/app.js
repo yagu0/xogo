@@ -90,8 +90,7 @@ function h(tag, attrs, children) {
 
 function setName() {
   // 'onChange' event on name input text field [HTML]
-  const name = $.getElementById("myName").value;
-  localStorage.setItem("name", sanitize(name, 30));
+  localStorage.setItem("name", $.getElementById("myName").value);
 }
 
 // Turn a "tab" on, and "close" all others
@@ -573,7 +572,8 @@ async function initializeGame(obj) {
   const options = obj.options || {};
 
   // 1. Dynamic loading of variant js module
-  const module = await import('/' + await manifest(`variants/${obj.vname}/class.js`));
+  const module =
+    await import('/' + await manifest(`variants/${obj.vname}/class.js`));
   window.V = module.default;
 
   // Export aliases in global scope (used by variants classes)
@@ -605,7 +605,11 @@ async function initializeGame(obj) {
 
   // Create SVG icons with a string, inserted securely.
   const infoIcon = h('div', { id: 'upLeftInfos', onclick: toggleGameInfos });
-  infoIcon.innerHTML = `<svg viewBox="0.5 0.5 100 100"><path d="M50.5,0.5c-27.614,0-50,22.386-50,50c0,27.614,22.386,50,50,50s50-22.386,50-50C100.5,22.886,78.114,0.5,50.5,0.5z M60.5,85.5h-20v-40h20V85.5z M50.5,35.5c-5.523,0-10-4.477-10-10s4.477-10,10-10c5.522,0,10,4.477,10,10S56.022,35.5,50.5,35.5z"/></svg>`;
+  infoIcon.innerHTML = `<svg viewBox="0.5 0.5 100 100">\
+<path d="M50.5,0.5c-27.614,0-50,22.386-50,50c0,27.614,22.386,50,50,50s50-\
+22.386,50-50C100.5,22.886,78.114,0.5,50.5,0.5z M60.5,85.5h-20v-40h20V85.5z \
+M50.5,35.5c-5.523,0-10-4.477-10-10s4.477-10,10-10c5.522,0,10,4.477,10,\
+10S56.022,35.5,50.5,35.5z"/></svg>`;
 
   const stopIcon = h('div', { id: 'upRightStop', onclick: confirmStopGame });
   stopIcon.innerHTML = `<svg viewBox="0 0 533.333 533.333" xmlns="http://www.w3.org/2000/svg">

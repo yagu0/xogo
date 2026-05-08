@@ -86,7 +86,7 @@ export default class ChainingRules extends ChessRules {
     return super.getPiece(x, y);
   }
 
-  getPotentialMovesFrom([x, y], color) {
+  getPotentialMovesFrom([x, y]) {
     const L = this.lastMoveEnd.length;
     if (
       L >= 1 &&
@@ -95,7 +95,7 @@ export default class ChainingRules extends ChessRules {
       // A self-capture was played: wrong square
       return [];
     }
-    return super.getPotentialMovesFrom([x, y], color);
+    return super.getPotentialMovesFrom([x, y]);
   }
 
   isLastMove(move) {

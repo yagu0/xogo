@@ -30,7 +30,7 @@ export default class AtomicRules extends ChessRules {
     return super.canIplay(x, y);
   }
 
-  getPotentialMovesFrom([x, y], color) {
+  getPotentialMovesFrom([x, y]) {
     if (this.options["rempawn"] && this.movesCount == 0) {
       if ([1, 6].includes(x)) {
         const c = this.getColor(x, y);
@@ -52,7 +52,7 @@ export default class AtomicRules extends ChessRules {
       }
       return [];
     }
-    return super.getPotentialMovesFrom([x, y], color);
+    return super.getPotentialMovesFrom([x, y]);
   }
 
   doClick(square) {

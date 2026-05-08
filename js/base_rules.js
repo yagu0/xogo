@@ -156,7 +156,7 @@ export default class ChessRules {
         ],
         vanish: []
       });
-      res.drag = {c: this.captured.c, p: this.captured.p};
+//      res.drag = {c: this.captured.c, p: this.captured.p}; //TODO?
       return res;
     }
     return null;
@@ -909,9 +909,14 @@ export default class ChessRules {
       pieceWidth = this.getPieceWidth(r.width);
       const cd = this.idToCoords(e.target.id);
       if (cd) {
-        const move = this.doClick(cd);
-        if (move)
-          this.buildMoveStack(move, r);
+        const move_s = this.doClick(cd);
+        if (move_s) {
+          if (Array.isArray(move_s)) //8-pieces (at least.. only?)
+            this.showChoices(move_s, r);
+          else
+            // Usual case, single move
+            this.buildMoveStack(move_s, r);
+        }
         else if (!this.clickOnly) {
           const [x, y] = Object.values(cd);
           if (typeof x != "number")
@@ -1535,7 +1540,7 @@ export default class ChessRules {
 
   // All possible moves from selected square
   // TODO: generalize usage if arg "color" (e.g. Checkered)
-  getPotentialMovesFrom([x, y], color) {
+  getPotentialMovesFrom([x, y], color, noPP) {
     if (this.subTurnTeleport == 2)
       return [];
     if (typeof x == "string")
@@ -1548,7 +1553,9 @@ export default class ChessRules {
       Array.prototype.push.apply(moves, this.getEnpassantCaptures([x, y]));
     if (this.isKing(0, 0, piece) && this.hasCastle)
       Array.prototype.push.apply(moves, this.getCastleMoves([x, y]));
-    return this.postProcessPotentialMoves(moves);
+    if (!noPP)
+      moves = this.postProcessPotentialMoves(moves);
+    return moves;
   }
 
   postProcessPotentialMoves(moves) {

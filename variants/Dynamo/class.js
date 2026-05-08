@@ -205,7 +205,7 @@ export default class DynamoRules extends ChessRules {
       // Free to play any move (if piece of my color):
       let moves = [];
       if (sqCol == color) {
-        moves = super.getPotentialMovesFrom([x, y])
+        moves = super.getPotentialMovesFrom([x, y]);
         if (this.canReachBorder(x, y))
           this.addExitMove(moves, [x, y], kp);
       }

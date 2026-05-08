@@ -92,7 +92,7 @@ export default class AmbiguousRules extends ChessRules {
         }
       }
     }
-    const moves = super.getPotentialMovesFrom([x, y], oppCol);
+    const moves = super.getPotentialMovesFrom([x, y]); //, oppCol);
     return moves.filter(m => m.end.x == target.x && m.end.y == target.y);
   }
 

@@ -1,5 +1,4 @@
 const params = require("./parameters.js");
-const sanitize = require("./sanitize.js");
 const WebSocket = require("ws");
 const wss = new WebSocket.Server({
   port: params.socket_port,
@@ -93,17 +92,19 @@ wss.on("connection", (socket, req) => {
     }
 
     // Basic security on recurrent fields
-    if (obj.vname) {
-      obj.vname = sanitize(obj.vname, 50);
-      if (obj.vname != "_random" && !variants.find(v => v.name == obj.vname))
+    if (
+      obj.vname &&
+      obj.vname != "_random" &&
+      !variants.find(v => v.name == obj.vname)
+    ) {
         return; //unknown variant name
     }
-    if (obj.name) //TODO: probably overkill..
-      obj.name = sanitize(obj.name, 30);
+    if (obj.name)
+      obj.name = obj.name.substring(0, 32);
     if (obj.fen)
-      obj.fen = sanitize(obj.fen, 500, true);
+      obj.fen = obj.fen.substring(0, 1024);
     if (obj.gid)
-      obj.gid = sanitize(obj.gid, 20);
+      obj.gid = obj.gid.substring(0, 16);
 
     switch (obj.code) {
       // Send challenge (may trigger game creation)
@@ -241,7 +242,7 @@ wss.on("connection", (socket, req) => {
         if (
           !games[obj.gid] ||
           !Array.isArray(obj.moves) ||
-          obj.moves.length > 20
+          obj.moves.length > 32
         ) {
           return;
         }
