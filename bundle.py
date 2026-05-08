@@ -9,7 +9,7 @@ import re
 # --- Configuration ---
 SOURCE_DIR = "."
 DEST_DIR = "dist"
-EXTENSIONS_TO_HASH = [".html", ".js", ".css", ".svg"] #all edited files
+EXTENSIONS_TO_HASH = [".html", ".js", ".css", ".svg", ".ico", ".png", ".jpg"]
 EXTENSIONS_TO_UPDATE = [".html", ".js", ".css"] #.svg don't contain refs
 DYNAMIC_LOAD_EXTENSIONS = (".html", ".js", ".css") #loaded from app.js
 

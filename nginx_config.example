@@ -21,20 +21,25 @@ server {
     error_log /var/log/nginx/xogo_error.log;
     access_log /var/log/nginx/xogo_access.log;
 
-    # 1. Entry point: always check if there was an update
-    location = /index.html {
+    #
+    # Entry point: always revalidate
+    #
+    location ~* ^/(index\.html|manifest\.json)$ {
         add_header Cache-Control "no-cache, must-revalidate";
-        expires 0;
     }
 
-    # 2. Static hashed files (JS, CSS) + assets: agressive caching
-    location / {
-        try_files $uri $uri/ /index.html;
+    #
+    # Static hashed assets
+    #
+    location ~* \.(js|css|html|png|jpg|svg|ico|ttf)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
+        try_files $uri =404;
     }
 
-    # 3. WebSocket server proxy
+    #
+    # WebSocket server proxy
+    #
     location /ws {
         proxy_pass http://localhost:WS_PORT;
         proxy_http_version 1.1;
@@ -42,6 +47,13 @@ server {
         proxy_set_header Connection $connection_upgrade;
         proxy_set_header Host $host;
         proxy_buffering off;
+    }
+
+    #
+    # SPA fallback
+    #
+    location / {
+        try_files $uri $uri/ /index.html;
     }
 
     ssl_certificate /etc/letsencrypt/live/my.server.com/fullchain.pem;
