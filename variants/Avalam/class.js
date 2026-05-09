@@ -23,7 +23,8 @@ export default class AvalamRules extends ChessRules {
           type: "checkbox",
           defaut: false
         }
-      ]
+      ],
+      styles: ["doublemove", "progressive"]
     };
   }
 
@@ -31,6 +32,9 @@ export default class AvalamRules extends ChessRules {
     return false;
   }
   get hasEnpassant() {
+    return false;
+  }
+  static get HasKing() {
     return false;
   }
 

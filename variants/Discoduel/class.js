@@ -14,6 +14,9 @@ export default class DiscoduelRules extends ChessRules {
   get hasFlags() {
     return false;
   }
+  static get HasKing() {
+    return false;
+  }
 
   genRandInitBaseFen() {
     return {

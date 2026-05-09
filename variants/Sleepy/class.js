@@ -2,58 +2,65 @@ import ChessRules from "/js/base_rules.js";
 
 export default class SleepyRules extends ChessRules {
 
-  pieces(color, x, y) {
-    let res = super.pieces(color, x, y);
-    res['s'] = {"class": "sleepy-pawn", moveas: "p"};
-    res['u'] = {"class": "sleepy-rook", moveas: "r"};
-    res['o'] = {"class": "sleepy-knight", moveas: "n"};
-    res['c'] = {"class": "sleepy-bishop", moveas: "b"};
-    res['t'] = {"class": "sleepy-queen", moveas: "q"};
-    return res;
+  static get Options() {
+    return {
+      select: C.Options.select,
+      input: C.Options.input,
+      styles: ["balance", "capture", "cylinder", "dark", "rifle", "zen"]
+    };
   }
 
-  static get V_PIECES() {
+  setOtherVariables(fenParsed) {
+    super.setOtherVariables(fenParsed);
+    this.states = JSON.parse(fenParsed.states);
+  }
+
+  getPartFen(o) {
+    return {
+      "states": (o.init ? '0'.repeat(64) : JSON.stringify(this.states)),
+      ...super.getPartFen(o)
+    };
+  }
+
+  pieces(color, x, y) {
+    return {
+      's': {"class": "sleepy-pawn"},
+      'u': {"class": "sleepy-rook"},
+      'o': {"class": "sleepy-knight"},
+      'c': {"class": "sleepy-bishop"},
+      't': {"class": "sleepy-queen"},
+      ...super.pieces(color, x, y)
+    };
+  }
+
+  static get M_PIECES() {
     return ['p', 'r', 'n', 'b', 'q'];
   }
   static get S_PIECES() {
     return ['s', 'u', 'o', 'c', 't'];
   }
 
-  // Forbid sleepy pieces to capture
-  canTake([x1, y1], [x2, y2]) {
-    return (
-      this.getColor(x1, y1) !== this.getColor(x2, y2) &&
-      (['k'].concat(V.V_PIECES)).includes(this.getPiece(x1, y1))
-    );
+  getPotentialMovesOf(piece, [x, y]) {
+    if (V.S_PIECES.includes(piece))
+      return [];
+    return super.getPotentialMovesOf(piece, [x, y]);
   }
 
-
-  //TODO:
-
-
-  pawnPostProcess(moves, color, oppCols) {
-    let res = super.pawnPostProcess(moves, color, oppCols);
-    if (res.length > 0 && res[0].vanish[0].p == 's') {
-      // Fix promotions of non-violent pawns (if any)
-      res.forEach(m => {
-        if (m.appear[0].p != 's')
-          m.appear[0].p = V.NV_PIECES[V.V_PIECES.indexOf(m.appear[0].p)];
-      });
-    }
-    return res;
+  getStateIndex(coords) {
+    return this.size.y * coords.x + coords.y;
   }
 
   prePlay(move) {
     super.prePlay(move);
-    // NOTE: drop moves already taken into account in base prePlay()
-    if (move.vanish.length == 2 && move.appear.length == 1) {
-      const normal = V.V_PIECES.includes(move.vanish[1].p);
-      const pIdx =
-        (normal ? V.V_PIECES : V.NV_PIECES).indexOf(move.vanish[1].p);
-      const resPiece = (normal ? V.NV_PIECES : V.V_PIECES)[pIdx];
-      super.updateReserve(C.GetOppTurn(this.turn), resPiece,
-        this.reserve[C.GetOppTurn(this.turn)][resPiece] + 1);
-    }
+    // 1) Wake up observed pieces
+    // TODO: findDestSquares(attackOnly = true) with changing piece color on board
+    // Loop on found squares + if index in S_PIECES then change
+    // 2) Update sleepy status
+    const indices = [move.start, move.end].map(this.getStateIndex);
+    this.states[indices[1]] = this.states[indices[0]] + 1;
+    this.states[indices[0]] = 0;
+    if (this.states[indices[1]] >= 3)
+      move.appear[0].p = V.S_PIECES[V.M_PIECES.indexOf(move.appear[0].p)];
   }
 
 };

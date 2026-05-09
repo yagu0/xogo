@@ -20,7 +20,8 @@ export default class WeiqiRules extends ChessRules {
           type: "checkbox",
           defaut: false
         }
-      ]
+      ],
+      styles: ["doublemove", "progressive"]
     };
   }
 
@@ -32,6 +33,9 @@ export default class WeiqiRules extends ChessRules {
   }
   get clickOnly() {
     return true;
+  }
+  static get HasKing() {
+    return false;
   }
 
   getSvgChessboard() {

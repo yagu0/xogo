@@ -54,7 +54,7 @@ function getRandomVariant() {
 if (params.dev) {
   const chokidar = require("chokidar");
   const watcher = chokidar.watch(
-    ["*.js", "*.css", "utils/", "variants/"],
+    ["*.js", "*.css", "css/", "js/", "pieces/", "utils/", "variants/"],
     { persistent: true }
   );
 

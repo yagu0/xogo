@@ -16,6 +16,9 @@ export default class ApocalypseRules extends ChessRules {
   get hideMoves() {
     return true;
   }
+  static get HasKing() {
+    return false;
+  }
 
   pawnPromotions() {
     return ['n', 'p'];

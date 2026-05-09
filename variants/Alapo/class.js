@@ -8,7 +8,7 @@ export default class AlapoRules extends ChessRules {
   static get Options() {
     return {
       select: C.Options.select,
-      styles: C.Options.styles.filter(s => s != "teleport")
+      styles: C.Options.styles.filter(s => !["recycle","teleport"].includes(s))
     };
   }
 
@@ -16,6 +16,9 @@ export default class AlapoRules extends ChessRules {
     return false;
   }
   get hasEnpassant() {
+    return false;
+  }
+  static get HasKing() {
     return false;
   }
 
@@ -49,7 +52,7 @@ export default class AlapoRules extends ChessRules {
       s.w.map(p => piece2pawn[p].toUpperCase()).join("") + "/" +
       s.w.join("").toUpperCase()
     );
-    return { fen: fen, o: {} };
+    return { fen, o: {} };
   }
 
   // Triangles are rotated from opponent viewpoint (=> suffix "_inv")
@@ -58,8 +61,10 @@ export default class AlapoRules extends ChessRules {
     return {
       'r': allSpecs['r'],
       'q': allSpecs['q'],
-      'b': Object.assign({}, allSpecs['b'],
-        {"class": "bishop" + (this.playerColor != color ? "_inv" : "")}),
+      'b': {
+        "class": "bishop" + (this.playerColor != color ? "_inv" : ""),
+        ...allSpecs['b']
+      },
       's': { //"square"
         "class": "babyrook",
         both: [

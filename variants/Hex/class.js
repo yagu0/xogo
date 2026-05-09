@@ -38,6 +38,9 @@ export default class HexRules extends AbstractClickFillRules {
   get clickOnly() {
     return true;
   }
+  static get HasKing() {
+    return false;
+  }
 
   doClick(coords) {
     if (

@@ -21,12 +21,16 @@ export default class GiveawayRules extends ChessRules {
       input: C.Options.input.filter(i => i.variable == "pawnfall"),
       styles: [
         "atomic", "cannibal", "cylinder", "dark",
+        "doublemove", "progressive",
         "madrasi", "rifle", "teleport", "zen"
       ]
     };
   }
 
   get hasFlags() {
+    return this.options["mode"] == "losers";
+  }
+  static get HasKing() {
     return this.options["mode"] == "losers";
   }
 

@@ -8,7 +8,14 @@ export default class AtarigoRules extends WeiqiRules {
   static get Options() {
     let input = WeiqiRules.Options.input;
     input[0].defaut = 11;
-    return {input: input};
+    return {
+      input,
+      styles: WeiqiRules.Options.styles
+    };
+  }
+
+  static get HasKing() {
+    return false;
   }
 
   getCurrentScore(move_s) {

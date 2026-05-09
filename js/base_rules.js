@@ -66,7 +66,7 @@ export default class ChessRules {
         "cannibal",
         "capture",
         "crazyhouse",
-        "cylinder", //ok with all
+        "cylinder", //ok with ~all
         "dark",
         "doublemove",
         "madrasi",
@@ -115,6 +115,11 @@ export default class ChessRules {
   // Some variants do not store reserve state (Align4, Chakart...)
   get hasReserveFen() {
     return this.hasReserve;
+  }
+
+  // Some variants don't have kings, not relevant
+  static get HasKing() {
+    return true;
   }
 
   get noAnimate() {
@@ -1187,6 +1192,8 @@ export default class ChessRules {
   }
 
   isKing(x, y, p) {
+    if (!V.HasKing)
+      return false;
     if (!p)
       p = this.getPiece(x, y);
     if (!this.options["cannibal"])
@@ -2244,6 +2251,8 @@ export default class ChessRules {
 
   // 'color' arg because some variants (e.g. Refusal) check opponent moves
   filterValid(moves, color) {
+    if (!V.HasKing)
+      return moves;
     color = color || this.turn;
     const oppCols = this.getOppCols(color);
     let kingPos = this.searchKingPos(color);
@@ -2401,9 +2410,11 @@ export default class ChessRules {
     if (move.next)
       return false;
     const color = this.turn;
-    const oppKingPos = this.searchKingPos(C.GetOppTurn(color));
-    if (oppKingPos.length == 0 || this.underCheck(oppKingPos, [color]))
-      return true;
+    if (V.HasKing) {
+      const oppKingPos = this.searchKingPos(C.GetOppTurn(color));
+      if (oppKingPos.length == 0 || this.underCheck(oppKingPos, [color]))
+        return true;
+    }
     return (
       (
         !this.options["balance"] ||
@@ -2453,6 +2464,8 @@ export default class ChessRules {
     // Shortcut in case the score was computed before:
     if (move.result)
       return move.result;
+    if (!V.HasKing)
+      return "*"; //can't guess better..
     const oppTurn = C.GetOppTurn(this.turn);
     const kingPos = {
       w: this.searchKingPos('w'),
