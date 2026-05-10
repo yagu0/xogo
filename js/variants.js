@@ -133,6 +133,7 @@ const variants = [
 //  {name: 'Shogi', desc: 'Japanese Chess'},
 //  {name: 'Shogun', desc: "General's Chess"},
 //  {name: 'Sittuyin', desc: 'Burmese Chess'},
+  {name: 'Sleepy', desc: 'Lazy pieces', disp: 'Sleepy'},
 //  {name: 'Spartan', desc: 'Spartan versus Persians'},
 //  {name: 'Squatter', desc: 'Squat last rank'},
 //  {name: 'Stealthbomb', desc: 'Beware the bomb'},
@@ -154,6 +155,7 @@ const variants = [
 //  {name: 'Wormhole', desc: 'Squares disappear'},
 //  {name: 'Xiangqi', desc: 'Chinese Chess'},
 //  {name: 'Yote', desc: 'African Draughts'},
+//  {name: 'Yoxii', desc: 'Moving totem'},
   {name: "Zen", desc: "Reverse captures"}
 ];
 
