@@ -21,11 +21,9 @@ export default class AvalancheRules extends ChessRules {
         "capture",
         "crazyhouse",
         "cylinder",
-        "dark",
         "madrasi",
         "recycle",
         "rifle",
-        "teleport",
         "zen"
       ]
     };

@@ -19,7 +19,7 @@ export default class AtarigoRules extends WeiqiRules {
   }
 
   getCurrentScore(move_s) {
-    if (move_s[0].vanish.length > 0)
+    if (move_s.some(mv => mv.vanish.length > 0))
       return (this.turn == 'w' ? "0-1" : "1-0");
     return "*";
   }

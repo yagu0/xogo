@@ -31,7 +31,7 @@ export default class BarioRules extends ChessRules {
     );
   }
 
-  get onlyClick() {
+  get clickOnly() {
     return this.movesCount <= 1;
   }
 
@@ -79,8 +79,12 @@ export default class BarioRules extends ChessRules {
     );
   }
 
+  static get ReserveArray() {
+    return ['r', 'n', 'b', 'q'];
+  }
+
   initReserves(reserveStr) {
-    super.initReserves(reserveStr, ['r', 'n', 'b', 'q']);
+    super.initReserves(reserveStr, V.ReserveArray);
   }
 
   setOtherVariables(fenParsed) {
@@ -96,7 +100,11 @@ export default class BarioRules extends ChessRules {
       case 0:
         return i == this.captureUndef.x && j == this.captureUndef.y;
       case 1:
-        return this.getPiece(i, j) == 'u' && c == this.getColor(i, j);
+        return (
+          this.board[i][j] != "" &&
+          this.getPiece(i, j) == 'u' &&
+          c == this.getColor(i, j)
+        );
     }
     return false; //never reached
   }
@@ -198,6 +206,63 @@ export default class BarioRules extends ChessRules {
     return false;
   }
 
+  resetReserve(move, computeNext) {
+    const variety = (c) => {
+      return (
+        [...new Set(
+          Array.prototype.concat.apply([],
+            this.board.map(row =>
+              row.filter(cell =>
+                cell.charAt(0) == c && !['p', 'k'].includes(cell.charAt(1))
+              ).map(cell => cell.charAt(1))
+            )
+          )
+        )].length >= 2
+      );
+    };
+    let next;
+    if (computeNext) {
+      next = {start: move.end, end: move.end, vanish: [], appear: []};
+      this.playOnBoard(move);
+    }
+    const twoOrMorePieces = {w: variety('w'), b: variety('b')};
+    const resetCols =
+      Object.keys(twoOrMorePieces).filter(k => twoOrMorePieces[k]);
+    if (resetCols.length >= 1) {
+      for (let i=0; i<this.size.x; i++) {
+        for (let j=0; j<this.size.y; j++) {
+          if (this.board[i][j] == "")
+            continue;
+          const colIJ = this.getColor(i, j);
+          const pieceIJ = this.getPiece(i, j);
+          if (resetCols.includes(colIJ) && !['p', 'k', 'u'].includes(pieceIJ))
+          {
+            if (computeNext) {
+              // NOTE: could also use a "flip" strategy similar to Benedict
+              next.vanish.push(new PiPo({c: colIJ, p: pieceIJ, x: i, y: j}));
+              next.appear.push(new PiPo({c: colIJ, p: 'u', x: i, y: j}));
+            }
+            this.reserve[colIJ][pieceIJ]++;
+          }
+        }
+      }
+      super.re_drawReserve(resetCols);
+    }
+    if (computeNext) {
+      this.undoOnBoard(move);
+      if (next.vanish.length >= 1) {
+        next.reset = true;
+        move.next = next;
+      }
+    }
+  }
+
+  prePlay(move) {
+    super.prePlay(move);
+    if (move.reset && move.vanish[0].c != this.playerColor)
+      this.resetReserve(move);
+  }
+
   postPlay(move) {
     const color = this.turn;
     if (this.movesCount <= 1 || move.reset || move.next) {
@@ -239,53 +304,13 @@ export default class BarioRules extends ChessRules {
 
   computeNextMove(move) {
     if (
-      !this.definition || this.playerColor != this.turn ||
-      this.board.some(row => row.some(cell =>
-        cell.charAt(0) == this.turn && cell.charAt(1) == 'u'))
+      this.definition && this.playerColor == this.turn &&
+      this.board.every(row => row.every(cell => {
+        return (
+          cell == "" || cell.charAt(0) != this.turn || cell.charAt(1) != 'u');
+      }))
     ) {
-      return;
-    }
-    const variety = (c) => {
-      return (
-        [...new Set(
-          Array.prototype.concat.apply([],
-            this.board.map(row =>
-              row.filter(cell =>
-                cell.charAt(0) == c && !['p', 'k'].includes(cell.charAt(1))
-              ).map(cell => cell.charAt(1))
-            )
-          )
-        )].length >= 2
-      );
-    };
-    let next = {start: move.end, end: move.end, vanish: [], appear: []};
-    this.playOnBoard(move);
-    const twoOrMorePieces = {w: variety('w'), b: variety('b')};
-    const resetCols =
-      Object.keys(twoOrMorePieces).filter(k => twoOrMorePieces[k]);
-    if (resetCols.length >= 1) {
-      for (let i=0; i<this.size.x; i++) {
-        for (let j=0; j<this.size.y; j++) {
-          const colIJ = this.getColor(i, j);
-          const pieceIJ = this.getPiece(i, j);
-          if (
-            resetCols.includes(colIJ) &&
-            this.board[i][j] != "" &&
-            !['p', 'k', 'u'].includes(pieceIJ)
-          ) {
-            // NOTE: could also use a "flip" strategy similar to Benedict
-            next.vanish.push(new PiPo({c: colIJ, p: pieceIJ, x: i, y: j}));
-            next.appear.push(new PiPo({c: colIJ, p: 'u', x: i, y: j}));
-            this.reserve[colIJ][pieceIJ]++;
-          }
-        }
-      }
-      super.re_drawReserve(resetCols);
-    }
-    this.undoOnBoard(move);
-    if (next.vanish.length >= 1) {
-      next.reset = true;
-      move.next = next;
+      this.resetReserve(move, true);
     }
   }
 

@@ -261,15 +261,13 @@ export default class ChessRules {
 
   // "Parse" FEN: just return untransformed string data
   parseFen(fen) {
-    const fenParts = fen.split(" ");
-    let res = {
-      position: fenParts[0],
-      turn: fenParts[1],
-      movesCount: fenParts[2]
+    const [position, turn, movesCount, extraData] = fen.split(" ");
+    return {
+      position,
+      turn,
+      movesCount,
+      ...(extraData ? JSON.parse(extraData) : {})
     };
-    if (fenParts.length > 3)
-      res = Object.assign(res, JSON.parse(fenParts[3]));
-    return res;
   }
 
   // Return current fen (game state)
@@ -913,7 +911,8 @@ export default class ChessRules {
       r = chessboard.getBoundingClientRect();
       pieceWidth = this.getPieceWidth(r.width);
       const cd = this.idToCoords(e.target.id);
-      if (cd) {
+      const [x, y] = Object.values(cd || {x: -1, y: -1});
+      if (cd && this.canIplay(x, y)) {
         const move_s = this.doClick(cd);
         if (move_s) {
           if (Array.isArray(move_s)) //8-pieces (at least.. only?)
@@ -923,12 +922,11 @@ export default class ChessRules {
             this.buildMoveStack(move_s, r);
         }
         else if (!this.clickOnly) {
-          const [x, y] = Object.values(cd);
           if (typeof x != "number")
             startPiece = this.r_pieces[x][y];
           else
             startPiece = this.g_pieces[x][y];
-          if (startPiece && this.canIplay(x, y)) {
+          if (startPiece) {
             e.preventDefault();
             start = cd;
             curPiece = startPiece.cloneNode();

@@ -32,4 +32,7 @@ piece.black.stack5 {
 
 .board-sq {
   fill: grey;
+  stroke: darkblue;
+  stroke-width: 0.1;
+  paint-order: stroke fill;
 }

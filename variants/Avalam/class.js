@@ -69,7 +69,7 @@ export default class AvalamRules extends ChessRules {
 
   genRandInitBaseFen() {
     let fen = "";
-    if (this.freefill)
+    if (this.options.freefill)
       fen = "9/".repeat(8) + "9";
     else if (this.options["randomness"] == 0) {
       fen = "2Bb5/1BbBb4/1bBbBbB2/1BbBbBbBb/BbBb1bBbB/" +
@@ -128,7 +128,7 @@ export default class AvalamRules extends ChessRules {
   }
 
   doClick(coords) {
-    if (!this.freefill || this.board[coords.x][coords.y] != "")
+    if (!this.options.freefill || this.board[coords.x][coords.y] != "")
       return null;
     return new Move({
       start: {x: coords.x, y: coords.y},
@@ -157,8 +157,16 @@ export default class AvalamRules extends ChessRules {
 
   getPotentialMovesFrom([x, y]) {
     const height = this.board[x][y].charCodeAt(1) - 97;
-    if (height == 5)
+    if (
+      height == 5
+      ||
+      (
+        this.options.freefill &&
+        this.board.some(row => row.some(sq => sq == ""))
+      )
+    ) {
       return [];
+    }
     let moves = [];
     for (let s of this.pieces(this.turn, x, y)['b'].both[0].steps) {
       const [i, j] = [x + s[0], y + s[1]];
@@ -181,6 +189,8 @@ export default class AvalamRules extends ChessRules {
     let towersCount = {w: 0, b: 0};
     for (let i = 0; i < this.size.x; i++) {
       for (let j = 0; j < this.size.y; j++) {
+        if (this.board[i][j] == "")
+          return "*"; //freefill
         if (this.board[i][j] != "") {
           if (this.getPotentialMovesFrom([i, j]).length > 0)
             return '*';

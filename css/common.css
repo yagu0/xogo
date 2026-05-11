@@ -308,7 +308,7 @@ piece.mark.transparent {
   margin-right: 15px;
 }
 .option-input input[type=number] {
-  width: 64px;
+  width: 50px;
 }
 .btn-wrap {
   text-align: center;
