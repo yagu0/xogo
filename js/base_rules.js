@@ -1088,6 +1088,7 @@ export default class ChessRules {
   // DARK METHODS
 
   updateEnlightened() {
+    console.log("new light");
     this.oldEnlightened = this.enlightened;
     this.enlightened = ArrayFun.init(this.size.x, this.size.y, false);
     // Add pieces positions + all squares reachable by moves (includes Zen):
@@ -1097,6 +1098,9 @@ export default class ChessRules {
         {
           this.enlightened[x][y] = true;
           this.getPotentialMovesFrom([x, y]).forEach(m => {
+
+console.log(m.end);
+
             this.enlightened[m.end.x][m.end.y] = true;
           });
         }
@@ -2310,9 +2314,7 @@ export default class ChessRules {
     });
   }
 
-  prePlay(move) {
-    if (this.hasCastle)
-      this.updateCastleFlags(move);
+  tryPrePlayCrazyhouse(move) {
     if (this.options["crazyhouse"]) {
       if (move.appear.length > 0 && move.vanish.length > 0) {
         // Assumption: something is moving
@@ -2338,6 +2340,9 @@ export default class ChessRules {
           delete this.ispawn[square];
       });
     }
+  }
+
+  tryPrePlayAtomicReserve(move) {
     const minSize = Math.min(move.appear.length, move.vanish.length);
     if (
       this.hasReserve &&
@@ -2365,6 +2370,13 @@ export default class ChessRules {
     }
   }
 
+  prePlay(move) {
+    if (this.hasCastle)
+      this.updateCastleFlags(move);
+    this.tryPrePlayCrazyhouse(move);
+    this.tryPrePlayAtomicReserve(move);
+  }
+
   play(move) {
     this.prePlay(move);
     if (this.hasEnpassant)
@@ -2373,9 +2385,7 @@ export default class ChessRules {
     this.postPlay(move);
   }
 
-  postPlay(move) {
-    if (this.options["dark"])
-      this.updateEnlightened();
+  tryPostPlayTeleport(move) {
     if (this.options["teleport"]) {
       if (
         this.subTurnTeleport == 1 &&
@@ -2391,6 +2401,10 @@ export default class ChessRules {
       this.subTurnTeleport = 1;
       this.captured = null;
     }
+  }
+
+  postPlay(move) {
+    this.tryPostPlayTeleport(move);
     this.tryChangeTurn(move);
   }
 
@@ -2399,6 +2413,8 @@ export default class ChessRules {
       this.turn = C.GetOppTurn(this.turn);
       this.movesCount++;
       this.subTurn = 1;
+      if (this.options["dark"])
+        this.updateEnlightened();
     }
     else if (!move.next)
       this.subTurn++;

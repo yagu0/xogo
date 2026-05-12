@@ -10,7 +10,7 @@ export default class BarioRules extends ChessRules {
       input: C.Options.input,
       styles: [
         "atomic", "cannibal", "capture", "cylinder",
-        "dark", "madrasi", "rifle", "teleport"
+        "dark", "madrasi", "rifle", "teleport", "zen"
       ]
     };
   }
@@ -279,7 +279,7 @@ export default class BarioRules extends ChessRules {
     );
     if (typeof move.start.x == "number" && !captureUndef)
       // Normal move (including Teleport)
-      super.postPlay(move);
+      super.tryPostPlayTeleport(move);
     else if (typeof move.start.x == "string") {
       super.updateReserve(
         color, move.start.y, this.reserve[color][move.start.y] - 1);
@@ -293,13 +293,15 @@ export default class BarioRules extends ChessRules {
       this.tryChangeTurn(null, captureUndef);
     }
   }
-
+//TODO
   // NOTE: not "trying", the turn always change here (TODO?)
   tryChangeTurn(move, captureUndef) {
     this.definition = null;
     this.subTurn = captureUndef ? 0 : 1;
     this.turn = C.GetOppTurn(this.turn);
     this.movesCount++;
+    if (this.options["dark"] && this.movesCount >= 2)
+      this.updateEnlightened();
   }
 
   computeNextMove(move) {
