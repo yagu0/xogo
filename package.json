@@ -1,4 +1,6 @@
 {
+  "name": "xogo",
+  "version": "0.1.0",
   "main": "js/server.js",
   "dependencies": {
     "ws": "^7.5.3"

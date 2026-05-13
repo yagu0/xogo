@@ -103,7 +103,7 @@ export default class BarioRules extends ChessRules {
         return (
           this.board[i][j] != "" &&
           this.getPiece(i, j) == 'u' &&
-          c == this.getColor(i, j)
+          this.getColor(i, j) == c
         );
     }
     return false; //never reached
@@ -267,39 +267,40 @@ export default class BarioRules extends ChessRules {
     const color = this.turn;
     if (this.movesCount <= 1 || move.reset || move.next) {
       if (!move.next)
-        this.tryChangeTurn();
+        this.tryChangeTurn(move);
       return;
     }
     if (this.subTurn == 0)
       this.captureUndef = null; //already used
-    const captureUndef = (
-      move.vanish.length == 2 && //exclude subTurn == 0
-      move.vanish[1].c != color &&
-      move.vanish[1].p == 'u'
-    );
-    if (typeof move.start.x == "number" && !captureUndef)
-      // Normal move (including Teleport)
-      super.tryPostPlayTeleport(move);
-    else if (typeof move.start.x == "string") {
+    if (typeof move.start.x == "string") {
       super.updateReserve(
         color, move.start.y, this.reserve[color][move.start.y] - 1);
       if (move.vanish.length == 1 && move.vanish[0].p == 'u')
         this.definition = move.end;
-      this.subTurn++;
     }
     else {
-      this.subTurn = 0;
-      this.captureUndef = move.end;
-      this.tryChangeTurn(null, captureUndef);
+      if (
+        move.vanish.length == 2 && //exclude subTurn == 0
+        move.vanish[1].c != color &&
+        move.vanish[1].p == 'u'
+      ) {
+        this.captureUndef = move.end;
+      }
+      else
+        super.tryPostPlayTeleport(move);
     }
+    this.tryChangeTurn(move);
   }
-//TODO
-  // NOTE: not "trying", the turn always change here (TODO?)
-  tryChangeTurn(move, captureUndef) {
-    this.definition = null;
-    this.subTurn = captureUndef ? 0 : 1;
-    this.turn = C.GetOppTurn(this.turn);
-    this.movesCount++;
+
+  tryChangeTurn(move) {
+    if (typeof move.start.x == "string")
+      this.subTurn++; //0 to 1, or 1 to 2
+    else {
+      this.subTurn = !!this.captureUndef ? 0 : 1;
+      this.definition = null;
+      this.turn = C.GetOppTurn(this.turn);
+      this.movesCount++;
+    }
     if (this.options["dark"] && this.movesCount >= 2)
       this.updateEnlightened();
   }

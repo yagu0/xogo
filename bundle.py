@@ -17,8 +17,8 @@ IGNORE_FILE_UPDATE = {"app.js"}
 # Files and folders to totally ignore
 IGNORE_FILES = {
     "LICENSE", "README.md", "TODO", "bundle.py", "js/parameters.js.dist",
-    "initialize.sh", "package-lock.json", "package.json", "js/server.js", ".gitignore",
-    "nginx_config.example", "start.sh", "stop.sh", "assets.zip", "extras.zip", ".pid"
+    "initialize.sh", "package-lock.json", "package.json", "js/server.js",
+    "nginx_config.example", "start.sh", "stop.sh", ".pid", ".gitignore"
 }
 IGNORE_DIRS = {".git", "node_modules", DEST_DIR}
 

@@ -1088,7 +1088,6 @@ export default class ChessRules {
   // DARK METHODS
 
   updateEnlightened() {
-    console.log("new light");
     this.oldEnlightened = this.enlightened;
     this.enlightened = ArrayFun.init(this.size.x, this.size.y, false);
     // Add pieces positions + all squares reachable by moves (includes Zen):
@@ -1098,9 +1097,6 @@ export default class ChessRules {
         {
           this.enlightened[x][y] = true;
           this.getPotentialMovesFrom([x, y]).forEach(m => {
-
-console.log(m.end);
-
             this.enlightened[m.end.x][m.end.y] = true;
           });
         }
