@@ -19,6 +19,12 @@ export default class EmergoRules extends ChessRules {
   get hasEnpassant() {
     return false;
   }
+  get hasReserve() {
+    return true;
+  }
+  static get HasKing() {
+    return false;
+  }
 
   // board element == piece class ref:
   board2fen(b) {
@@ -48,11 +54,15 @@ export default class EmergoRules extends ChessRules {
   }
 
   getColor(x, y) {
-    if (x >= this.size.x)
-      return x == this.size.x ? "w" : "b";
-    if (this.board[x][y].charCodeAt(0) < 97)
-      return 'w';
-    return 'b';
+    const sq = (typeof x == "string" ? x : this.board[x][y]);
+    return sq.charCodeAt(0) < 97 ? 'w' : 'b';
+  }
+
+  pieceDef(piece, color, x, y) {
+    //this.board[x][y]
+    // --> TODO
+    // Moving always the same, but look differs
+    // class: classUp, class: classDOwn + composition
   }
 
   getPiece(x, y) {
@@ -64,21 +74,17 @@ export default class EmergoRules extends ChessRules {
   }
 
   genRandInitBaseFen() {
-    return { fen: "9/9/9/9/9/9/9/9/9 w 0 12,12", o: {} };
+    return { fen: "9/9/9/9/9/9/9/9/9", o: {} };
   }
 
   static get ReserveArray() {
-    // Piece type doesn't matter
-    return ['@']; //TODO ::
-
-
-
+    return ['a@'];
   }
 
   setOtherVariables(fenParsed) {
     super.setOtherVariables(fenParsed);
-    // Local stack of captures during a turn (squares + directions)
-    this.captures = [ [] ];
+    // Last capture during a turn (square + direction)
+    this.lastCapture = null;
   }
 
   atLeastOneCaptureFrom([x, y], color, forbiddenStep) {
@@ -102,13 +108,10 @@ export default class EmergoRules extends ChessRules {
   }
 
   atLeastOneCapture(color) {
-    const L0 = this.captures.length;
-    const captures = this.captures[L0 - 1];
-    const L = captures.length;
-    if (L > 0) {
+    if (!!this.lastCapture) {
       return (
         this.atLeastOneCaptureFrom(
-          captures[L-1].square, color, captures[L-1].step)
+          this.lastCapture.square, color, this.lastCapture.step)
       );
     }
     for (let i = 0; i < this.size.x; i++) {
@@ -196,17 +199,14 @@ export default class EmergoRules extends ChessRules {
   }
 
   getAllLongestCaptures(color) {
-    const L0 = this.captures.length;
-    const captures = this.captures[L0 - 1];
-    const L = captures.length;
     let caps = [];
-    if (L > 0) {
-      let locSteps = [ captures[L-1].step ];
+    if (!!this.lastCapture) {
+      let locSteps = [ this.lastCapture.step ];
       let res =
-        this.getLongestCapturesFrom(captures[L-1].square, color, locSteps);
+        this.getLongestCapturesFrom(this.lastCapture.square, color, locSteps);
       Array.prototype.push.apply(
         caps,
-        res.map(r => Object.assign({ square: captures[L-1].square }, r))
+        res.map(r => Object.assign({ square: this.lastCapture.square }, r))
       );
     }
     else {
@@ -352,7 +352,7 @@ export default class EmergoRules extends ChessRules {
   }
 
   getPossibleMovesFrom([x, y], longestCaptures) {
-    if (x >= this.size.x) {
+    if (typeof x === "string") {
       if (longestCaptures.length == 0)
         return this.getReserveMoves(x);
       return [];
@@ -360,14 +360,11 @@ export default class EmergoRules extends ChessRules {
     const color = this.turn;
     if (!!this.reserve[color] && !this.atLeastOneCapture(color))
       return [];
-    const L0 = this.captures.length;
-    const captures = this.captures[L0 - 1];
-    const L = captures.length;
     let moves = [];
     if (longestCaptures.length > 0) {
       if (
-        L > 0 &&
-        (x != captures[L-1].square[0] || y != captures[L-1].square[1])
+        !!this.lastCapture &&
+        (x != this.lastCapture.square[0] || y != this.lastCapture.square[1])
       ) {
         return [];
       }
@@ -403,12 +400,10 @@ export default class EmergoRules extends ChessRules {
     move.turn = color; //for undo
     V.PlayOnBoard(this.board, move);
     if (move.vanish.length == 2) {
-      const L0 = this.captures.length;
-      let captures = this.captures[L0 - 1];
-      captures.push({
+      this.lastCapture = {
         square: [move.end.x, move.end.y],
         step: [(move.end.x - move.start.x)/2, (move.end.y - move.start.y)/2]
-      });
+      };
       if (this.atLeastOneCapture(color))
         // There could be other captures (mandatory)
         move.notTheEnd = true;
@@ -423,7 +418,7 @@ export default class EmergoRules extends ChessRules {
     if (!move.notTheEnd) {
       this.turn = V.GetOppCol(color);
       this.movesCount++;
-      this.captures.push([]);
+      this.lastCapture = null;
     }
   }
 

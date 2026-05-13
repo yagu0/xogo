@@ -352,7 +352,8 @@ export default class ChessRules {
     if (o.init)
       return Array(2 * V.ReserveArray.length).fill('0').join("");
     return (
-      ['w', 'b'].map(c => Object.values(this.reserve[c]).join("")).join("")
+      ['w', 'b'].map(c => Object.values(this.reserve[c]).map(
+        v => v.toString(36)).join("")).join("")
     );
   }
 
@@ -497,7 +498,7 @@ export default class ChessRules {
   }
 
   getRankInReserve(c, p) {
-    const pieces = Object.keys(this.pieces(c, c, p));
+    const pieces = Object.keys(V.ReserveArray);
     const lastIndex = pieces.findIndex(pp => pp == p)
     let toTest = pieces.slice(0, lastIndex);
     return toTest.reduce(
@@ -674,7 +675,8 @@ export default class ChessRules {
         if (this.board[i][j] != "") {
           const color = this.getColor(i, j);
           const piece = this.getPiece(i, j);
-          addPiece(i, j, "g_pieces", this.pieces(color, i, j)[piece]["class"]);
+          addPiece(i, j, "g_pieces",
+                   this.pieceDef(piece, color, i, j)["class"]);
           this.g_pieces[i][j].classList.add(V.GetColorClass(color));
           if (this.enlightened && !this.enlightened[i][j])
             this.g_pieces[i][j].classList.add("hidden");
@@ -741,7 +743,7 @@ export default class ChessRules {
         r_cell.style.height = sqResSize + "px";
         rcontainer.appendChild(r_cell);
         let piece = document.createElement("piece");
-        C.AddClass_es(piece, this.pieces(c, c, p)[p]["class"]);
+        C.AddClass_es(piece, this.pieceDef(p, c, c, p)["class"]);
         piece.classList.add(V.GetColorClass(c));
         piece.style.width = "100%";
         piece.style.height = "100%";
@@ -1060,7 +1062,7 @@ export default class ChessRules {
       const piece = document.createElement("piece");
       const cdisp = moves[i].choice || moves[i].appear[0].p;
       C.AddClass_es(piece,
-        this.pieces(color, moves[i].end.x, moves[i].end.y)[cdisp]["class"]);
+        this.pieceDef(cdisp, color, moves[i].end.x, moves[i].end.y)["class"]);
       piece.classList.add(V.GetColorClass(color));
       piece.style.width = "100%";
       piece.style.height = "100%";
@@ -1110,7 +1112,7 @@ export default class ChessRules {
   enlightEnpassant() {
     // NOTE: shortcut, pawn has only one attack type, doesn't depend on square
     // TODO: (0, 0) is wrong, would need to place an attacker here...
-    const steps = this.pieces(this.playerColor, 0, 0)["p"].attack[0].steps;
+    const steps = this.pieceDef('p', this.playerColor, 0, 0).attack[0].steps;
     for (let step of steps) {
       const x = this.epSquare.x - step[0], //NOTE: epSquare.x not on edge
             y = this.getY(this.epSquare.y - step[1]);
@@ -1186,7 +1188,7 @@ export default class ChessRules {
   getPieceType(x, y, p) {
     if (!p)
       p = this.getPiece(x, y);
-    return this.pieces(this.getColor(x, y), x, y)[p].moveas || p;
+    return this.pieceDef(p, this.getColor(x, y), x, y).moveas || p;
   }
 
   isKing(x, y, p) {
@@ -1229,10 +1231,11 @@ export default class ChessRules {
     return (color == 'w' && x >= 6) || (color == 'b' && x <= 1);
   }
 
-  pieces(color, x, y) {
-    const pawnShift = this.getPawnShift(color || 'w');
-    return {
-      'p': {
+  pieceDef(piece, color, x, y) {
+    switch (piece) {
+    case 'p': {
+      const pawnShift = this.getPawnShift(color || 'w');
+      return {
         "class": "pawn",
         moves: [
           {
@@ -1246,14 +1249,17 @@ export default class ChessRules {
             range: 1
           }
         ]
-      },
-      'r': {
+      };
+    }
+    case 'r':
+      return {
         "class": "rook",
         both: [
           {steps: [[0, 1], [0, -1], [1, 0], [-1, 0]]}
         ]
-      },
-      'n': {
+      };
+    case 'n':
+      return {
         "class": "knight",
         both: [
           {
@@ -1264,14 +1270,16 @@ export default class ChessRules {
             range: 1
           }
         ]
-      },
-      'b': {
+      };
+    case 'b':
+      return {
         "class": "bishop",
         both: [
           {steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]]}
         ]
-      },
-      'q': {
+      };
+    case 'q':
+      return {
         "class": "queen",
         both: [
           {
@@ -1281,8 +1289,9 @@ export default class ChessRules {
             ]
           }
         ]
-      },
-      'k': {
+      };
+    case 'k':
+      return {
         "class": "king",
         both: [
           {
@@ -1293,14 +1302,14 @@ export default class ChessRules {
             range: 1
           }
         ]
-      },
-      // Cannibal kings:
-      '!': {"class": "king-pawn", moveas: "p"},
-      '#': {"class": "king-rook", moveas: "r"},
-      '$': {"class": "king-knight", moveas: "n"},
-      '%': {"class": "king-bishop", moveas: "b"},
-      '*': {"class": "king-queen", moveas: "q"}
-    };
+      };
+    // Cannibal kings:
+    case '!': return {"class": "king-pawn", moveas: "p"};
+    case '#': return {"class": "king-rook", moveas: "r"};
+    case '$': return {"class": "king-knight", moveas: "n"};
+    case '%': return {"class": "king-bishop", moveas: "b"};
+    case '*': return {"class": "king-queen", moveas: "q"};
+    }
   }
 
   // NOTE: using special symbols to not interfere with variants' pieces codes
@@ -1359,13 +1368,11 @@ export default class ChessRules {
   }
 
   getStepSpec(color, x, y, piece) {
-    let pieceType = piece;
-    let allSpecs = this.pieces(color, x, y);
-    if (!piece)
-      pieceType = this.getPieceType(x, y);
-    else if (allSpecs[piece].moveas)
-      pieceType = allSpecs[piece].moveas;
-    let res = allSpecs[pieceType];
+    let pieceType =
+      !piece
+        ? this.getPieceType(x, y)
+        : this.pieceDef(piece, color, x, y).moveas || piece;
+    let res = this.pieceDef(pieceType, color, x, y);
     if (!res["both"])
       res.both = [];
     if (!res["moves"])
@@ -2510,7 +2517,7 @@ export default class ChessRules {
     move.appear.forEach(a => {
       this.g_pieces[a.x][a.y] = document.createElement("piece");
       C.AddClass_es(this.g_pieces[a.x][a.y],
-                    this.pieces(a.c, a.x, a.y)[a.p]["class"]);
+                    this.pieceDef(a.p, a.c, a.x, a.y)["class"]);
       this.g_pieces[a.x][a.y].classList.add(V.GetColorClass(a.c));
       this.g_pieces[a.x][a.y].style.width = pieceWidth + "px";
       this.g_pieces[a.x][a.y].style.height = pieceWidth + "px";
@@ -2585,11 +2592,12 @@ export default class ChessRules {
     }
     const maxDist = this.getMaxDistance(r);
     const apparentColor = this.getColor(start.x, start.y);
-    const pieces = this.pieces(apparentColor, start.x, start.y);
     if (drag) {
       const startCode = this.getPiece(start.x, start.y);
-      C.RemoveClass_es(movingPiece, pieces[startCode]["class"]);
-      C.AddClass_es(movingPiece, pieces[drag.p]["class"]);
+      C.RemoveClass_es(movingPiece,
+        this.pieceDef(startCode, apparentColor, start.x, start.y)["class"]);
+      C.AddClass_es(movingPiece,
+        this.pieceDef(drag.p, apparentColor, start.x, start.y)["class"]);
       if (apparentColor != drag.c) {
         movingPiece.classList.remove(V.GetColorClass(apparentColor));
         movingPiece.classList.add(V.GetColorClass(drag.c));

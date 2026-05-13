@@ -4,7 +4,11 @@
 # https://travishorn.com/removing-parts-of-shapes-in-svg-b539a89e5649
 # https://developer.mozilla.org/fr/docs/Web/SVG/Tutoriel/Paths
 
-preamble = """<?xml version="1.0" encoding="UTF-8" ?>
+###############################
+# 1. Simple pieces (mono-color)
+###############################
+
+preamble_simple = """<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
 <svg xmlns="http://www.w3.org/2000/svg" version="1.0" width="230" height="230">"""
 
@@ -45,7 +49,7 @@ for color in ["white", "black"]:
     for number in range(12):
         filename = chr(65 + number + chrShift) + "@.svg"
         f = open(filename, "w")
-        f.write(preamble)
+        f.write(preamble_simple)
         f.write("\n")
         f.write(white if color == "white" else black)
         f.write("\n")
@@ -55,8 +59,11 @@ for color in ["white", "black"]:
         f.write(final)
         f.close()
 
+################################
+# 1. Composite pieces (bi-color)
+################################
 
-preamble = """<?xml version="1.0" encoding="UTF-8" ?>
+preamble_composite = """<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
 <svg xmlns="http://www.w3.org/2000/svg" version="1.0" width="230" height="230">
 <defs>
@@ -134,7 +141,7 @@ for colorTop in ["white", "black"]:
         for bottom in range(12):
             filename = chr(65 + top + chrShift) + chr(65 + bottom + chrShift) + ".svg"
             f = open(filename, "w")
-            f.write(preamble)
+            f.write(preamble_composite)
             f.write("\n")
             f.write(black_bottom if colorTop == "white" else white_bottom)
             f.write("\n")
