@@ -66,6 +66,7 @@ export default class EmergoRules extends ChessRules {
   }
 
   getPiece(x, y) {
+    // Both characters required to describe the (aggregated) "piece"
     return this.board[x][y];
   }
 
@@ -198,37 +199,6 @@ export default class EmergoRules extends ChessRules {
     return this.maxLengthIndices(res).map(i => res[i]);;
   }
 
-  getAllLongestCaptures(color) {
-    let caps = [];
-    if (!!this.lastCapture) {
-      let locSteps = [ this.lastCapture.step ];
-      let res =
-        this.getLongestCapturesFrom(this.lastCapture.square, color, locSteps);
-      Array.prototype.push.apply(
-        caps,
-        res.map(r => Object.assign({ square: this.lastCapture.square }, r))
-      );
-    }
-    else {
-      for (let i = 0; i < this.size.x; i++) {
-        for (let j=0; j < this.size.y; j++) {
-          if (
-            this.board[i][j] != "" &&
-            this.getColor(i, j) == color
-          ) {
-            let locSteps = [];
-            let res = this.getLongestCapturesFrom([i, j], color, locSteps);
-            Array.prototype.push.apply(
-              caps,
-              res.map(r => Object.assign({ square: [i, j] }, r))
-            );
-          }
-        }
-      }
-    }
-    return this.maxLengthIndices(caps).map(i => caps[i]);
-  }
-
   getBasicMove([x1, y1], [x2, y2], capt) {
     const cp1 = this.board[x1][y1];
     if (!capt) {
@@ -288,8 +258,6 @@ export default class EmergoRules extends ChessRules {
     return mv;
   }
 
-
-// TODO: + style
   getSquareColorClass(x, y) {
     return ((x+y) % 2 == 0 ? "dark-square": "light-square");
   }
