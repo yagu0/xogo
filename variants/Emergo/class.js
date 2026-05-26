@@ -59,6 +59,8 @@ export default class EmergoRules extends ChessRules {
   }
 
   pieceDef(piece, color, x, y) {
+    const color = this.getColor(piece);
+    piece.charAt(0)
     //this.board[x][y]
     // --> TODO
     // Moving always the same, but look differs
