@@ -505,6 +505,9 @@ export default class ChessRules {
       (oldV,newV) => oldV + (this.reserve[c][newV] > 0 ? 1 : 0), 0);
   }
 
+  // Placeholder for variants building SVG pieces "on demand"
+  setPieceBackground(domPiece, piece, color, x, y) {}
+
   static AddClass_es(elt, class_es) {
     if (!Array.isArray(class_es))
       class_es = [class_es];
@@ -636,9 +639,11 @@ export default class ChessRules {
     if (!r)
       r = chessboard.getBoundingClientRect();
     const pieceWidth = this.getPieceWidth(r.width);
-    const addPiece = (i, j, arrName, classes) => {
+    const addPiece = (i, j, arrName, classes, piece, color) => {
       this[arrName][i][j] = document.createElement("piece");
       C.AddClass_es(this[arrName][i][j], classes);
+      if (!!piece)
+        this.setPieceBackground(this[arrName][i][j], piece, color, i, j);
       this[arrName][i][j].style.width = pieceWidth + "px";
       this[arrName][i][j].style.height = pieceWidth + "px";
       let [ip, jp] = this.getPixelPosition(i, j, r);
@@ -661,11 +666,12 @@ export default class ChessRules {
       }
       else
         this[arrName] = ArrayFun.init(this.size.x, this.size.y, null);
-      if (arrName == "d_pieces")
+      if (arrName == "d_pieces") {
         this.marks.forEach((m) => {
           const mCoords = this.coordsFromUsual(m);
           addPiece(mCoords.x, mCoords.y, arrName, "mark");
         });
+      }
     };
     if (this.marks)
       conditionalReset("d_pieces");
@@ -676,7 +682,7 @@ export default class ChessRules {
           const color = this.getColor(i, j);
           const piece = this.getPiece(i, j);
           addPiece(i, j, "g_pieces",
-                   this.pieceDef(piece, color, i, j)["class"]);
+                   this.pieceDef(piece, color, i, j)["class"], piece, color);
           this.g_pieces[i][j].classList.add(V.GetColorClass(color));
           if (this.enlightened && !this.enlightened[i][j])
             this.g_pieces[i][j].classList.add("hidden");
@@ -744,6 +750,7 @@ export default class ChessRules {
         rcontainer.appendChild(r_cell);
         let piece = document.createElement("piece");
         C.AddClass_es(piece, this.pieceDef(p, c, c, p)["class"]);
+        this.setPieceBackground(piece, p, c, c, p);
         piece.classList.add(V.GetColorClass(c));
         piece.style.width = "100%";
         piece.style.height = "100%";
@@ -1063,6 +1070,8 @@ export default class ChessRules {
       const cdisp = moves[i].choice || moves[i].appear[0].p;
       C.AddClass_es(piece,
         this.pieceDef(cdisp, color, moves[i].end.x, moves[i].end.y)["class"]);
+      this.setPieceBackground(piece,
+        cdisp, color, moves[i].end.x, moves[i].end.y);
       piece.classList.add(V.GetColorClass(color));
       piece.style.width = "100%";
       piece.style.height = "100%";
@@ -2518,6 +2527,7 @@ export default class ChessRules {
       this.g_pieces[a.x][a.y] = document.createElement("piece");
       C.AddClass_es(this.g_pieces[a.x][a.y],
                     this.pieceDef(a.p, a.c, a.x, a.y)["class"]);
+      this.setPieceBackground(this.g_pieces[a.x][a.y], a.p, a.c, a.x, a.y);
       this.g_pieces[a.x][a.y].classList.add(V.GetColorClass(a.c));
       this.g_pieces[a.x][a.y].style.width = pieceWidth + "px";
       this.g_pieces[a.x][a.y].style.height = pieceWidth + "px";
@@ -2598,6 +2608,8 @@ export default class ChessRules {
         this.pieceDef(startCode, apparentColor, start.x, start.y)["class"]);
       C.AddClass_es(movingPiece,
         this.pieceDef(drag.p, apparentColor, start.x, start.y)["class"]);
+      this.setPieceBackground(movingPiece,
+        drag.p, apparentColor, start.x, start.y);
       if (apparentColor != drag.c) {
         movingPiece.classList.remove(V.GetColorClass(apparentColor));
         movingPiece.classList.add(V.GetColorClass(drag.c));

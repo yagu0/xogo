@@ -53,23 +53,8 @@ export default class EmergoRules extends ChessRules {
     return board;
   }
 
-  getColor(x, y) {
-    const sq = (typeof x == "string" ? x : this.board[x][y]);
-    return sq.charCodeAt(0) < 97 ? 'w' : 'b';
-  }
-
-  pieceDef(piece, color, x, y) {
-    const color = this.getColor(piece);
-    piece.charAt(0)
-    //this.board[x][y]
-    // --> TODO
-    // Moving always the same, but look differs
-    // class: classUp, class: classDOwn + composition
-  }
-
-  getPiece(x, y) {
-    // Both characters required to describe the (aggregated) "piece"
-    return this.board[x][y];
+  getSquareColorClass(x, y) {
+    return ((x+y) % 2 == 0 ? "dark-square": "light-square");
   }
 
   get size() {
@@ -88,6 +73,183 @@ export default class EmergoRules extends ChessRules {
     super.setOtherVariables(fenParsed);
     // Last capture during a turn (square + direction)
     this.lastCapture = null;
+    // Compute pieces drawings when required, and cache it:
+    this.svgEncodedPieces = {};
+  }
+
+  getColor(x, y) {
+    const sq = (typeof x == "string" ? x : this.board[x][y]);
+    return sq.charCodeAt(0) < 97 ? 'w' : 'b';
+  }
+
+  getPiece(x, y) {
+    // Both characters required to describe the (aggregated) "piece"
+    return this.board[x][y];
+  }
+
+  pieceDef(piece, color, x, y) {
+    // Captures handled in getPotentialMoves directly
+    return {
+      moves: [{ steps: [ [-1, -1], [-1, 1], [1, -1], [1, 1] ] }],
+      "class": "emergo-piece",
+    };
+  }
+
+  static GetSvgNumber(n, position) {
+    switch (position) {
+    case "full": {
+      switch (n) {
+      case 1: //unused
+        return '<path d="M130,85 v60"';
+      case 2:
+        return '<path d="M100,85 h30 v30 h-30 v30 h30"';
+      case 3:
+        return '<path d="M100,85 h30 v30 h-30 M130,115 v30 h-30"';
+      case 4:
+        return '<path d="M100,85 v30 h30 v30 M130,85 v30"';
+      case 5:
+        return '<path d="M130,85 h-30 v30 h30 v30 h-30"';
+      case 6:
+        return '<path d="M130,85 h-30 v60 h30 v-30 h-30"';
+      case 7:
+        return '<path d="M100,85 h30 v60"';
+      case 8:
+        return '<path d="M100,85 h30 v60 h-30 z M100,115 h30"';
+      case 9:
+        return '<path d="M100,135 h30 v-60 h-30 v30 h30"';
+      case 10:
+        return '<path d="M95,85 v60 M105,85 h30 v60 h-30 v-60"';
+      case 11:
+        return '<path d="M95,85 v60 M135,85 v60"';
+      case 12:
+        return '<path d="M95,85 v60 M105,85 h30 v30 h-30 v30 h30"';
+      }
+    }
+    case "top": {
+      switch (n) {
+      case 1: //unused here
+        return '<path d="M130,35 v60"';
+      case 2:
+        return '<path d="M100,35 h30 v30 h-30 v30 h30"';
+      case 3:
+        return '<path d="M100,35 h30 v30 h-30 M130,65 v30 h-30"';
+      case 4:
+        return '<path d="M100,35 v30 h30 v30 M130,35 v30"';
+      case 5:
+        return '<path d="M130,35 h-30 v30 h30 v30 h-30"';
+      case 6:
+        return '<path d="M130,35 h-30 v60 h30 v-30 h-30"';
+      case 7:
+        return '<path d="M100,35 h30 v60"';
+      case 8:
+        return '<path d="M100,35 h30 v60 h-30 z M100,65 h30"';
+      case 9:
+        return '<path d="M100,95 h30 v-60 h-30 v30 h30"';
+      case 10:
+        return '<path d="M90,35 v60 M100,35 h30 v60 h-30 v-60"';
+      case 11:
+        return '<path d="M90,35 v60 M130,35 v60"';
+      case 12:
+        return '<path d="M90,35 v60 M100,35 h30 v30 h-30 v30 h30"';
+      }
+    }
+    case "bottom": {
+      switch (n) {
+      case 1: //unused here
+        return '<path d="M130,135 v60"';
+      case 2:
+        return '<path d="M100,135 h30 v30 h-30 v30 h30"';
+      case 3:
+        return '<path d="M100,135 h30 v30 h-30 M130,165 v30 h-30"';
+      case 4:
+        return '<path d="M100,135 v30 h30 v30 M130,135 v30"';
+      case 5:
+        return '<path d="M130,135 h-30 v30 h30 v30 h-30"';
+      case 6:
+        return '<path d="M130,135 h-30 v60 h30 v-30 h-30"';
+      case 7:
+        return '<path d="M100,135 h30 v60"';
+      case 8:
+        return '<path d="M100,135 h30 v60 h-30 z M100,165 h30"';
+      case 9:
+        return '<path d="M100,195 h30 v-60 h-30 v30 h30"';
+      case 10:
+        return '<path d="M90,135 v60 M100,135 h30 v60 h-30 v-60"';
+      case 11:
+        return '<path d="M90,135 v60 M130,135 v60"';
+      case 12:
+        return '<path d="M90,135 v60 M100,135 h30 v30 h-30 v30 h30"';
+      }
+    }
+    return ""; //never reached
+  }
+
+  // Compute piece drawing
+  getSvgEncodedPiece(piece, color) {
+    if (this.svgPieces[piece])
+      return this.svgPieces[piece];
+
+    let rawSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 230"
+           width="100%" height="100%">`;
+    if (piece.charAt(1) == '@') {
+      const number = ...
+      rawSvg += `
+        <circle cx="115" cy="115" r="100"
+                fill="${color=='w' ? 'whitesmoke' : 'black'}"
+                ${color=='w' ? 'stroke="saddlebrown"' : ''}
+        />`;
+      if (number > 1) {
+        rawSvg += V.GetSvgNumber(number, "full") + `
+                    fill="none" stroke-width="5"
+                    stroke="${color=='w' ? 'red' : 'orange'}"
+                  />`;
+      }
+    }
+    else { //composite
+      const numTop = ...,
+            numBottom = ...;
+      const isTopWhite = 
+      rawSvg += `<defs>
+        <mask id="stripe">
+          <rect width="230" height="230" fill="white"/>
+          <rect y="115" width="230" height="115"/>
+        </mask>
+      </defs>
+      <circle cx="115" cy="115" r="100"
+              fill="${color=='b' ? 'whitesmoke' : 'black'}"
+              ${color=='b' ? 'stroke="saddlebrown"' : ''}
+      />
+      <circle cx="115" cy="115" r="100"
+              fill="${color=='w' ? 'whitesmoke' : 'black'}"
+              ${color=='w' ? 'stroke="saddlebrown"' : ''} mask="url(#stripe)"
+      />`;
+      if (numTop > 1) {
+        rawSvg += V.GetSvgNumber(numTop, "top") + `
+                    fill="none" stroke-width="5"
+                    stroke="${color=='w' ? 'red' : 'orange'}"
+                  />`
+      }
+      if (numBottom > 1) {
+        rawSvg += V.GetSvgNumber(numBottom, "bottom") + `
+                    fill="none" stroke-width="5"
+                    stroke="${color=='b' ? 'red' : 'orange'}"
+                  />`;
+      }
+    }
+    rawSvg += "</svg>";
+
+    // On encode le SVG pour qu'il soit lisible dans un "url()" CSS
+    const svgBase64 = btoa(unescape(encodeURIComponent(rawSvg)));
+    this.svgEncodedPieces[piece] = svgBase64;
+    return svgBase64;
+  }
+
+  // Draw piece
+  setPieceBackground(domPiece, piece, color, x, y) {
+    const svgBase64 = this.getSvgEncodedPiece(piece, color);
+    domPiece.style.backgroundImage =
+      `url('data:image/svg+xml;base64,${svgBase64}')`;
   }
 
   atLeastOneCaptureFrom([x, y], color, forbiddenStep) {
@@ -259,13 +421,6 @@ export default class EmergoRules extends ChessRules {
     }
     return mv;
   }
-
-  getSquareColorClass(x, y) {
-    return ((x+y) % 2 == 0 ? "dark-square": "light-square");
-  }
-
-
-
 
   getDropMovesFrom([c, p]) {
     const color = c;

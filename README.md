@@ -1,22 +1,22 @@
 # xogo.casa
 
-Simplified version of old vchess.club, to focus on the essential : the game.
+Simplified version of old vchess.club, to focus on the essential.
 
 ## Requirements (dev)
 
-PHP + Python + Node.js + npm.
+PHP + Node.js + npm.
+
 ```npm i -g nodemon```
 
 ## Usage
 
-Initialisation (done once): retrieve 'binaries'
-(files binary or not which never change).
+Initialisation (done only once):
 
 ```./initialize.sh```
 
-Rename and edit the parameters.js.dist file:
+Edit the parameters.js file:
 
-```cp js/parameters.js.dist js/parameters.js```
+```vim js/parameters.js```
 
 Finally:
 
