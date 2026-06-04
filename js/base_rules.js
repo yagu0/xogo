@@ -348,9 +348,13 @@ export default class ChessRules {
     return C.CoordsToSquare(this.epSquare);
   }
 
+  static get NewGameReserves() {
+    return Array(2 * V.ReserveArray.length).fill('0').join("");
+  }
+
   getReserveFen(o) {
     if (o.init)
-      return Array(2 * V.ReserveArray.length).fill('0').join("");
+      return V.NewGameReserves;
     return (
       ['w', 'b'].map(c => Object.values(this.reserve[c]).map(
         v => v.toString(36)).join("")).join("")

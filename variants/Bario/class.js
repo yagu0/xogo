@@ -71,12 +71,8 @@ export default class BarioRules extends ChessRules {
     );
   }
 
-  getReserveFen(o) {
-    if (o.init)
-      return "22212221";
-    return (
-      ["w","b"].map(c => Object.values(this.reserve[c]).join("")).join("")
-    );
+  static get NewGameReserves() {
+    return "22212221";
   }
 
   static get ReserveArray() {

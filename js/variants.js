@@ -49,7 +49,7 @@ const variants = [
   {name: 'Doublemove', desc: 'Double moves'},
   {name: 'Dynamo', desc: 'Push and pull'},
   {name: 'Eightpieces', desc: 'Each piece is unique', disp: '8 Pieces'},
-//  {name: 'Emergo', desc: 'Stacking Checkers variant'},
+  {name: 'Emergo', desc: 'Stacking Checkers variant'},
 //  {name: 'Empire', desc: 'Empire versus Kingdom'},
 //  {name: 'Enpassant', desc: 'Capture en passant', disp: 'En-passant'},
 //  {name: 'Evolution', desc: 'Faster development'},

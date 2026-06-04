@@ -1,7 +1,7 @@
-import { ChessRules } from "@/js/base_rules";
+import ChessRules from "/js/base_rules.js";
 import PiPo from "/utils/PiPo.js";
 import Move from "/utils/Move.js";
-import { ArrayFun } from "@/utils/array";
+import { ArrayFun } from "/utils/array.js";
 
 export default class EmergoRules extends ChessRules {
 
@@ -10,7 +10,7 @@ export default class EmergoRules extends ChessRules {
   // Single piece (no prisoners): A@ to L@ (+ lowercase)
 
   static get Options() {
-    return null;
+    return {};
   }
 
   get hasFlags() {
@@ -65,8 +65,12 @@ export default class EmergoRules extends ChessRules {
     return { fen: "9/9/9/9/9/9/9/9/9", o: {} };
   }
 
+  static get NewGameReserves() {
+    return "c00c"; //c in hex = 12
+  }
+
   static get ReserveArray() {
-    return ['a@'];
+    return ["A@", "a@"];
   }
 
   setOtherVariables(fenParsed) {
@@ -78,8 +82,9 @@ export default class EmergoRules extends ChessRules {
   }
 
   getColor(x, y) {
-    const sq = (typeof x == "string" ? x : this.board[x][y]);
-    return sq.charCodeAt(0) < 97 ? 'w' : 'b';
+    // TODO: if typeof x === "string" return x ?
+    const sq = (typeof y == "string" ? y : this.board[x][y]);
+    return sq.charCodeAt(0) < 92 ? 'w' : 'b';
   }
 
   getPiece(x, y) {
@@ -87,8 +92,8 @@ export default class EmergoRules extends ChessRules {
     return this.board[x][y];
   }
 
-  pieceDef(piece, color, x, y) {
-    // Captures handled in getPotentialMoves directly
+  pieceDef() {
+    // Captures handled in getPotentialMoves() directly
     return {
       moves: [{ steps: [ [-1, -1], [-1, 1], [1, -1], [1, 1] ] }],
       "class": "emergo-piece",
@@ -180,20 +185,24 @@ export default class EmergoRules extends ChessRules {
       case 12:
         return '<path d="M90,135 v60 M100,135 h30 v30 h-30 v30 h30"';
       }
-    }
+    }}
     return ""; //never reached
   }
 
   // Compute piece drawing
-  getSvgEncodedPiece(piece, color) {
-    if (this.svgPieces[piece])
-      return this.svgPieces[piece];
+  getSvgEncodedPiece(piece) {
+    if (this.svgEncodedPieces[piece])
+      return this.svgEncodedPieces[piece];
+
+    const baseCharCode = {'w': 65, 'b': 97};
+    const color = (piece.charCodeAt(0) < 92 ? 'w' : 'b');
 
     let rawSvg = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 230"
            width="100%" height="100%">`;
     if (piece.charAt(1) == '@') {
-      const number = ...
+      // Pièce simple : 'A@' à 'L@' ou 'a@' à 'l@'
+      const number = piece.charCodeAt(0) - baseCharCode[color] + 1;
       rawSvg += `
         <circle cx="115" cy="115" r="100"
                 fill="${color=='w' ? 'whitesmoke' : 'black'}"
@@ -207,9 +216,11 @@ export default class EmergoRules extends ChessRules {
       }
     }
     else { //composite
-      const numTop = ...,
-            numBottom = ...;
-      const isTopWhite = 
+      const numTop =
+              piece.charCodeAt(0) - baseCharCode[color] + 1,
+            numBottom =
+              piece.charCodeAt(1) - baseCharCode[C.GetOppTurn(color)] + 1;
+      const isTopWhite = piece.charCodeAt(0) < 92;
       rawSvg += `<defs>
         <mask id="stripe">
           <rect width="230" height="230" fill="white"/>
@@ -240,16 +251,17 @@ export default class EmergoRules extends ChessRules {
     rawSvg += "</svg>";
 
     // On encode le SVG pour qu'il soit lisible dans un "url()" CSS
-    const svgBase64 = btoa(unescape(encodeURIComponent(rawSvg)));
-    this.svgEncodedPieces[piece] = svgBase64;
-    return svgBase64;
+    //const encodedSvg = btoa(unescape(encodeURIComponent(rawSvg)));
+    const encodedSvg = encodeURIComponent(rawSvg).replace(/#/g, '%23');
+    this.svgEncodedPieces[piece] = encodedSvg;
+    return encodedSvg;
   }
 
   // Draw piece
-  setPieceBackground(domPiece, piece, color, x, y) {
-    const svgBase64 = this.getSvgEncodedPiece(piece, color);
-    domPiece.style.backgroundImage =
-      `url('data:image/svg+xml;base64,${svgBase64}')`;
+  setPieceBackground(domPiece, piece) {
+    const encodedSvg = this.getSvgEncodedPiece(piece);
+    domPiece.style.setProperty('--piece-img',
+      `url('data:image/svg+xml;utf8,${encodedSvg}')`); //;base64
   }
 
   atLeastOneCaptureFrom([x, y], color, forbiddenStep) {
@@ -293,6 +305,7 @@ export default class EmergoRules extends ChessRules {
     return false;
   }
 
+  // Return the array "arg_max(caps)" (mult. if ex-aequo)
   maxLengthIndices(caps) {
     let maxLength = 0;
     let res = [];
@@ -311,7 +324,7 @@ export default class EmergoRules extends ChessRules {
     let res = [];
     const L = locSteps.length;
     const lastStep = (L > 0 ? locSteps[L-1] : null);
-    for (let s of super.pieces()['b'].both[0].steps) {
+    for (let s of this.pieceDef().moves[0].steps) {
       if (!!lastStep && s[0] == -lastStep[0] && s[1] == -lastStep[1])
         continue;
       const [i, j] = [x + s[0], y + s[1]];
@@ -340,7 +353,7 @@ export default class EmergoRules extends ChessRules {
     let res = [];
     const L = locSteps.length;
     const lastStep = (L > 0 ? locSteps[L-1] : null);
-    for (let s of super.pieces()['b'].both[0].steps) {
+    for (let s of this.pieceDef().moves[0].steps) {
       if (!!lastStep && s[0] == -lastStep[0] && s[1] == -lastStep[1])
         continue;
       const [i, j] = [x + s[0], y + s[1]];
@@ -361,6 +374,34 @@ export default class EmergoRules extends ChessRules {
       }
     }
     return this.maxLengthIndices(res).map(i => res[i]);;
+  }
+
+  getAllLongestCaptures(color) {
+    let caps = [];
+    if (this.lastCapture) {
+      let locSteps = [ this.lastCapture.step ];
+      let res =
+        this.getLongestCapturesFrom(this.lastCapture.square, color, locSteps);
+      Array.prototype.push.apply(
+        caps,
+        res.map(r => Object.assign({ square: this.lastCapture.square }, r))
+      );
+    }
+    else {
+      for (let i = 0; i < this.size.x; i++) {
+        for (let j=0; j < this.size.y; j++) {
+          if (this.board[i][j] != "" && this.getColor(i, j) == color) {
+            let locSteps = [];
+            let res = this.getLongestCapturesFrom([i, j], color, locSteps);
+            Array.prototype.push.apply(
+              caps,
+              res.map(r => Object.assign({ square: [i, j] }, r))
+            );
+          }
+        }
+      }
+    }
+    return this.maxLengthIndices(caps).map(i => caps[i]);
   }
 
   getBasicMove([x1, y1], [x2, y2], capt) {
@@ -455,7 +496,7 @@ export default class EmergoRules extends ChessRules {
             addMove([i, j]);
           else {
             let canAddMove = true;
-            for (let s of super.pieces()['b'].both[0].steps) {
+            for (let s of super.pieceDef('b').both[0].steps) {
               if (
                 this.onBoard(i + s[0], j + s[1]) &&
                 this.onBoard(i - s[0], j - s[1]) &&
@@ -479,7 +520,7 @@ export default class EmergoRules extends ChessRules {
   getPossibleMovesFrom([x, y], longestCaptures) {
     if (typeof x === "string") {
       if (longestCaptures.length == 0)
-        return this.getReserveMoves(x);
+        return this.getDropMovesFrom([x, y]);
       return [];
     }
     const color = this.turn;
@@ -503,7 +544,7 @@ export default class EmergoRules extends ChessRules {
       return moves;
     }
     // Just search simple moves:
-    for (let s of V.steps[V.BISHOP]) {
+    for (let s of this.pieceDef().moves[0].steps) {
       const [i, j] = [x + s[0], y + s[1]];
       if (this.onBoard(i, j) && this.board[i][j] == "")
         moves.push(this.getBasicMove([x, y], [i, j]));
@@ -523,7 +564,7 @@ export default class EmergoRules extends ChessRules {
   play(move) {
     const color = this.turn;
     move.turn = color; //for undo
-    V.PlayOnBoard(this.board, move);
+    this.playOnBoard(move);
     if (move.vanish.length == 2) {
       this.lastCapture = {
         square: [move.end.x, move.end.y],
@@ -537,11 +578,11 @@ export default class EmergoRules extends ChessRules {
       const firstCode = (color == 'w' ? 65 : 97);
       // Generally, reserveCount == 1 (except for shadow piece)
       const reserveCount = move.appear[0].c.charCodeAt() - firstCode + 1;
-      this.reserve[color][V.PAWN] -= reserveCount;
-      if (this.reserve[color][V.PAWN] == 0) this.reserve[color] = null;
+      this.reserve[color]["a@"] -= reserveCount;
+      if (this.reserve[color]["a@"] == 0) this.reserve[color] = null;
     }
     if (!move.notTheEnd) {
-      this.turn = V.GetOppCol(color);
+      this.turn = C.GetOppTurn(color);
       this.movesCount++;
       this.lastCapture = null;
     }
@@ -560,15 +601,9 @@ export default class EmergoRules extends ChessRules {
         }
       }
     }
-
-
-    // TODO: adapt
-    const reserveMoves =
-      this.getReserveMoves(this.size.x + (this.turn == "w" ? 0 : 1));
+    const reserveMoves = this.getDropMovesFrom([color, "a@"]);
     return (reserveMoves.length > 0);
   }
-
-
 
   getCurrentScore() {
     const color = this.turn;
@@ -580,7 +615,7 @@ export default class EmergoRules extends ChessRules {
       return "*";
     const atLeastOnePiece = this.board.some(row => row.some(cell => {
       return cell != "" && testColorCode(cell.charCodeAt(0));
-    });
+    }));
     if (!atLeastOnePiece)
       return (color == 'w' ? "0-1" : "1-0");
     if (!this.atLeastOneMove())

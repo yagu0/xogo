@@ -416,6 +416,7 @@ piece.hidden {
   position: absolute;
   display: block;
   font-weight: bold;
+  z-index: 9999;
 }
 /* Choices div after a promotion */
 #choices, .choice {
