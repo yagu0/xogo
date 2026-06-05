@@ -189,38 +189,48 @@ export default class EmergoRules extends ChessRules {
     return ""; //never reached
   }
 
+  static CharToNum(x, index) {
+    const baseCharCode = {'w': 65, 'b': 97};
+    if (!index)
+      index = [0, 1];
+    else if (!Array.isArray(index))
+      index = [index];
+    let res = index.map(i => {
+      color = (x.charCodeAt(i) < 92 ? 'w' : 'b');
+      return {
+        num: piece.charCodeAt(i) - baseCharCode[color] + 1,
+        col: color
+      };
+    });
+    if (res.length == 1)
+      return res[0];
+    return res;
+  }
+
   // Compute piece drawing
   getSvgEncodedPiece(piece) {
     if (this.svgEncodedPieces[piece])
       return this.svgEncodedPieces[piece];
 
-    const baseCharCode = {'w': 65, 'b': 97};
-    const color = (piece.charCodeAt(0) < 92 ? 'w' : 'b');
-
     let rawSvg = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 230"
            width="100%" height="100%">`;
+    const numCol = V.CharToNum(piece);
     if (piece.charAt(1) == '@') {
       // Pièce simple : 'A@' à 'L@' ou 'a@' à 'l@'
-      const number = piece.charCodeAt(0) - baseCharCode[color] + 1;
       rawSvg += `
         <circle cx="115" cy="115" r="100"
-                fill="${color=='w' ? 'whitesmoke' : 'black'}"
-                ${color=='w' ? 'stroke="saddlebrown"' : ''}
+                fill="${numCol[0].col=='w' ? 'whitesmoke' : 'black'}"
+                ${numCol[0].col=='w' ? 'stroke="saddlebrown"' : ''}
         />`;
-      if (number > 1) {
-        rawSvg += V.GetSvgNumber(number, "full") + `
+      if (numCol[0].num > 1) {
+        rawSvg += V.GetSvgNumber(numCol[0].num, "full") + `
                     fill="none" stroke-width="5"
-                    stroke="${color=='w' ? 'red' : 'orange'}"
+                    stroke="${numCol[0].col=='w' ? 'red' : 'orange'}"
                   />`;
       }
     }
     else { //composite
-      const numTop =
-              piece.charCodeAt(0) - baseCharCode[color] + 1,
-            numBottom =
-              piece.charCodeAt(1) - baseCharCode[C.GetOppTurn(color)] + 1;
-      const isTopWhite = piece.charCodeAt(0) < 92;
       rawSvg += `<defs>
         <mask id="stripe">
           <rect width="230" height="230" fill="white"/>
@@ -228,23 +238,24 @@ export default class EmergoRules extends ChessRules {
         </mask>
       </defs>
       <circle cx="115" cy="115" r="100"
-              fill="${color=='b' ? 'whitesmoke' : 'black'}"
-              ${color=='b' ? 'stroke="saddlebrown"' : ''}
+              fill="${numCol[0].col=='b' ? 'whitesmoke' : 'black'}"
+              ${numCol[0].col=='b' ? 'stroke="saddlebrown"' : ''}
       />
       <circle cx="115" cy="115" r="100"
-              fill="${color=='w' ? 'whitesmoke' : 'black'}"
-              ${color=='w' ? 'stroke="saddlebrown"' : ''} mask="url(#stripe)"
+              fill="${numCol[0].col=='w' ? 'whitesmoke' : 'black'}"
+              ${numCol[0].col=='w' ? 'stroke="saddlebrown"' : ''}
+              mask="url(#stripe)"
       />`;
-      if (numTop > 1) {
-        rawSvg += V.GetSvgNumber(numTop, "top") + `
+      if (numCol[0].num > 1) {
+        rawSvg += V.GetSvgNumber(numCol[0].num, "top") + `
                     fill="none" stroke-width="5"
-                    stroke="${color=='w' ? 'red' : 'orange'}"
+                    stroke="${numCol[0].col=='w' ? 'red' : 'orange'}"
                   />`
       }
-      if (numBottom > 1) {
-        rawSvg += V.GetSvgNumber(numBottom, "bottom") + `
+      if (numCol[1].num > 1) {
+        rawSvg += V.GetSvgNumber(numCol[1].num, "bottom") + `
                     fill="none" stroke-width="5"
-                    stroke="${color=='b' ? 'red' : 'orange'}"
+                    stroke="${numCol[0].col=='b' ? 'red' : 'orange'}"
                   />`;
       }
     }
@@ -322,10 +333,9 @@ export default class EmergoRules extends ChessRules {
 
   getLongestCaptures_aux([x, y], color, locSteps) {
     let res = [];
-    const L = locSteps.length;
-    const lastStep = (L > 0 ? locSteps[L-1] : null);
+    const lastStep = locSteps[ locSteps.length - 1 ];
     for (let s of this.pieceDef().moves[0].steps) {
-      if (!!lastStep && s[0] == -lastStep[0] && s[1] == -lastStep[1])
+      if (s[0] == -lastStep[0] && s[1] == -lastStep[1])
         continue;
       const [i, j] = [x + s[0], y + s[1]];
       if (
@@ -413,55 +423,53 @@ export default class EmergoRules extends ChessRules {
       });
     }
     // Compute resulting types based on jumped + jumping pieces
-    const color = this.getColor(x1, y1);
-    const firstCodes = (color == 'w' ? [65, 97] : [97, 65]);
-    const cpCapt = this.board[capt[0]][capt[1]];
-    let count1 = [cp1.charCodeAt(0) - firstCodes[0], -1];
-    if (cp1[1] != '@')
-      count1[1] = cp1.charCodeAt(1) - firstCodes[0];
-    let countC = [cpCapt.charCodeAt(0) - firstCodes[1], -1];
-    if (cpCapt[1] != '@')
-      countC[1] = cpCapt.charCodeAt(1) - firstCodes[1];
-    count1[1]++;
-    countC[0]--;
-    let colorChange = false,
-        captVanish = false;
-    if (countC[0] < 0) {
-      if (countC[1] >= 0) {
-        colorChange = true;
-        countC = [countC[1], -1];
-      }
-      else
-        captVanish = true;
-    }
-    const incPrisoners = String.fromCharCode(firstCodes[0] + count1[1]);
+    const numCol1 = V.CharToNum(this.board[x1][y1]),
+          numColC = V.CharToNum(this.board[capt[0]][capt[1]]);
     let mv = new Move({
       appear: [
         new PiPo({
           x: x2,
           y: y2,
-          c: cp1[0],
-          p: incPrisoners
+          c: numCol1[0].col,
+          p: this.board[x1][y1].charAt(0) +
+             String.fromCharCode(this.board[x1][y1].charCodeAt(1) + 1)
         })
       ],
       vanish: [
-        new PiPo({ x: x1, y: y1, c: cp1[0], p: cp1[1] }),
-        new PiPo({ x: capt[0], y: capt[1], c: cpCapt[0], p: cpCapt[1] })
+        new PiPo({
+          x: x1,
+          y: y1,
+          c: numCol1[0].col,
+          p: this.board[x1][y1]
+        }),
+        new PiPo({
+          x: capt[0],
+          y: capt[1],
+          c: numColC[0].col,
+          p: this.board[capt[0]][capt[1]]
+        })
       ]
     });
-    if (!captVanish) {
+    if (numColC[0].num >= 2 || numColC[1].num >= 1) {
       mv.appear.push(
         new PiPo({
           x: capt[0],
           y: capt[1],
-          c: String.fromCharCode(
-               firstCodes[(colorChange ? 0 : 1)] + countC[0]),
-          p: (colorChange ? '@' : cpCapt[1]),
+          c: numColC[0].num >= 2 ? numColC[0].col : numColC[1].col,
+          p: (numColC[0].num >= 2
+            ? String.fromCharCode(
+                this.board[capt[0]][capt[1]].charCodeAt(0) - 1) +
+              this.board[capt[0]][capt[1]].charAt(1)
+            : this.board[capt[0]][capt[1]].charAt(1) + '@') //color change
         })
       );
     }
     return mv;
   }
+
+
+  // TODO: finish from here
+
 
   getDropMovesFrom([c, p]) {
     const color = c;
@@ -563,7 +571,6 @@ export default class EmergoRules extends ChessRules {
 
   play(move) {
     const color = this.turn;
-    move.turn = color; //for undo
     this.playOnBoard(move);
     if (move.vanish.length == 2) {
       this.lastCapture = {
@@ -574,7 +581,7 @@ export default class EmergoRules extends ChessRules {
         // There could be other captures (mandatory)
         move.notTheEnd = true;
     }
-    else if (move.vanish == 0) {
+    else if (move.vanish == 0) { //drop
       const firstCode = (color == 'w' ? 65 : 97);
       // Generally, reserveCount == 1 (except for shadow piece)
       const reserveCount = move.appear[0].c.charCodeAt() - firstCode + 1;
@@ -601,7 +608,8 @@ export default class EmergoRules extends ChessRules {
         }
       }
     }
-    const reserveMoves = this.getDropMovesFrom([color, "a@"]);
+    const reserveMoves =
+      this.getDropMovesFrom([color, (color=='w' ? 'A' : 'a') + '@']);
     return (reserveMoves.length > 0);
   }
 
