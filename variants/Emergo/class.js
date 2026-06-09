@@ -467,28 +467,25 @@ export default class EmergoRules extends ChessRules {
     return mv;
   }
 
-
-  // TODO: finish from here
-
-
   getDropMovesFrom([c, p]) {
     const color = c;
-    if (!this.reserve[color] || this.atLeastOneCapture(color))
+    const rp = (color == 'w' ? ["A@", "a@"] : ["a@", "A@"]);
+    if (this.reserve[color][rp[0]] == 0 || this.atLeastOneCapture(color))
       return [];
     let moves = [];
     const oppCol = C.GetOppTurn(color);
     const shadowPiece =
-      !this.reserve[oppCol]
-        ? this.reserve[color]['p'] - 1
+      this.reserve[oppCol][rp[1]] == 0
+        ? this.reserve[color][rp[0]] - 1
         : 0;
-    const appearColor = String.fromCharCode(
+    const appearNum = String.fromCharCode(
       (color == 'w' ? 'A' : 'a').charCodeAt(0) + shadowPiece);
     const addMove = ([i, j]) => {
       moves.push(
         new Move({
-          appear: [ new PiPo({ x: i, y: j, c: appearColor, p: '@' }) ],
+          appear: [ new PiPo({ x: i, y: j, c: color, p: appearNum + '@' }) ],
           vanish: [],
-          start: { x: this.size.x + (color == 'w' ? 0 : 1), y: 0 }
+          start: { x: c, y: p }
         })
       );
     };
@@ -504,7 +501,7 @@ export default class EmergoRules extends ChessRules {
             addMove([i, j]);
           else {
             let canAddMove = true;
-            for (let s of super.pieceDef('b').both[0].steps) {
+            for (let s of this.pieceDef().moves[0].steps) {
               if (
                 this.onBoard(i + s[0], j + s[1]) &&
                 this.onBoard(i - s[0], j - s[1]) &&
@@ -524,6 +521,10 @@ export default class EmergoRules extends ChessRules {
     }
     return moves;
   }
+
+
+  // TODO: finish from here
+
 
   getPossibleMovesFrom([x, y], longestCaptures) {
     if (typeof x === "string") {
