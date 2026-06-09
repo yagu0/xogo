@@ -191,14 +191,14 @@ export default class EmergoRules extends ChessRules {
 
   static CharToNum(x, index) {
     const baseCharCode = {'w': 65, 'b': 97};
-    if (!index)
+    if (index === undefined)
       index = [0, 1];
     else if (!Array.isArray(index))
       index = [index];
     let res = index.map(i => {
-      color = (x.charCodeAt(i) < 92 ? 'w' : 'b');
+      const color = (x.charCodeAt(i) < 92 ? 'w' : 'b');
       return {
-        num: piece.charCodeAt(i) - baseCharCode[color] + 1,
+        num: x.charCodeAt(i) - baseCharCode[color] + 1,
         col: color
       };
     });
@@ -276,7 +276,7 @@ export default class EmergoRules extends ChessRules {
   }
 
   atLeastOneCaptureFrom([x, y], color, forbiddenStep) {
-    for (let s of super.pieces()['b'].both[0].steps) {
+    for (let s of this.pieceDef().moves[0].steps) {
       if (
         !forbiddenStep ||
         (s[0] != -forbiddenStep[0] || s[1] != -forbiddenStep[1])
@@ -388,7 +388,7 @@ export default class EmergoRules extends ChessRules {
 
   getAllLongestCaptures(color) {
     let caps = [];
-    if (this.lastCapture) {
+    if (!!this.lastCapture) {
       let locSteps = [ this.lastCapture.step ];
       let res =
         this.getLongestCapturesFrom(this.lastCapture.square, color, locSteps);
@@ -522,10 +522,6 @@ export default class EmergoRules extends ChessRules {
     return moves;
   }
 
-
-  // TODO: finish from here
-
-
   getPossibleMovesFrom([x, y], longestCaptures) {
     if (typeof x === "string") {
       if (longestCaptures.length == 0)
@@ -533,7 +529,8 @@ export default class EmergoRules extends ChessRules {
       return [];
     }
     const color = this.turn;
-    if (!!this.reserve[color] && !this.atLeastOneCapture(color))
+    const rp = (color == 'w' ? ["A@", "a@"] : ["a@", "A@"]);
+    if (this.reserve[color][rp[0]] >= 1 && !this.atLeastOneCapture(color))
       return [];
     let moves = [];
     if (longestCaptures.length > 0) {
@@ -563,6 +560,8 @@ export default class EmergoRules extends ChessRules {
 
   getPotentialMovesFrom([x, y]) {
     const longestCaptures = this.getAllLongestCaptures(this.getColor(x, y));
+    
+console.log(longestCaptures);
     return this.getPossibleMovesFrom([x, y], longestCaptures);
   }
 
@@ -583,11 +582,9 @@ export default class EmergoRules extends ChessRules {
         move.notTheEnd = true;
     }
     else if (move.vanish == 0) { //drop
-      const firstCode = (color == 'w' ? 65 : 97);
-      // Generally, reserveCount == 1 (except for shadow piece)
-      const reserveCount = move.appear[0].c.charCodeAt() - firstCode + 1;
-      this.reserve[color]["a@"] -= reserveCount;
-      if (this.reserve[color]["a@"] == 0) this.reserve[color] = null;
+      const nc = V.CharToNum(move.appear[0].p, 0);
+      const p = (color == 'w' ? "A@" : "a@");
+      super.updateReserve(color, p, this.reserve[color][p] - nc.num);
     }
     if (!move.notTheEnd) {
       this.turn = C.GetOppTurn(color);
@@ -603,6 +600,7 @@ export default class EmergoRules extends ChessRules {
     for (let i = 0; i < this.size.x; i++) {
       for (let j = 0; j < this.size.y; j++) {
         if (this.board[i][j] != "" && this.getColor(i, j) == color) {
+          // TODO: stop at first move found:
           const moves = this.getPossibleMovesFrom([i, j], []);
           if (moves.length > 0)
             return true;
@@ -620,7 +618,7 @@ export default class EmergoRules extends ChessRules {
       return (c <= 90 && color == 'w') || (c >= 97 && color == 'b');
     };
     // If no pieces on board + reserve, I lose
-    if (!!this.reserve[color])
+    if (this.reserve[color][color == 'w' ? "A@" : "a@"] >= 1)
       return "*";
     const atLeastOnePiece = this.board.some(row => row.some(cell => {
       return cell != "" && testColorCode(cell.charCodeAt(0));
