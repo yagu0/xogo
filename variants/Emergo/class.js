@@ -417,9 +417,10 @@ export default class EmergoRules extends ChessRules {
   getBasicMove([x1, y1], [x2, y2], capt) {
     const cp1 = this.board[x1][y1];
     if (!capt) {
+      const color = this.getColor(x1, y1);
       return new Move({
-        appear: [ new PiPo({ x: x2, y: y2, c: cp1[0], p: cp1[1] }) ],
-        vanish: [ new PiPo({ x: x1, y: y1, c: cp1[0], p: cp1[1] }) ]
+        appear: [ new PiPo({ x: x2, y: y2, c: color, p: cp1 }) ],
+        vanish: [ new PiPo({ x: x1, y: y1, c: color, p: cp1 }) ]
       });
     }
     // Compute resulting types based on jumped + jumping pieces
@@ -560,13 +561,24 @@ export default class EmergoRules extends ChessRules {
 
   getPotentialMovesFrom([x, y]) {
     const longestCaptures = this.getAllLongestCaptures(this.getColor(x, y));
-    
-console.log(longestCaptures);
     return this.getPossibleMovesFrom([x, y], longestCaptures);
   }
 
   filterValid(moves) {
     return moves;
+  }
+
+  playOnBoard(move) {
+    for (let psq of move.vanish)
+      this.board[psq.x][psq.y] = "";
+    for (let psq of move.appear)
+      this.board[psq.x][psq.y] = psq.p;
+  }
+  undoOnBoard(move) {
+    for (let psq of move.appear)
+      this.board[psq.x][psq.y] = "";
+    for (let psq of move.vanish)
+      this.board[psq.x][psq.y] = psq.p;
   }
 
   play(move) {
