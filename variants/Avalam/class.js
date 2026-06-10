@@ -38,33 +38,73 @@ export default class AvalamRules extends ChessRules {
     return false;
   }
 
-  pieces(color, x, y) {
-    const steps = [
-      [1, 0], [0, 1], [-1, 0], [0, -1],
-      [1, 1], [1, -1], [-1, 1], [-1, -1]
-    ];
+  setOtherVariables(fenParsed) {
+    super.setOtherVariables(fenParsed);
+    // Compute pieces drawings when required, and cache it:
+    this.svgEncodedPieces = {};
+  }
+
+  pieceDef() {
     return {
-      'b': {
-        "class": "stack",
-        both: [{steps: steps, range: 1}]
-      },
-      'c': {
-        "class": "stack2",
-        moveas: 'b'
-      },
-      'd': {
-        "class": "stack3",
-        moveas: 'b'
-      },
-      'e': {
-        "class": "stack4",
-        moveas: 'b'
-      },
-      'f': {
-        "class": "stack5",
-        moveas: 'b'
-      }
+      "class": "avalam-piece",
+      attack: [{
+        steps: [
+          [1, 0], [0, 1], [-1, 0], [0, -1],
+          [1, 1], [1, -1], [-1, 1], [-1, -1]
+        ],
+        range: 1
+      }]
     };
+  }
+
+  static GetSvgNumber(n) {
+    switch (n) {
+    case 1: //unused
+      return '<path d="M130,85 v60"';
+    case 2:
+      return '<path d="M100,85 h30 v30 h-30 v30 h30"';
+    case 3:
+      return '<path d="M100,85 h30 v30 h-30 M130,115 v30 h-30"';
+    case 4:
+      return '<path d="M100,85 v30 h30 v30 M130,85 v30"';
+    case 5:
+      return '<path d="M130,85 h-30 v30 h30 v30 h-30"';
+    }
+    return ""; //never reached
+  }
+
+  // Compute piece drawing
+  getSvgEncodedPiece(piece, color) {
+    if (this.svgEncodedPieces[color + piece])
+      return this.svgEncodedPieces[color + piece];
+
+    let rawSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 230"
+           width="100%" height="100%">`;
+    rawSvg += `
+      <circle cx="115" cy="115" r="100"
+              fill="${color=='w' ? 'gold' : 'crimson'}"
+              stroke="darkslategray"
+      />`;
+    const n = piece.charCodeAt(0) - 97;
+    if (n > 1) {
+      rawSvg += V.GetSvgNumber(n) + " ";
+      rawSvg += 'fill="none" stroke-width="5" stroke="black" />';
+    }
+    rawSvg += "</svg>";
+
+    // On encode le SVG pour qu'il soit lisible dans un "url()" CSS
+    //const encodedSvg = btoa(unescape(encodeURIComponent(rawSvg)));
+    const encodedSvg = encodeURIComponent(rawSvg).replace(/#/g, '%23');
+    this.svgEncodedPieces[color + piece] = encodedSvg;
+    return encodedSvg;
+  }
+
+  // Draw piece
+  setPieceBackground(domPiece, piece, color) {
+    const encodedSvg = this.getSvgEncodedPiece(piece, color);
+    domPiece.style.setProperty('--piece-img',
+      `url('data:image/svg+xml;utf8,${encodedSvg}')`); //;base64
   }
 
   genRandInitBaseFen() {
@@ -168,7 +208,7 @@ export default class AvalamRules extends ChessRules {
       return [];
     }
     let moves = [];
-    for (let s of this.pieces(this.turn, x, y)['b'].both[0].steps) {
+    for (let s of this.pieceDef().attack[0].steps) {
       const [i, j] = [x + s[0], y + s[1]];
       if (
         this.onBoard(i, j) &&
