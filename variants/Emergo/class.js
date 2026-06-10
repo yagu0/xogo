@@ -63,10 +63,12 @@ export default class EmergoRules extends ChessRules {
 
   genRandInitBaseFen() {
     return { fen: "9/9/9/9/9/9/9/9/9", o: {} };
+    //return { fen: "2b@6/3A@5/4D@4/9/4a@4/9/4a@1a@2/9/9", o: {} };
   }
 
   static get NewGameReserves() {
     return "c00c"; //c in hex = 12
+    //return "0000"; //c in hex = 12
   }
 
   static get ReserveArray() {

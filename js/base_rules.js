@@ -764,9 +764,9 @@ export default class ChessRules {
         number.textContent = this.reserve[c][p];
         number.classList.add("reserve-num");
         number.id = this.getReserveNumId(c, p);
-        const fontSize = "1.3em";
-        number.style.fontSize = fontSize;
-        number.style.fontSize = fontSize;
+//        const fontSize = "1.3em";
+//        number.style.fontSize = fontSize;
+//        number.style.fontSize = fontSize;
         r_cell.appendChild(number);
         ridx++;
       }
