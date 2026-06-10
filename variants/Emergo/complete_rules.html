@@ -1,0 +1,142 @@
+<html>
+<head>
+  <title>Emergo Rules</title>
+  <link href="/css/common.css" rel="stylesheet"/>
+  <link href="/variants/Emergo/style.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="full-rules">
+<h1>Emergo Rules</h1>
+
+<div>
+  <p>Similar to Checkers, with prisoners stacked below capturers.</p>
+
+  <figure>
+    <img src="/extras/Emergo/match_2004_U-con.jpg"/>
+    <figcaption>
+      [Wikipedia]
+      Game played on an orthogonal depiction of a standard 9x9 Emergo board.
+    </figcaption>
+  </figure>
+
+  <p>
+    Nothing disappears in this game: captured pieces become part of the
+    capturing unit. Therefore, a composed piece or unit will always be
+    understood as a combination of W white (elementary) pieces and B
+    (elementary) black ones, with W + B &ge; 1.
+  </p>
+  <p>
+    The 9x9 board is initially empty.
+    Each player receives 12 stackable pieces, "in hand".
+    At each turn, a player must pick an action among the followings:
+  </p>
+  <ul>
+    <li>Enter a new piece (W + B = 1) on the board.</li>
+    <li>Move a unit along diagonals, by one square.</li>
+    <li>Capture something.</li>
+  </ul>
+</div>
+
+<h3>Entering moves</h3>
+<div>
+  <p>
+    Introducing a piece such that the opponent can take it on next turn is
+    forbidden, unless another capture is already available.
+  </p>
+  <p>
+    At first move, white cannot place a piece at the central point.
+  </p>
+  <p>
+    If the opponent already placed all his pieces in hand, then a
+    "shadow piece" enters, formed by all the remaining pieces available
+    (thus in this case W + B &gt; 1).
+  </p>
+  <p>
+    While you have pieces in hand, none of your pieces can move on the board
+    unless they capture something.
+  </p>
+</div>
+
+<h3>Captures</h3>
+<div>
+  <p>
+    Captures work exactly as in Checkers: by jumping over a diagonally
+    adjacent piece to land on a free square just behind.
+    If a capture is possible, then it must be played; in this case no piece
+    can be introduced on the board.
+    If after a capture another is possible with the same piece, it must also
+    be played &mdash; except if that implies turning at 180 degrees.
+  </p>
+  <figure>
+    <div class="diag left"
+         data-fen='9/9/2a@1a@4/9/4a@4/3D@5/9/5A@3/6b@2 b 3 {"reserve":"0000"}'
+         data-mks='e3'>
+    </div>
+    <div class="diag right"
+         data-fen='9/9/2a@1a@4/9/4a@4/3D@5/4ba4/9/9 w 4 {"reserve":"0000"}'>
+    </div>
+    <figcaption>
+      Before and after black captures, jumping at the marked location.
+      The next white piece must be captured too.
+    </figcaption>
+  </figure>
+  <p>
+    Captures can be described formally as follows.
+    If, as white, W1/B1 jumps over B2/W2 at square S2 to land on S1', then
+    W1/(B1+1) arrives on S1' while (B2-1)/W2 stays on S2.
+    If B2 - 1 = 0, then the jumped piece change color (becomes white).
+    If W2 = B2 - 1 = 0, nothing remains at the captured unit location.
+    As black: exchange W and B.
+  </p>
+  <p>
+    In other words, each unit is a stack of friendly and enemy pieces, with
+    friendly pieces on top. After each capture, the prisoners part of the
+    stack is incremented, while the jailers quantity at the captured
+    location decreases by one.
+  </p>
+  <p>
+    When several capturing chains are available,
+    the player must select one of the longest (as in Checkers):
+  </p>
+  <figure>
+    <div class="diag"
+         data-fen='9/9/2a@1a@4/9/2bb1a@4/3C@5/9/9/9 w 2 {"reserve":"0000"}'>
+    </div>
+    <figcaption>
+      From https://www.mindsports.nl/:
+      White's only option is to capture clockwise.
+    </figcaption>
+  </figure>
+  <p>
+    A piece can be jumped over several times, as long as it contains
+    at least one enemy unit (controling it).
+  </p>
+</div>
+
+<h3>End of the game</h3>
+<div>
+  <p>
+    If no pieces of some color remain on the board (all prisoners),
+    then the opponent wins.
+  </p>
+  <p>
+    If a player has no available moves but still units on board,
+    then we can consider that the game ends in a draw.
+  </p>
+</div>
+
+<h3>More information</h3>
+<div>
+  <p>
+    You are invited to visit the 
+    <a href="https://www.mindsports.nl/index.php/arena/emergo/88-rules">authors' website</a>.
+    The rules are also described on 
+    <a href="http://www.iggamecenter.com/info/en/emergo.html">iggamecenter</a>,
+    where you can play Emergo.
+  </p>
+</div>
+
+</body>
+<script src="/utils/drawDiagrams.js"></script>
+<script>fenToDiag("Emergo");</script>
+</html>

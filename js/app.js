@@ -153,6 +153,7 @@ async function showNewGameForm() {
   if (vname == "_random")
     alert("Select a variant first");
   else {
+    $.getElementById("variantName").innerText = vname;
     $.getElementById("gameLink").innerHTML = "";
     $.getElementById("selectColor").selectedIndex = 0;
     toggleVisible("newGameForm");
