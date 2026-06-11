@@ -1,0 +1,23 @@
+@import url("/css/base_pieces.css");
+
+piece.white.e_pawn {
+  background-image: url('/pieces/Empire/pawn.svg');
+}
+piece.white.soldier {
+  background-image: url('/pieces/Empire/soldier.svg');
+}
+piece.white.tower {
+  background-image: url('/pieces/Empire/tower.svg');
+}
+piece.white.eagle {
+  background-image: url('/pieces/Empire/eagle.svg');
+}
+piece.white.cardinal {
+  background-image: url('/pieces/Empire/cardinal.svg');
+}
+piece.white.e_queen {
+  background-image: url('/pieces/Empire/queen.svg');
+}
+piece.white.kaiser {
+  background-image: url('/pieces/Empire/kaiser.svg');
+}
