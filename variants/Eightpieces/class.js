@@ -92,72 +92,72 @@ export default class EightpiecesRules extends ChessRules {
     this.pushedTo = V.convertPush(fenParsed.pushedTo);
   }
 
-  pieces(color, x, y) {
+  pieceDef(piece, color, x, y) {
     const mirror = (this.playerColor == 'b');
-    return {
-      'j': {
-        "class": "jailer",
-        moves: [
-          {steps: [[0, 1], [0, -1], [1, 0], [-1, 0]]}
-        ]
-      },
-      's': {
-        "class": "sentry",
-        indirectAttack: true,
-        both: [
-          {steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]]}
-        ]
-      },
-      'c': {
-        "class": mirror ? "lancer_S" : "lancer_N",
-        both: [
-          {steps: [[-1, 0]]}
-        ]
-      },
-      'd': {
-        "class": mirror ? "lancer_SO" : "lancer_NE",
-        both: [
-          {steps: [[-1, 1]]}
-        ]
-      },
-      'e': {
-        "class": mirror ? "lancer_O" : "lancer_E",
-        both: [
-          {steps: [[0, 1]]}
-        ]
-      },
-      'f': {
-        "class": mirror ? "lancer_NO" : "lancer_SE",
-        both: [
-          {steps: [[1, 1]]}
-        ]
-      },
-      'g': {
-        "class": mirror ? "lancer_N" : "lancer_S",
-        both: [
-          {steps: [[1, 0]]}
-        ]
-      },
-      'h': {
-        "class": mirror ? "lancer_NE" : "lancer_SO",
-        both: [
-          {steps: [[1, -1]]}
-        ]
-      },
-      'm': {
-        "class": mirror ? "lancer_E" : "lancer_O",
-        both: [
-          {steps: [[0, -1]]}
-        ]
-      },
-      'o': {
-        "class": mirror ? "lancer_SE" : "lancer_NO",
-        both: [
-          {steps: [[-1, -1]]}
-        ]
-      },
-      ...super.pieces(color, x, y)
+    switch (piece) {
+    case 'j': return {
+      "class": "jailer",
+      moves: [
+        {steps: [[0, 1], [0, -1], [1, 0], [-1, 0]]}
+      ]
     };
+    case 's': return {
+      "class": "sentry",
+      indirectAttack: true,
+      both: [
+        {steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]]}
+      ]
+    };
+    case 'c': return {
+      "class": mirror ? "lancer_S" : "lancer_N",
+      both: [
+        {steps: [[-1, 0]]}
+      ]
+    };
+    case 'd': return {
+      "class": mirror ? "lancer_SO" : "lancer_NE",
+      both: [
+        {steps: [[-1, 1]]}
+      ]
+    };
+    case 'e': return {
+      "class": mirror ? "lancer_O" : "lancer_E",
+      both: [
+        {steps: [[0, 1]]}
+      ]
+    };
+    case 'f': return {
+      "class": mirror ? "lancer_NO" : "lancer_SE",
+      both: [
+        {steps: [[1, 1]]}
+      ]
+    };
+    case 'g': return {
+      "class": mirror ? "lancer_N" : "lancer_S",
+      both: [
+        {steps: [[1, 0]]}
+      ]
+    };
+    case 'h': return {
+      "class": mirror ? "lancer_NE" : "lancer_SO",
+      both: [
+        {steps: [[1, -1]]}
+      ]
+    };
+    case 'm': return {
+      "class": mirror ? "lancer_E" : "lancer_O",
+      both: [
+        {steps: [[0, -1]]}
+      ]
+    };
+    case 'o': return {
+      "class": mirror ? "lancer_SE" : "lancer_NO",
+      both: [
+        {steps: [[-1, -1]]}
+      ]
+    };
+    }
+    return super.pieceDef(piece, color, x, y);
   }
 
   canIplay(x, y) {
@@ -232,7 +232,7 @@ export default class EightpiecesRules extends ChessRules {
         )
         ||
         (
-          this.pieces()['j'].moves[0].steps.some(s => {
+          this.pieceDef('j').moves[0].steps.some(s => {
             const [i, j] = [coords.x + s[0], coords.y + s[1]];
             return (
               this.onBoard(i, j) &&
@@ -274,9 +274,9 @@ export default class EightpiecesRules extends ChessRules {
         });
         if (V.LANCERS.includes(p)) {
           // Allow all other directions without reorient
-          const ls = this.pieces()[p].both[0].steps[0];
+          const ls = this.pieceDef(p).both[0].steps[0];
           for (const lCode of V.LANCERS) {
-            const s = this.pieces()[lCode].both[0].steps[0];
+            const s = this.pieceDef(lCode).both[0].steps[0];
             if (s[0] != ls[0] || s[1] != ls[1]) {
               this.board[x][y] = color + lCode;
               super.findDestSquares([x, y], {}).forEach(r => {
@@ -329,10 +329,10 @@ export default class EightpiecesRules extends ChessRules {
     if (V.LANCERS.includes(p)) {
       pmoves.forEach(m => m.noReorient = true);
       // Allow all other steps by 1 square (nudge)
-      const ls = this.pieces()[p].both[0].steps[0];
+      const ls = this.pieceDef(p).both[0].steps[0];
       let nextP = p;
       for (const lCode of V.LANCERS) {
-        const s = this.pieces()[lCode].both[0].steps[0];
+        const s = this.pieceDef(lCode).both[0].steps[0];
         if (
           (s[0] != ls[0] || s[1] != ls[1]) &&
           this.onBoard(x + s[0], y + s[1]) &&
@@ -447,7 +447,7 @@ export default class EightpiecesRules extends ChessRules {
             const p = this.getPiece(r.sq[0], r.sq[1]);
             if (['j', 's'].includes(p))
               continue;
-            const specs = this.pieces(oppCol, r.sq[0], r.sq[1])[p];
+            const specs = this.pieceDef(p, oppCol, r.sq[0], r.sq[1]);
             const steps = (specs.both || specs.attack)[0].steps;
             let res = false;
             for (const s of steps) {

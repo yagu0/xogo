@@ -164,115 +164,112 @@ export default class CwdaRules extends ChessRules {
     };
   }
 
-  pieces(color, x, y) {
-    const res = super.pieces(color, x, y);
+  pieceDef(piece, color, x, y) {
     const backward = (color == 'w' ? 1 : -1);
     const forward = -backward;
-    return Object.assign(
-      {
-        'd': {
-          "class": "c_rook",
-          both: [
-            {steps: res['b'].both[0].steps},
-            {steps: V.steps.d, range: 1}
-          ]
+    switch (piece) {
+    case 'd': return {
+      "class": "c_rook",
+      both: [
+        {steps: res['b'].both[0].steps},
+        {steps: V.steps.d, range: 1}
+      ]
+    };
+    case 'w': return {
+      "class": "c_knight",
+      both: [
+        {steps: V.steps.a, range: 1},
+        {steps: res['r'].both[0].steps, range: 1}
+      ]
+    };
+    case 'f': return {
+      "class": "c_bishop",
+      both: [
+        {steps: V.steps.d, range: 1},
+        {steps: V.steps.a, range: 1},
+        {steps: res['b'].both[0].steps, range: 1}
+      ]
+    };
+    case 'c': return {
+      "class": "c_queen",
+      both: [
+        {steps: res['b'].both[0].steps},
+        {steps: res['n'].both[0].steps, range: 1}
+      ]
+    };
+    case 'm': return { "class": "c_king", moveas: 'k' };
+    case 'z': return { "class": "c_pawn", moveas: 'p' };
+    case 'g': return {
+      "class": "n_rook",
+      both: [
+        {steps: [[0, -1], [0, 1], [color == 'w' ? -1 : 1, 0]]},
+        {steps: [[backward, -1], [backward, 0], [backward, 1]], range: 1}
+      ]
+    };
+    case 'i': return {
+      "class": "n_knight",
+      both: [
+        {steps: V.steps.$n, range: 1},
+        {steps: V.steps.f, range: 1}
+      ]
+    };
+    case 't': return {
+      "class": "n_bishop",
+      both: [
+        {
+          steps: [[0, -1], [0, 1], [backward, -1],
+                 [backward, 0], [backward, 1]],
+          range: 1
         },
-        'w': {
-          "class": "c_knight",
-          both: [
-            {steps: V.steps.a, range: 1},
-            {steps: res['r'].both[0].steps, range: 1}
-          ]
-        },
-        'f': {
-          "class": "c_bishop",
-          both: [
-            {steps: V.steps.d, range: 1},
-            {steps: V.steps.a, range: 1},
-            {steps: res['b'].both[0].steps, range: 1}
-          ]
-        },
-        'c': {
-          "class": "c_queen",
-          both: [
-            {steps: res['b'].both[0].steps},
-            {steps: res['n'].both[0].steps, range: 1}
-          ]
-        },
-        'm': { "class": "c_king", moveas: 'k' },
-        'z': { "class": "c_pawn", moveas: 'p' },
-        'g': {
-          "class": "n_rook",
-          both: [
-            {steps: [[0, -1], [0, 1], [color == 'w' ? -1 : 1, 0]]},
-            {steps: [[backward, -1], [backward, 0], [backward, 1]], range: 1}
-          ]
-        },
-        'i': {
-          "class": "n_knight",
-          both: [
-            {steps: V.steps.$n, range: 1},
-            {steps: V.steps.f, range: 1}
-          ]
-        },
-        't': {
-          "class": "n_bishop",
-          both: [
-            {
-              steps: [[0, -1], [0, 1], [backward, -1],
-                     [backward, 0], [backward, 1]],
-              range: 1
-            },
-            {
-              steps: [[2*forward, -1], [2*forward, 1],
-                     [forward, -2], [forward, 2]],
-              range: 1
-            }
-          ]
-        },
-        'l': {
-          "class": "n_queen",
-          both: [
-            {steps: [[0, -1], [0, 1], [forward, 0]]},
-            {steps: [[forward, -1], [forward, 1],
-                    [backward, -1], [backward, 0], [backward, 1]], range: 1},
-            {steps: [[2*forward, -1], [2*forward, 1],
-                    [forward, -2], [forward, 2]], range: 1}
-          ]
-        },
-        'e': { "class": "n_king", moveas: 'k' },
-        'v': { "class": "n_pawn", moveas: 'p' },
-        's': {
-          "class": "r_rook",
-          both: [{steps: res['r'].both[0].steps, range: 4}]
-        },
-        'y': {
-          "class": "r_knight",
-          both: [
-            {steps: V.steps.d, range: 1},
-            {steps: V.steps.w, range: 1}
-          ]
-        },
-        'h': {
-          "class": "r_bishop",
-          both: [
-            {steps: V.steps.d, range: 1},
-            {steps: V.steps.f, range: 1},
-            {steps: V.steps.$3, range: 1}
-          ]
-        },
-        'o': {
-          "class": "r_queen",
-          both: [
-            {steps: res['r'].both[0].steps},
-            {steps: res['n'].both[0].steps, range: 1}
-          ]
-        },
-        'a': { "class": "r_king", moveas: 'k' },
-        'u': { "class": "r_pawn", moveas: 'p' }
-      },
-      res
-    );
+        {
+          steps: [[2*forward, -1], [2*forward, 1],
+                 [forward, -2], [forward, 2]],
+          range: 1
+        }
+      ]
+    };
+    case 'l': return {
+      "class": "n_queen",
+      both: [
+        {steps: [[0, -1], [0, 1], [forward, 0]]},
+        {steps: [[forward, -1], [forward, 1],
+                [backward, -1], [backward, 0], [backward, 1]], range: 1},
+        {steps: [[2*forward, -1], [2*forward, 1],
+                [forward, -2], [forward, 2]], range: 1}
+      ]
+    };
+    case 'e': return { "class": "n_king", moveas: 'k' };
+    case 'v': return { "class": "n_pawn", moveas: 'p' };
+    case 's': return {
+      "class": "r_rook",
+      both: [{steps: res['r'].both[0].steps, range: 4}]
+    };
+    case 'y': return {
+      "class": "r_knight",
+      both: [
+        {steps: V.steps.d, range: 1},
+        {steps: V.steps.w, range: 1}
+      ]
+    };
+    case 'h': return {
+      "class": "r_bishop",
+      both: [
+        {steps: V.steps.d, range: 1},
+        {steps: V.steps.f, range: 1},
+        {steps: V.steps.$3, range: 1}
+      ]
+    };
+    case 'o': return {
+      "class": "r_queen",
+      both: [
+        {steps: res['r'].both[0].steps},
+        {steps: res['n'].both[0].steps, range: 1}
+      ]
+    };
+    case 'a': return { "class": "r_king", moveas: 'k' };
+    case 'u': return { "class": "r_pawn", moveas: 'p' };
+    }
+    return super.pieceDef(piece, color, x, y);
   }
 
   pawnPromotions() {

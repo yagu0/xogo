@@ -117,9 +117,8 @@ export default class CheckeredRules extends ChessRules {
     return ['c'];
   }
 
-  pieces(color, x, y) {
-    let baseRes = super.pieces(color, x, y);
-    if (this.getPiece(x, y) == 'p' && color == 'c') {
+  pieceDef(piece, color, x, y) {
+    if (piece == 'p' && color == 'c') {
       const pawnShift = this.getPawnShift(this.turn); //cannot trust color
       const initRank = (
         (this.stage == 2 && [1, 6].includes(x)) ||
@@ -135,7 +134,7 @@ export default class CheckeredRules extends ChessRules {
         Array.prototype.push.apply(attackSteps,
           [[-pawnShift, 1], [-pawnShift, -1]]);
       }
-      baseRes['p'] = {
+      return {
         "class": "pawn",
         moves: [
           {
@@ -151,14 +150,14 @@ export default class CheckeredRules extends ChessRules {
         ]
       };
     }
-    const checkered = {
-      's': {"class": "checkered-pawn", moveas: 'p'},
-      'u': {"class": "checkered-rook", moveas: 'r'},
-      'o': {"class": "checkered-knight", moveas: 'n'},
-      'c': {"class": "checkered-bishop", moveas: 'b'},
-      't': {"class": "checkered-queen", moveas: 'q'}
-    };
-    return Object.assign(baseRes, checkered);
+    switch (piece) {
+    case 's': return {"class": "checkered-pawn", moveas: 'p'};
+    case 'u': return {"class": "checkered-rook", moveas: 'r'};
+    case 'o': return {"class": "checkered-knight", moveas: 'n'};
+    case 'c': return {"class": "checkered-bishop", moveas: 'b'};
+    case 't': return {"class": "checkered-queen", moveas: 'q'};
+    }
+    return super.pieceDef(piece, color, x, y);
   }
 
   setOtherVariables(fenParsed) {

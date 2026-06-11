@@ -20,24 +20,26 @@ export default class ArenaRules extends ChessRules {
     return board;
   }
 
-  pieces(color, x, y) {
-    let allSpecs = super.pieces(color, x, y);
-    let pawnSpec = allSpecs['p'],
-        queenSpec = allSpecs['q'],
-        kingSpec = allSpecs['k'];
-    const pawnShift = (color == "w" ? -1 : 1);
-    Array.prototype.push.apply(pawnSpec.attack[0].steps,
-                               [[-pawnShift, 1], [-pawnShift, -1]]);
-    queenSpec.both[0].range = 3;
-    kingSpec.both[0].range = 3;
-    return Object.assign({},
-      allSpecs,
-      {
-        'p': pawnSpec,
-        'q': queenSpec,
-        'k': kingSpec
-      }
-    );
+  pieceDef(piece, color, x, y) {
+    switch (piece) {
+    case 'p': {
+      const pawnShift = (color == "w" ? -1 : 1);
+      let pawnSpec = super.pieceDef('p', color, x, y);
+      pawnSpec.attack[0].steps.push(...[[-pawnShift, 1], [-pawnShift, -1]]);
+      return pawnSpec;
+    }
+    case 'q': {
+      let queenSpec = super.pieceDef('q', color, x, y);
+      queenSpec.both[0].range = 3;
+      return queenSpec;
+    }
+    case 'k': {
+      let kingSpec = super.pieceDef('k', color, x, y);
+      kingSpec.both[0].range = 3;
+      return kingSpec;
+    }
+    }
+    return super.pieceDef(piece, color, x, y);
   }
 
   static InArena(x) {

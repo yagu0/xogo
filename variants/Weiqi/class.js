@@ -124,16 +124,11 @@ export default class WeiqiRules extends ChessRules {
       passBtn_arr[0].removeEventListener("click", this.passListener);
   }
 
-  pieces(color, x, y) {
+  pieceDef(piece, color, x, y) {
     let classe_s = ["stone"];
-    if (this.options["onecolor"] && color == 'w')
+    if (this.options["onecolor"] && color == 'w') //'w' is black! (First move)
       classe_s.push("one-color");
-    return {
-      's': {
-        "class": classe_s,
-        moves: []
-      }
-    };
+    return {"class": classe_s};
   }
 
   doClick(coords) {

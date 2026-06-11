@@ -19,7 +19,7 @@ export default class CopycatRules extends ChessRules {
       return res;
     // Now check if the piece at x, y attack some friendly one (enhancement)
     let movements = {};
-    const steps = this.pieces()[piece].both[0].steps;
+    const steps = this.pieceDef(piece).both[0].steps;
     steps.forEach(s => {
       let [i, j] = [x + s[0], y + s[1]];
       while (
@@ -46,7 +46,7 @@ export default class CopycatRules extends ChessRules {
     });
     Object.keys(movements).forEach(type => {
       if ((piece != 'q' && type != piece) || (piece == 'q' && type == 'n'))
-        res.both.push(this.pieces()[type].both[0]);
+        res.both.push(this.pieceDef(type).both[0]);
     });
     return res;
   }

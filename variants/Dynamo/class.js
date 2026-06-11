@@ -167,9 +167,9 @@ export default class DynamoRules extends ChessRules {
     // Slider
     let steps = [];
     if (['r', 'q'].includes(p))
-      steps = steps.concat(this.pieces()['r'].both[0].steps);
+      steps = steps.concat(this.pieceDef('r').both[0].steps);
     if (['b', 'q'].includes(p))
-      steps = steps.concat(this.pieces()['b'].both[0].steps);
+      steps = steps.concat(this.pieceDef('b').both[0].steps);
     for (let s of steps) {
       let [i, j] = [x + s[0], y + s[1]];
       while (this.onBoard(i, j) && this.board[i][j] == "") {
@@ -213,7 +213,7 @@ export default class DynamoRules extends ChessRules {
       let movesHash = {};
       moves.forEach(m => { movesHash[getMoveHash(m)] = true; });
       // [x, y] is pushed by 'color'
-      for (let step of this.pieces()['n'].both[0].steps) {
+      for (let step of this.pieceDef('n').both[0].steps) {
         const [i, j] = [x + step[0], y + step[1]];
         if (
           this.onBoard(i, j) &&
@@ -224,8 +224,8 @@ export default class DynamoRules extends ChessRules {
           addMoves(step, 1);
         }
       }
-      for (let step of this.pieces()['r'].both[0].steps.concat(
-                       this.pieces()['b'].both[0].steps))
+      for (let step of this.pieceDef('r').both[0].steps.concat(
+                       this.pieceDef('b').both[0].steps))
       {
         let [i, j] = [x + step[0], y + step[1]];
         while (this.onBoard(i, j) && this.board[i][j] == "") {
@@ -491,9 +491,9 @@ export default class DynamoRules extends ChessRules {
     const sq = square_s[0],
           oppCol = oppCols[0];
     // Look for every directions from kp
-    const P = this.pieces(oppCol, 0, 0);
     for (const piece of ['r', 'n', 'b', 'q', 'k', 'p']) {
-      const stepArray = (P[piece].attack || P[piece].both);
+      const pd = this.pieceDef(piece, oppCol);
+      const stepArray = (pd.attack || pd.both);
       for (const stepObj of stepArray) {
         const range = stepObj.range || Math.max(this.size.x, this.size.y);
         for (const s of stepObj.steps) {
@@ -538,7 +538,7 @@ export default class DynamoRules extends ChessRules {
       }
     }
     return false;
-  } //TODO: checks by pull!!
+  }
 
   // Does m2 un-do m1 ? (to disallow undoing actions)
   oppositeMoves(m1, m2) {

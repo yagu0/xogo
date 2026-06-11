@@ -131,17 +131,17 @@ export default class AmbiguousRules extends ChessRules {
     };
   }
 
-  pieces(color, x, y) {
-    const targets = {
-      's': {"class": "target-pawn"},
-      'u': {"class": "target-rook"},
-      'o': {"class": "target-knight"},
-      'c': {"class": "target-bishop"},
-      't': {"class": "target-queen"},
-      'l': {"class": "target-king"}
-    };
-    return Object.assign({ 'g': {"class": "target"} },
-      targets, super.pieces(color, x, y));
+  pieceDef(piece, color, x, y) {
+    switch (piece) {
+    case 's': return {"class": "target-pawn"};
+    case 'u': return {"class": "target-rook"};
+    case 'o': return {"class": "target-knight"};
+    case 'c': return {"class": "target-bishop"};
+    case 't': return {"class": "target-queen"};
+    case 'l': return {"class": "target-king"};
+    case 'g': return {"class": "target"} };
+    }
+    return super.pieceDef(piece, color, x, y);
   }
 
   atLeastOneMove() {

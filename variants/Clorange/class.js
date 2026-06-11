@@ -14,14 +14,15 @@ export default class ClorangeRules extends ChessRules {
     return true;
   }
 
-  pieces(color, x, y) {
-    let res = super.pieces(color, x, y);
-    res['s'] = {"class": "nv-pawn", moveas: "p"};
-    res['u'] = {"class": "nv-rook", moveas: "r"};
-    res['o'] = {"class": "nv-knight", moveas: "n"};
-    res['c'] = {"class": "nv-bishop", moveas: "b"};
-    res['t'] = {"class": "nv-queen", moveas: "q"};
-    return res;
+  pieceDef(piece, color, x, y) {
+    switch (piece) {
+    case 's': return {"class": "nv-pawn", moveas: "p"};
+    case 'u': return {"class": "nv-rook", moveas: "r"};
+    case 'o': return {"class": "nv-knight", moveas: "n"};
+    case 'c': return {"class": "nv-bishop", moveas: "b"};
+    case 't': return {"class": "nv-queen", moveas: "q"};
+    }
+    return super.pieceDef(piece, color, x, y);
   }
 
   static get V_PIECES() {

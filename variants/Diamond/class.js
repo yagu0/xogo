@@ -85,12 +85,16 @@ export default class DiamondRules extends ChessRules {
     return { fen: fen, o: {} };
   }
 
-  pieces(color, x, y) {
-    let res = super.pieces(color, x, y);
-    const pawnShift = this.getPawnShift(color || 'w');
-    res['p'].moves = [{steps: [[pawnShift, pawnShift]], range: 1}];
-    res['p'].attack = [{steps: [[0, pawnShift], [pawnShift, 0]], range: 1}];
-    return res;
+  pieceDef(piece, color, x, y) {
+    if (piece == 'p') {
+      const pawnShift = this.getPawnShift(color || 'w');
+      return {
+        "class": "pawn",
+        moves: [{steps: [[pawnShift, pawnShift]], range: 1}],
+        attack: [{steps: [[0, pawnShift], [pawnShift, 0]], range: 1}]
+      };
+    }
+    return super.pieceDef(piece, color, x, y);
   }
 
 };

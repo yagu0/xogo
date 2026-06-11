@@ -30,15 +30,15 @@ export default class SleepyRules extends ChessRules {
     };
   }
 
-  pieces(color, x, y) {
-    return {
-      's': {"class": "sleepy-pawn"},
-      'u': {"class": "sleepy-rook"},
-      'o': {"class": "sleepy-knight"},
-      'c': {"class": "sleepy-bishop"},
-      't': {"class": "sleepy-queen"},
-      ...super.pieces(color, x, y)
-    };
+  pieceDef(piece, color, x, y) {
+    switch (piece) {
+    case 's': return {"class": "sleepy-pawn"};
+    case 'u': return {"class": "sleepy-rook"};
+    case 'o': return {"class": "sleepy-knight"};
+    case 'c': return {"class": "sleepy-bishop"};
+    case 't': return {"class": "sleepy-queen"};
+    }
+    return super.pieceDef(piece, color, x, y);
   }
 
   static get M_PIECES() {

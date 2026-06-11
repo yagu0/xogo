@@ -24,14 +24,13 @@ export default class BenedictRules extends AbstractFlipRules {
     };
   }
 
-  pieces(color, x, y) {
-    if (!this.options["cleopatra"])
-      return super.pieces(color, x, y);
-    const allSpecs = super.pieces(color, x, y);
-    return Object.assign({},
-      allSpecs,
-      {'q': Object.assign({}, allSpecs['q'], {"class": "cleopatra"})}
-    );
+  pieceDef(piece, color, x, y) {
+    if (this.options["cleopatra"] && piece == 'q') {
+      let pd = super.pieceDef('q', color, x, y);
+      pd["class"] = "cleopatra";
+      return pd;
+    }
+    return super.pieceDef(piece, color, x, y);
   }
 
   postProcessPotentialMoves(moves) {

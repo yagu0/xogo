@@ -21,62 +21,63 @@ export default class AbsorptionRules extends ChessRules {
     };
   }
 
-  pieces(color, x, y) {
-    let fusions = {
-      'a': {
-        "class": "amazon",
-        both: [
-          {
-            steps: [
-              [0, 1], [0, -1], [1, 0], [-1, 0],
-              [1, 1], [1, -1], [-1, 1], [-1, -1]
-            ]
-          },
-          {
-            steps: [
-              [1, 2], [1, -2], [-1, 2], [-1, -2],
-              [2, 1], [-2, 1], [2, -1], [-2, -1]
-            ],
-            range: 1
-          }
-        ]
-      },
-      'e': {
-        "class": "empress",
-        both: [
-          {
-            steps: [
-              [1, 0], [-1, 0], [0, 1], [0, -1]
-            ]
-          },
-          {
-            steps: [
-              [1, 2], [1, -2], [-1, 2], [-1, -2],
-              [2, 1], [-2, 1], [2, -1], [-2, -1]
-            ],
-            range: 1
-          }
-        ]
-      },
-      's': {
-        "class": "princess",
-        both: [
-          {
-            steps: [
-              [1, 1], [1, -1], [-1, 1], [-1, -1]
-            ]
-          },
-          {
-            steps: [
-              [1, 2], [1, -2], [-1, 2], [-1, -2],
-              [2, 1], [-2, 1], [2, -1], [-2, -1]
-            ],
-            range: 1
-          }
-        ]
-      }
+  pieceDef(piece, color, x, y) {
+    switch (piece) {
+    // Fusions
+    case 'a': return {
+      "class": "amazon",
+      both: [
+        {
+          steps: [
+            [0, 1], [0, -1], [1, 0], [-1, 0],
+            [1, 1], [1, -1], [-1, 1], [-1, -1]
+          ]
+        },
+        {
+          steps: [
+            [1, 2], [1, -2], [-1, 2], [-1, -2],
+            [2, 1], [-2, 1], [2, -1], [-2, -1]
+          ],
+          range: 1
+        }
+      ]
     };
-    return Object.assign(fusions, super.pieces(color, x, y));
+    case 'e': return {
+      "class": "empress",
+      both: [
+        {
+          steps: [
+            [1, 0], [-1, 0], [0, 1], [0, -1]
+          ]
+        },
+        {
+          steps: [
+            [1, 2], [1, -2], [-1, 2], [-1, -2],
+            [2, 1], [-2, 1], [2, -1], [-2, -1]
+          ],
+          range: 1
+        }
+      ]
+    };
+    case 's': return {
+      "class": "princess",
+      both: [
+        {
+          steps: [
+            [1, 1], [1, -1], [-1, 1], [-1, -1]
+          ]
+        },
+        {
+          steps: [
+            [1, 2], [1, -2], [-1, 2], [-1, -2],
+            [2, 1], [-2, 1], [2, -1], [-2, -1]
+          ],
+          range: 1
+        }
+      ]
+    };
+    }
+    return super.pieceDef(piece, color, x, y);
   }
 
   static get MergeComposed() {

@@ -75,13 +75,16 @@ export default class CoregalRules extends ChessRules {
     };
   }
 
-  pieces(color, x, y) {
-    let res = super.pieces(color, x, y);
-    res['l'] = JSON.parse(JSON.stringify(res['q']));
-    // TODO: CSS royal queen symbol (with cross?)
-    res['l']["class"] = "royal_queen";
-    res['='] = {"class": "castle"}; //for castle display
-    return res;
+  pieceDef(piece, color, x, y) {
+    if (piece == 'l') {
+      let pd = super.pieceDef('q', color, x, y);
+      // TODO: CSS royal queen symbol (with cross?)
+      pd["class"] = "royal_queen";
+      return pd;
+    }
+    else if (piece == '=')
+      return {"class": "castle"}; //for castle display
+    return super.pieceDef(piece, color, x, y);
   }
 
   setFlags(fenflags) {

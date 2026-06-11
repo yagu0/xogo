@@ -66,10 +66,10 @@ export default class ApocalypseRules extends ChessRules {
   // Allow pawns to move diagonally and capture vertically,
   // because some of these moves might be valid a posteriori.
   // They will be flagged as 'illegal' in a first time, however.
-  pieces(color, x, y) {
-    const pawnShift = (color == "w" ? -1 : 1);
-    return {
-      'p': {
+  pieceDef(piece, color, x, y) {
+    if (piece == 'p') {
+      const pawnShift = (color == "w" ? -1 : 1);
+      return {
         "class": "pawn",
         both: [
           {
@@ -77,9 +77,9 @@ export default class ApocalypseRules extends ChessRules {
             range: 1
           }
         ],
-      },
-      'n': super.pieces(color, x, y)['n']
-    };
+      };
+    }
+    return super.pieceDef('n', color, x, y);
   }
 
   // Allow self-captures, because they might be valid

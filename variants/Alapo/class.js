@@ -56,46 +56,43 @@ export default class AlapoRules extends ChessRules {
   }
 
   // Triangles are rotated from opponent viewpoint (=> suffix "_inv")
-  pieces(color, x, y) {
-    const allSpecs = super.pieces(color, x, y);
-    return {
-      'r': allSpecs['r'],
-      'q': allSpecs['q'],
-      'b': {
-        "class": "bishop" + (this.playerColor != color ? "_inv" : ""),
-        ...allSpecs['b']
-      },
-      's': { //"square"
-        "class": "babyrook",
-        both: [
-          {
-            steps: [[0, 1], [0, -1], [1, 0], [-1, 0]],
-            range: 1
-          }
-        ]
-      },
-      'c': { //"circle"
-        "class": "babyqueen",
-        both: [
-          {
-            steps: [
-              [0, 1], [0, -1], [1, 0], [-1, 0],
-              [1, 1], [1, -1], [-1, 1], [-1, -1]
-            ],
-            range: 1
-          }
-        ]
-      },
-      't': { //"triangle"
-        "class": "babybishop" + (this.playerColor != color ? "_inv" : ""),
-        both: [
-          {
-            steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]],
-            range: 1
-          }
-        ]
-      }
+  pieceDef(piece, color, x, y) {
+    switch (piece) {
+    case 's': return { //"square"
+      "class": "babyrook",
+      both: [
+        {
+          steps: [[0, 1], [0, -1], [1, 0], [-1, 0]],
+          range: 1
+        }
+      ]
     };
+    case 'c': return { //"circle"
+      "class": "babyqueen",
+      both: [
+        {
+          steps: [
+            [0, 1], [0, -1], [1, 0], [-1, 0],
+            [1, 1], [1, -1], [-1, 1], [-1, -1]
+          ],
+          range: 1
+        }
+      ]
+    };
+    case 't': return { //"triangle"
+      "class": "babybishop" + (this.playerColor != color ? "_inv" : ""),
+      both: [
+        {
+          steps: [[1, 1], [1, -1], [-1, 1], [-1, -1]],
+          range: 1
+        }
+      ]
+    };
+    }
+    let pd = super.pieceDef(piece, color, x, y);
+    if (piece == 'b')
+      pd["class"] = "bishop" + (this.playerColor != color ? "_inv" : "");
+    return pd;
   }
 
   get size() {

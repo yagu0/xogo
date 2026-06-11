@@ -10,17 +10,14 @@ export default class DoublearmyRules extends ChessRules {
     };
   }
 
-  pieces(color, x, y) {
-    let res = super.pieces(color, x, y);
-    return Object.assign(
-      {
-        'c': {
-          "class": "commoner",
-          moveas: 'k'
-        }
-      },
-      res
-    );
+  pieceDef(piece, color, x, y) {
+    if (piece == 'c') {
+      return {
+        "class": "commoner",
+        moveas: 'k'
+      };
+    }
+    return super.pieceDef(piece, color, x, y);
   }
 
   genRandInitBaseFen() {

@@ -14,44 +14,47 @@ export default class DobutsuRules extends ChessRules {
     return false;
   }
 
-  pieces(color, x, y) {
-    const pawnShift = this.getPawnShift(color || 'w');
+  pieceDef(piece, color, x, y) {
     // NOTE: classs change according to playerColor (orientation)
     const mySide = (this.playerColor == color);
-    return {
-      'p': {
+    switch (piece) {
+    case 'p': {
+      const pawnShift = this.getPawnShift(color || 'w');
+      return {
         "class": (mySide ? "" : "rev-") + "chick",
         both: [{steps: [[pawnShift, 0]], range: 1}]
-      },
-      'h': {
-        "class": (mySide ? "" : "rev-") + "hen",
-        both: [
-          {
-            steps: [
-              [pawnShift, 1], [pawnShift, -1],
-              [0, 1], [0, -1], [1, 0], [-1, 0]
-            ],
-            range: 1
-          }
-        ]
-      },
-      'e': {
-        "class": (mySide ? "" : "rev-") + "elephant",
-        both: [{steps: [[-1, 1], [-1, -1], [1, 1], [1, -1]], range: 1}]
-      },
-      'g': {
-        "class": (mySide ? "" : "rev-") + "giraffe",
-        both: [{steps: [[0, 1], [0, -1], [1, 0], [-1, 0]], range: 1}]
-      },
-      'k': {
-        "class": (mySide ? "" : "rev-") + "lion",
-        both: [{
-          steps: [[-1, 1], [-1, -1], [1, 1], [1, -1],
-                  [0, 1], [0, -1], [1, 0], [-1, 0]],
+      };
+    }
+    case 'h': return {
+      "class": (mySide ? "" : "rev-") + "hen",
+      both: [
+        {
+          steps: [
+            [pawnShift, 1], [pawnShift, -1],
+            [0, 1], [0, -1], [1, 0], [-1, 0]
+          ],
           range: 1
-        }]
-      }
+        }
+      ]
     };
+    case 'e': return {
+      "class": (mySide ? "" : "rev-") + "elephant",
+      both: [{steps: [[-1, 1], [-1, -1], [1, 1], [1, -1]], range: 1}]
+    };
+    case 'g': return {
+      "class": (mySide ? "" : "rev-") + "giraffe",
+      both: [{steps: [[0, 1], [0, -1], [1, 0], [-1, 0]], range: 1}]
+    };
+    case 'k': return {
+      "class": (mySide ? "" : "rev-") + "lion",
+      both: [{
+        steps: [[-1, 1], [-1, -1], [1, 1], [1, -1],
+                [0, 1], [0, -1], [1, 0], [-1, 0]],
+        range: 1
+      }]
+    };
+    }
+    return {}; //never reached
   }
 
   static get ReserveArray() {

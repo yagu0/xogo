@@ -7,44 +7,44 @@ export default class CapablancaRules extends ChessRules {
     return ['q', 'e', 's', 'r', 'n', 'b'];
   }
 
-  pieces(color, x, y) {
-    let newPieces = {
-      'e': {
-        "class": "empress",
-        both: [
-          {
-            steps: [
-              [1, 0], [-1, 0], [0, 1], [0, -1]
-            ]
-          },
-          {
-            steps: [
-              [1, 2], [1, -2], [-1, 2], [-1, -2],
-              [2, 1], [-2, 1], [2, -1], [-2, -1]
-            ],
-            range: 1
-          }
-        ]
-      },
-      's': {
-        "class": "princess",
-        both: [
-          {
-            steps: [
-              [1, 1], [1, -1], [-1, 1], [-1, -1]
-            ]
-          },
-          {
-            steps: [
-              [1, 2], [1, -2], [-1, 2], [-1, -2],
-              [2, 1], [-2, 1], [2, -1], [-2, -1]
-            ],
-            range: 1
-          }
-        ]
-      }
+  pieceDef(piece, color, x, y) {
+    switch (piece) {
+    case 'e': return {
+      "class": "empress",
+      both: [
+        {
+          steps: [
+            [1, 0], [-1, 0], [0, 1], [0, -1]
+          ]
+        },
+        {
+          steps: [
+            [1, 2], [1, -2], [-1, 2], [-1, -2],
+            [2, 1], [-2, 1], [2, -1], [-2, -1]
+          ],
+          range: 1
+        }
+      ]
     };
-    return Object.assign(newPieces, super.pieces(color, x, y));
+    case 's': return {
+      "class": "princess",
+      both: [
+        {
+          steps: [
+            [1, 1], [1, -1], [-1, 1], [-1, -1]
+          ]
+        },
+        {
+          steps: [
+            [1, 2], [1, -2], [-1, 2], [-1, -2],
+            [2, 1], [-2, 1], [2, -1], [-2, -1]
+          ],
+          range: 1
+        }
+      ]
+    };
+    }
+    return super.pieceDef(piece, color, x, y);
   }
 
   get size() {

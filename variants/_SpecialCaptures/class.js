@@ -9,19 +9,16 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
     return false;
   }
 
-  pieces() {
-    return Object.assign({},
-      super.pieces(),
-      {
-        '+': {"class": "push-action"},
-        '-': {"class": "pull-action"}
-      }
-    );
+  pieceDef(piece, color, x, y) {
+    if (['+', '-'].includes(piece))
+      // When a move is ambiguous ("pushme-pullyou")
+      return {"class": (piece == '+' ? "push" : "pull" + "-action")};
+    super.pieceDef(piece, color, x, y);
   }
 
   // Modify capturing moves among listed pincer moves
   addPincerCaptures(moves, byChameleon) {
-    const steps = this.pieces()['p'].moves[0].steps;
+    const steps = this.pieceDef('p').moves[0].steps;
     const color = moves[0].vanish[0].c;
     const oppCol = C.GetOppTurn(color);
     moves.forEach(m => {
@@ -89,7 +86,7 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
 
   getLeaperCaptures([x, y], byChameleon, onlyOne) {
     // Look in every direction for captures
-    const steps = this.pieces()['r'].moves[0].steps;
+    const steps = this.pieceDef('r').moves[0].steps;
     const color = this.getColor(x, y);
     const oppCol = C.GetOppTurn(color);
     let moves = [];
@@ -155,7 +152,7 @@ export default class AbstractSpecialCaptureRules extends ChessRules {
   // type: nothing (freely, capture all), or pull or push, or "exclusive"
   addPushmePullyouCaptures(moves, byChameleon, type) {
     const [sx, sy] = [moves[0].start.x, moves[0].start.y];
-    const adjacentSteps = this.pieces()['r'].moves[0].steps;
+    const adjacentSteps = this.pieceDef('r').moves[0].steps;
     let capturingPullDir = {};
     const color = moves[0].vanish[0].c;
     const oppCol = C.GetOppTurn(color);

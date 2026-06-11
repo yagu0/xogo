@@ -11,10 +11,10 @@ export default class Antiking1Rules extends AbstractAntikingRules {
     return false;
   }
 
-  pieces(color, x, y) {
-    let res = super.pieces(color, x, y);
-    res['p'] = BerolinaPawnSpec(color); //no 2-squares moves
-    return res;
+  pieceDef(piece, color, x, y) {
+    if (piece == 'p')
+      return BerolinaPawnSpec(color); //no 2-squares moves
+    return super.pieceDef(piece, color, x, y);
   }
 
   genRandInitBaseFen() {

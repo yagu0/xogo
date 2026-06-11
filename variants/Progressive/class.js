@@ -26,16 +26,17 @@ export default class ProgressiveRules extends ChessRules {
     return !this.options["logical"];
   }
 
-  pieces(color, x, y) {
-    let res = super.pieces(color, x, y);
-    if (this.options["logical"]) {
+  pieceDef(piece, color, x, y) {
+    if (this.options["logical"] && piece == 'p') {
       const pawnShift = (color == "w" ? -1 : 1);
-      res["p"].moves[0] = {
+      let res = super.pieceDef('p', color, x, y);
+      res.moves[0] = {
         steps: [[pawnShift, 0]],
         range: 1 //always
       };
+      return res;
     }
-    return res;
+    return super.pieceDef(piece, color, x, y);
   }
 
 };

@@ -124,7 +124,7 @@ export default class ConvertRules extends ChessRules {
       }
     }
     // Knights:
-    this.pieces()['n'].both[0].steps.forEach(s => {
+    this.pieceDef('n').both[0].steps.forEach(s => {
       const [i, j] = [x + s[0], y + s[1]];
       if (
         this.onBoard(i, j) &&
@@ -135,7 +135,7 @@ export default class ConvertRules extends ChessRules {
       }
     });
     // Sliders:
-    this.pieces()['q'].both[0].steps.forEach(s => {
+    this.pieceDef('q').both[0].steps.forEach(s => {
       let [i, j] = [x + s[0], y + s[1]];
       while (this.onBoard(i, j) && this.board[i][j] == "") {
         i += s[0];

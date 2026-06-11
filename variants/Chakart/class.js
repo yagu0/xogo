@@ -94,40 +94,37 @@ export default class ChakartRules extends ChessRules {
     return this.egg == "kingboo" || this.getColor(x, y) == this.turn;
   }
 
-  pieces(color, x, y) {
-    const specials = {
-      'i': {"class": "invisible"}, //queen
-      '?': {"class": "mystery"}, //...initial square
-      'e': {"class": "egg"},
-      'm': {"class": "mushroom"},
-      'd': {"class": "banana"},
-      'w': {"class": "bomb"},
-      'z': {"class": "remote-capture"}
-    };
-    const bowsered = {
-      's': {"class": ["immobilized", "pawn"]},
-      'u': {"class": ["immobilized", "rook"]},
-      'o': {"class": ["immobilized", "knight"]},
-      'c': {"class": ["immobilized", "bishop"]},
-      't': {"class": ["immobilized", "queen"]},
-      'l': {"class": ["immobilized", "king"]}
-    };
-    return Object.assign(
-      {
-        'y': {
-          // Virtual piece for "king remote shell captures"
-          attack: [
-            {
-              steps: [
-                [0, 1], [0, -1], [1, 0], [-1, 0],
-                [1, 1], [1, -1], [-1, 1], [-1, -1]
-              ]
-            }
+  pieceDef(piece, color, x, y) {
+    switch (piece) {
+    // Specials
+    case 'i': return {"class": "invisible"}; //queen
+    case '?': return {"class": "mystery"}; //...initial square
+    case 'e': return {"class": "egg"};
+    case 'm': return {"class": "mushroom"};
+    case 'd': return {"class": "banana"};
+    case 'w': return {"class": "bomb"};
+    case 'z': return {"class": "remote-capture"};
+    // Bowsered
+    case 's': return {"class": ["immobilized", "pawn"]};
+    case 'u': return {"class": ["immobilized", "rook"]};
+    case 'o': return {"class": ["immobilized", "knight"]};
+    case 'c': return {"class": ["immobilized", "bishop"]};
+    case 't': return {"class": ["immobilized", "queen"]};
+    case 'l': return {"class": ["immobilized", "king"]};
+    // Others
+    case 'y': return {
+      // Virtual piece for "king remote shell captures"
+      attack: [
+        {
+          steps: [
+            [0, 1], [0, -1], [1, 0], [-1, 0],
+            [1, 1], [1, -1], [-1, 1], [-1, -1]
           ]
         }
-      },
-      specials, bowsered, super.pieces(color, x, y)
-    );
+      ]
+    };
+    }
+    return super.pieceDef(piece, color, x, y);
   }
 
   isKing(x, y, p) {

@@ -47,16 +47,16 @@ export default class AliceRules extends ChessRules {
     return ['k', 'l'].includes(p);
   }
 
-  pieces(color, x, y) {
-    let alices = {
-      's': {"class": "alice-pawn", moveas: 'p'},
-      'u': {"class": "alice-rook", moveas: 'r'},
-      'o': {"class": "alice-knight", moveas: 'n'},
-      'c': {"class": "alice-bishop", moveas: 'b'},
-      't': {"class": "alice-queen", moveas: 'q'},
-      'l': {"class": "alice-king", moveas: 'k'}
-    };
-    return Object.assign(alices, super.pieces(color, x, y));
+  pieceDef(piece, color, x, y) {
+    switch (piece) {
+    case 's': return {"class": "alice-pawn", moveas: 'p'};
+    case 'u': return {"class": "alice-rook", moveas: 'r'};
+    case 'o': return {"class": "alice-knight", moveas: 'n'};
+    case 'c': return {"class": "alice-bishop", moveas: 'b'};
+    case 't': return {"class": "alice-queen", moveas: 'q'};
+    case 'l': return {"class": "alice-king", moveas: 'k'};
+    }
+    return super.pieceDef(piece, color, x, y);
   }
 
   fromSameWorld(p1, p2) {

@@ -11,28 +11,27 @@ export default class BalaklavaRules extends ChessRules {
     return false;
   }
 
-  pieces(color, x, y) {
-    let res = super.pieces(color, x, y);
-    const knightSpecMoves = res['n'].both;
-    delete res['n'];
-    res['m'] = {
-      "class": "mammoth",
-      both: [
-        {
-          steps: [
-            [-2, -2], [-2, 0], [-2, 2],
-            [0, -2], [0, 2], [2, -2],
-            [2, 0], [2, 2]
-          ],
-          range: 1
-        }
-      ]
-    };
-    ['p', 'r', 'b', 'm', 'q'].forEach(p => {
-      if (!res[p].moves)
-        res[p].moves = [];
-      Array.prototype.push.apply(res[p].moves, knightSpecMoves);
-    });
+  pieceDef(piece, color, x, y) {
+    if (piece == 'm') {
+      return {
+        "class": "mammoth",
+        both: [
+          {
+            steps: [
+              [-2, -2], [-2, 0], [-2, 2],
+              [0, -2], [0, 2], [2, -2],
+              [2, 0], [2, 2]
+            ],
+            range: 1
+          }
+        ]
+      };
+    }
+    let res = super.pieceDef(piece, color, x, y);
+    const knightSpecMoves = super.pieceDef('n').both;
+    if (!res.moves)
+      res.moves = [];
+    res.moves.push(...knightSpecMoves);
     return res;
   }
 

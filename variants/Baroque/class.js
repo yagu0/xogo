@@ -54,45 +54,43 @@ export default class BaroqueRules extends AbstractSpecialCaptureRules {
     };
   }
 
-  pieces() {
-    return Object.assign({},
-      super.pieces(),
-      {
-        'p': {
-          "class": "pawn", //pincer
-          moves: [
-            {steps: [[0, 1], [0, -1], [1, 0], [-1, 0]]}
+  pieceDef(piece, color, x, y) {
+    switch (piece) {
+    case 'p': return {
+      "class": "pawn", //pincer
+      moves: [
+        {steps: [[0, 1], [0, -1], [1, 0], [-1, 0]]}
+      ]
+    };
+    case 'r': return {
+      "class": "rook", //coordinator
+      moves: [
+        {
+          steps: [
+            [1, 0], [0, 1], [-1, 0], [0, -1],
+            [1, 1], [1, -1], [-1, 1], [-1, -1]
           ]
-        },
-        'r': {
-          "class": "rook", //coordinator
-          moves: [
-            {
-              steps: [
-                [1, 0], [0, 1], [-1, 0], [0, -1],
-                [1, 1], [1, -1], [-1, 1], [-1, -1]
-              ]
-            }
-          ]
-        },
-        'n': {
-          "class": "knight", //long-leaper
-          moveas: 'r'
-        },
-        'b': {
-          "class": "bishop", //chameleon
-          moveas: 'r'
-        },
-        'q': {
-          "class": "queen", //withdrawer
-          moveas: 'r'
-        },
-        'i': {
-          "class": "immobilizer",
-          moveas: 'r'
         }
-      }
-    );
+      ]
+    };
+    case 'n': return {
+      "class": "knight", //long-leaper
+      moveas: 'r'
+    };
+    case 'b': return {
+      "class": "bishop", //chameleon
+      moveas: 'r'
+    };
+    case 'q': return {
+      "class": "queen", //withdrawer
+      moveas: 'r'
+    };
+    case 'i': return {
+      "class": "immobilizer",
+      moveas: 'r'
+    };
+    }
+    return {}; //never reached
   }
 
   // Is piece on square (x,y) immobilized?
@@ -100,7 +98,7 @@ export default class BaroqueRules extends AbstractSpecialCaptureRules {
     const piece = this.getPiece(x, y);
     const color = this.getColor(x, y);
     const oppCol = C.GetOppTurn(color);
-    const adjacentSteps = this.pieces()['k'].both[0].steps;
+    const adjacentSteps = this.pieceDef('k').both[0].steps;
     for (let step of adjacentSteps) {
       const [i, j] = [x + step[0], this.getY(y + step[1])];
       if (
