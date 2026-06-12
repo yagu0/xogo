@@ -1,18 +1,17 @@
 import ChessRules from "/js/base_rules.js";
-import {FenUtil} from "/utils/setupPieces.js" //required?
 
 export default class EmpireRules extends ChessRules {
 
-  // TODO: options ?
   static get Options() {
-    return C.Options;
+    return {
+      select: C.Options.select,
+      input: C.Options.input,
+      styles: ["atomic", "balance", "capture", "cylinder",
+               "doublemove", "progressive", "zen"]
+    };
   }
 
-  // TODO: adapt
-  static GenRandInitFen(options) {
-    if (options.randomness == 0)
-      return "rnbqkbnr/pppppppp/8/8/8/PPPSSPPP/8/TECDKCET w 0 ah -";
-
+  genRandInitBaseFen() {
     // Mapping kingdom --> empire:
     const piecesMap = {
       'R': 'T',
@@ -22,39 +21,101 @@ export default class EmpireRules extends ChessRules {
       'K': 'K'
     };
 
-    const baseFen = ChessRules.GenRandInitFen(options);
-    return (
-      baseFen.substr(0, 24) + "PPPSSPPP/8/" +
-      baseFen.substr(35, 8).split('').map(p => piecesMap[p]).join('') +
-      baseFen.substr(43, 5) + baseFen.substr(50)
-    );
+    const bf = super.genRandInitBaseFen();
+    return {
+      fen: bf.fen.substr(0, 24) + "PPPSSPPP/8/" +
+           bf.fen.substr(35, 8).split('').map(p => piecesMap[p]).join('') +
+           bf.fen.substr(43),
+      o: bf.o
+    };
   }
 
   pawnPromotions() {
     return ['q'];
   }
 
-  pieceDef() {
-    // TODO : + adjust pieces() ====> pieceDef() everywhere
+  pieceDef(piece, color, x, y) {
+    switch (piece) {
+    case 's': {
+      const forward = (color == 'w' ? -1 : 1);
+      return {
+        "class": "soldier",
+        both: [{
+          steps: [[0, 1], [0, -1], [forward, 0]],
+          range: 1
+        }]
+      };
+    }
+    case 't': return {
+      "class": "tower",
+      both: [{
+        steps: [[-1, 0], [1, 0], [0, -1], [0, 1]]
+      }],
+      moves: [{
+        steps: [[-1, -1], [-1, 1], [1, -1], [1, 1]]
+      }],
+    };
+    case 'c': return {
+      "class": "cardinal",
+      both: [{
+        steps: [[-1, -1], [-1, 1], [1, -1], [1, 1]]
+      }],
+      moves: [{
+        steps: [[-1, 0], [1, 0], [0, -1], [0, 1]]
+      }],
+    };
+    case 'e': return {
+      "class": "eagle",
+      moves: super.pieceDef('q').both,
+      attack: super.pieceDef('n').both
+    };
+    case 'd': return {
+      "class": "duke",
+      moves: super.pieceDef('q').both,
+      attack: super.pieceDef('k').both
+    };
+    }
+    return super.pieceDef(piece, color, x, y);
   }
 
   filterValid(moves) {
+    const kp = {
+      'w': super.searchKingPos('w')[0],
+      'b': super.searchKingPos('b')[0]
+    };
+    // Potentially facing each other ?
+    const pf = (kp['w'][0] == kp['b'][0] || kp['w'][1] == kp['b'][1]);
     return super.filterValid(moves).filter(m => {
-      // TODO: filter out moves letting kings facing each other
+      // Filter out moves letting kings facing each other
+      if (
+        !pf &&
+        [m.start, m.end].every(xy => {
+          return ['w','b'].every(c => xy.x != kp[c][0] || xy.y != kp[c][1]);
+        })
+      ) {
+        // King don't face each other and don't move
+        return true;
+      }
+      if (pf) {
+        // Check that current move doesn't clear the path between kings
+        // TODO: apply vanish / appear on the path (horizontal or vertical)
+        return true;
+      }
+      // Situation: a king moves. Does it lead to a forbidden configuration ?
+      // TODO: check alignment, then check path (same as above).
+      return true;
     });
   }
 
-  getCurrentScore() {
+  getCurrentScore(move_s) {
     // Turn has changed:
     const color = C.GetOppTurn(this.turn);
     const lastRank = (color == 'w' ? 0 : 7);
-    if (this.kingPos[color][0] == lastRank)
+    const kp = super.searchKingPos(color)[0];
+    if (kp[0] == lastRank)
       // The opposing edge is reached!
       return (color == "w" ? "1-0" : "0-1");
-    if (this.atLeastOneMove())
-      return "*";
-    // Game over
-    return (this.turn == "w" ? "0-1" : "1-0");
+    return super.getCurrentScore(move_s);
   }
 
 };

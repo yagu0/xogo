@@ -1,6 +1,6 @@
 @import url("/css/base_pieces.css");
 
-piece.white.e_pawn {
+piece.white.pawn {
   background-image: url('/pieces/Empire/pawn.svg');
 }
 piece.white.soldier {
@@ -15,9 +15,12 @@ piece.white.eagle {
 piece.white.cardinal {
   background-image: url('/pieces/Empire/cardinal.svg');
 }
-piece.white.e_queen {
+piece.white.duke {
+  background-image: url('/pieces/Empire/duke.svg');
+}
+piece.white.queen {
   background-image: url('/pieces/Empire/queen.svg');
 }
-piece.white.kaiser {
+piece.white.king {
   background-image: url('/pieces/Empire/kaiser.svg');
 }
