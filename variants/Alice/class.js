@@ -11,7 +11,6 @@ export default class AliceRules extends ChessRules {
         "balance",
         "capture",
         "cylinder",
-        "dark",
         "doublemove",
         "progressive",
         "zen"

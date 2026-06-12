@@ -35,10 +35,10 @@ export default class ApocalypseRules extends ChessRules {
       ? JSON.parse(fenParsed.whiteMove)
       : [];
     this.firstMove = null; //used if black turn pawn relocation
-    this.penalties = ArrayFun.toObject(
-      ['w', 'b'],
-      [0, 1].map(i => parseInt(fenParsed.penalties.charAt(i), 10))
-    );
+    this.penalties = {
+      'w': parseInt(fenParsed.penalties.charAt(0), 10),
+      'b': parseInt(fenParsed.penalties.charAt(1), 10)
+    };
   }
 
   genRandInitBaseFen() {

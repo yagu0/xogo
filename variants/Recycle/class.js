@@ -5,20 +5,7 @@ export default class RecycleRules extends ChessRules {
   static get Options() {
     return {
       select: C.Options.select,
-      input: [
-        {
-          label: "Capture king",
-          variable: "taking",
-          type: "checkbox",
-          defaut: false
-        },
-        {
-          label: "Falling pawn",
-          variable: "pawnfall",
-          type: "checkbox",
-          defaut: true
-        }
-      ],
+      input: C.Options.input,
       styles: C.Options.styles.filter(s => s != "recycle")
     };
   }

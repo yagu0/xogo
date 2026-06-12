@@ -14,7 +14,6 @@ export default class AbsorptionRules extends ChessRules {
         "doublemove",
         "progressive",
         "recycle",
-        //"rifle", //TODO
         "teleport",
         "zen"
       ]
@@ -120,7 +119,6 @@ export default class AbsorptionRules extends ChessRules {
     return V.MergeComposed[[p1, p2].sort().join("")];
   }
 
-  // TODO: interaction with rifle ?
   postProcessPotentialMoves(moves) {
     // Filter out capturing promotions (except one),
     // because they are all the same.

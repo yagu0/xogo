@@ -2,6 +2,15 @@ import ChessRules from "/js/base_rules.js";
 
 export default class ChecklessRules extends ChessRules {
 
+  static get Options() {
+    return {
+      select: C.Options.select,
+      input: C.Options.input.filter(o => o.variable == "pawnfall"),
+      styles: ["cannibal", "capture", "crazyhouse", "cylinder", "madrasi",
+               "progressive", "recycle", "rifle", "teleport", "zen"]
+    };
+  }
+
   // Cannot use super.atLeastOneMove: lead to infinite recursion
   atLeastOneMove_aux(kingPos, oppKingPos, color, oppCol) {
     for (let i = 0; i < this.size.x; i++) {

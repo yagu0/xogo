@@ -3,7 +3,11 @@ import ChessRules from "/js/base_rules.js";
 export default class ArenaRules extends ChessRules {
 
   static get Options() {
-    return {}; //TODO
+    return {
+      select: C.Options.select,
+      input: [],
+      styles: ["atomic", "cannibal", "capture", "cylinder", "zen"]
+    };
   }
 
   get hasFlags() {

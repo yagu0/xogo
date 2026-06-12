@@ -3,21 +3,7 @@ import {ArrayFun} from "/utils/array.js";
 import {FenUtil} from "/utils/setupPieces.js";
 import PiPo from "/utils/PiPo.js";
 import Move from "/utils/Move.js";
-
-// Helper class for move animation
-class TargetObj {
-
-  constructor(callOnComplete) {
-    this.value = 0;
-    this.target = 0;
-    this.callOnComplete = callOnComplete;
-  }
-  increment() {
-    if (++this.value == this.target)
-      this.callOnComplete();
-  }
-
-};
+import TargetObj from "/utils/TargetObj.js";
 
 // NOTE: x coords: top to bottom (white perspective); y: left to right
 // NOTE: ChessRules is aliased as window.C, and variants as window.V
