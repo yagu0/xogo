@@ -79,6 +79,25 @@ export default class EmpireRules extends ChessRules {
   }
 
   filterValid(moves) {
+    // Sub-function to check a path (between kings)
+    const scanPath = (start, end, justOne) => {
+      let s = [end[0] - start[0], end[1] - start[1]];
+      for (const i in [0, 1]) {
+        if (s[i] != 0)
+          s[i] = s[i] / Math.abs(s[i]);
+      }
+      let onPath = {};
+      let [i, j] = [start[0] + s[0], start[1] + s[1]];
+      while (i != end[0] || j != end[1]) {
+        if (this.board[i][j] != "") {
+          onPath[i + "." + j] = true;
+          if (justOne)
+            return true;
+        }
+        [i, j] = [i + s[0], j + s[1]];
+      }
+      return (justOne ? false : onPath);
+    };
     const kp = {
       'w': super.searchKingPos('w')[0],
       'b': super.searchKingPos('b')[0]
@@ -89,21 +108,39 @@ export default class EmpireRules extends ChessRules {
       // Filter out moves letting kings facing each other
       if (
         !pf &&
-        [m.start, m.end].every(xy => {
-          return ['w','b'].every(c => xy.x != kp[c][0] || xy.y != kp[c][1]);
-        })
+        ['w','b'].every(c => m.start.x != kp[c][0] || m.start.y != kp[c][1])
       ) {
-        // King don't face each other and don't move
+        // Kings don't face each other and don't move
         return true;
       }
       if (pf) {
         // Check that current move doesn't clear the path between kings
-        // TODO: apply vanish / appear on the path (horizontal or vertical)
-        return true;
+        const onPath = scanPath(kp['b'], kp['w']);
+        m.vanish.forEach(v => {
+          const key = v.x + "." + v.y;
+          if (onPath[key])
+            onPath[key] = false;
+        });
+        if (Object.values(onPath).some(z => z))
+          return true;
+        for (const a of m.appear) {
+          const key = a.x + "." + a.y;
+          if (Object.keys(onPath).includes(key))
+            return true;
+        }
+        return false;
       }
-      // Situation: a king moves. Does it lead to a forbidden configuration ?
-      // TODO: check alignment, then check path (same as above).
-      return true;
+      // A king moves. Does it lead to a forbidden configuration ?
+      const kc =
+        ['w','b'].filter(c => m.start.x == kp[c][0] && m.start.y == kp[c][1]);
+      const oppCol = C.GetOppTurn(kc);
+      if (kp[oppCol][0] != m.end.x && kp[oppCol][1] != m.end.y)
+        return true;
+      // Potentially yes:
+      this.playOnBoard(m);
+      const valid = scanPath(kp[oppCol], [m.end.x, m.end.y], true);
+      this.undoOnBoard(m);
+      return valid;
     });
   }
 

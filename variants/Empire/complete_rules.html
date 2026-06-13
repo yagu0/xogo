@@ -1,0 +1,134 @@
+<html>
+<head>
+  <title>Empire Rules</title>
+  <link href="/css/common.css" rel="stylesheet"/>
+  <link href="/variants/Empire/style.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="full-rules">
+<h1>Empire Rules</h1>
+
+<div>
+  <p>
+    The player in first has a different set of pieces,
+    moving generally like a queen but capturing (almost) as usual.
+  </p>
+  <figure>
+    <img src="/extras/Empire/Board.png"/>
+    <figcaption>Initial deterministic setup.</figcaption>
+  </figure>
+  <p>
+    Empire Chess is a chess variant designed in 2020 by Couch Tomato, the
+    third asymmetric game. This game pits the army of the "Empire" (gold)
+    against the original chess army (the "Kingdom", black). The Empire's
+    unique feature is that its pieces move like queens but attack differently.
+  </p>
+</div>
+
+<h3>General Rules</h3>
+<ol>
+  <li>The Empire (gold) always moves first.</li>
+  <li>The Empire cannot castle.</li>
+  <li>
+    As the Empire's pawns start on the third rank, they do not have the
+    option to move two spaces or be captured by en passant.
+  </li>
+  <li>Pawns on either side can only promote to a queen.</li>
+  <li>
+    One can win by bringing the king into the final rank without being
+    check. This situation is called "campmate".
+  </li>
+  <li>Stalemate and repetition are both losses.</li>
+  <li>
+    The King and Kaiser (Imperial King) may not face
+    each other on a file or rank.
+  </li>
+</ol>
+
+<h3>Imperial Pieces</h3>
+<div>
+  <p>
+    There are five new units unique to the Empire: Siege Towers, Eagles,
+    Cardinals, Duke, and Soldiers. The bottom rank pieces are all stronger
+    than their Kingdom counterparts with the exception of the Duke.
+  </p>
+  <ul>
+    <li>
+      Kaiser (K) &mdash; The Imperial king is called the Kaiser and has a
+      different symbol, but the change is purely aesthetic and thematic:
+      it behave like an orthodox king.
+    </li>
+    <li>
+      Soldier (S) &mdash; The Soldiers are the two pawn-like pieces replacing
+      the two middle pawns. They can move one square orthogonally forward,
+      or lateraly.
+    </li>
+  </ul>
+  <p>
+    The remaining pieces are "divergent" pieces: they move differently
+    than they attack (such as pawns). Imperial pieces all move as queens,
+    but attack like their Kingdom counterpart except for the Duke.
+  </p>
+  <ul>
+    <li>
+      Siege Tower (T) &mdash; The Siege Tower, or Tower for short,
+      attacks like a Rook.
+    </li>
+    <li>Eagle (E) &mdash; The Eagle attacks like a Knight.</li>
+    <li>Cardinal (C) &mdash; The Cardinal attacks like a Bishop.</li>
+    <li>Duke (D) &mdash; The Duke attacks like a King.</li>
+  </ul>
+  <figure>
+    <img src="/extras/Empire/EagleMoves.png"/>
+    <figcaption>Eagle's moves (green) &amp; captures (red).</figcaption>
+  </figure>
+</div>
+
+<h3>Pieces valuation</h3>
+<div>
+  <p>The following simplified values can be used:</p>
+  <table>
+    <tr>
+      <th>Kingdom piece</th>
+      <th>Values</th>
+      <th>Imperial piece</th>
+    </tr>
+    <tr>
+      <td>Pawn</td>
+      <td>1 / 1</td>
+      <td>Pawn</td>
+    </tr>
+    <tr>
+      <td>Queen</td>
+      <td>9 / 4</td>
+      <td>Duke</td>
+    </tr>
+    <tr>
+      <td>Bishop</td>
+      <td>3 / 4</td>
+      <td>Cardinal</td>
+    </tr>
+    <tr>
+      <td>Knight</td>
+      <td>3 / 7</td>
+      <td>Eagle</td>
+    </tr>
+    <tr>
+      <td>Rook</td>
+      <td>5 / 7</td>
+      <td>Siege Tower</td>
+    </tr>
+    <tr>
+      <td> - </td>
+      <td> - / 2</td>
+      <td>Soldier</td>
+    </tr>
+  </table>
+</div>
+
+<h3>More information</h3>
+<p>
+  See 
+  <a href="https://www.pychess.org/variants/empire">Empire Chess</a>
+  on pychess.org, where you can also play this variant (among many others !).
+</p>
