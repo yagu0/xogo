@@ -21,7 +21,8 @@ export default class EmpireRules extends ChessRules {
       'K': 'K'
     };
 
-    const bf = super.genRandInitBaseFen();
+    let bf = super.genRandInitBaseFen();
+    bf.o.flags = "88" + bf.o.flags.substr(2);
     return {
       fen: bf.fen.substr(0, 24) + "PPPSSPPP/8/" +
            bf.fen.substr(35, 8).split('').map(p => piecesMap[p]).join('') +

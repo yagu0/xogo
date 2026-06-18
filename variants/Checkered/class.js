@@ -191,16 +191,15 @@ export default class CheckeredRules extends ChessRules {
     }
   }
 
-  getEpSquare(moveOrSquare) {
-    // At stage 2, all pawns can be captured en-passant
+  setEpSquare_s(move) {
     if (
+      // At stage 2, all pawns can be captured en-passant
       this.stage == 2 ||
-      typeof moveOrSquare !== "object" ||
-      (moveOrSquare.appear.length > 0 && moveOrSquare.appear[0].c != 'c')
-    )
-      return super.getEpSquare(moveOrSquare);
-    // Checkered or switch move: no en-passant
-    return undefined;
+      // Checkered or switch move ==> no en-passant:
+      (move.appear.length > 0 && move.appear[0].c != 'c')
+    ) {
+      super.setEpSquare_s(move);
+    }
   }
 
   getCmove(move) {

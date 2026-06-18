@@ -329,9 +329,9 @@ export default class ChessRules {
 
   // Enpassant part of the FEN string
   getEnpassantFen() {
-    if (!this.epSquare)
+    if (!this.epSquare_s)
       return "-";
-    return C.CoordsToSquare(this.epSquare);
+    return this.epSquare_s.map(C.CoordsToSquare).join(',');
   }
 
   static get NewGameReserves() {
@@ -424,7 +424,7 @@ export default class ChessRules {
     if (this.hasFlags)
       this.setFlags(fenParsed.flags);
     if (this.hasEnpassant)
-      this.epSquare = this.getEpSquare(fenParsed.enpassant);
+      this.epSquare_s = this.readEpSquare_s(fenParsed.enpassant);
     if (this.hasReserve && !this.isDiagram)
       this.initReserves(fenParsed.reserve);
     if (this.options["crazyhouse"])
@@ -1103,27 +1103,34 @@ export default class ChessRules {
         }
       }
     }
-    if (this.epSquare)
+    if (this.epSquare_s)
       this.enlightEnpassant();
   }
 
   // Include square of the en-passant capturing square:
   enlightEnpassant() {
+    this.epSquare_s.forEach(sq => {
+      if (this.findEpAttack(sq, this.playerColor))
+        this.enlightened[sq.x][sq.y] = true;
+    })
+  }
+
+  findEpAttack(sq, color) {
     // NOTE: shortcut, pawn has only one attack type, doesn't depend on square
     // TODO: (0, 0) is wrong, would need to place an attacker here...
     const steps = this.pieceDef('p', this.playerColor, 0, 0).attack[0].steps;
     for (let step of steps) {
-      const x = this.epSquare.x - step[0], //NOTE: epSquare.x not on edge
-            y = this.getY(this.epSquare.y - step[1]);
+      const x = sq.x - step[0], //NOTE: (ep) sq.x not on edge
+            y = this.getY(sq.y - step[1]);
       if (
         this.onBoard(x, y) &&
-        this.getColor(x, y) == this.playerColor &&
+        this.getColor(x, y) == color &&
         this.getPieceType(x, y) == "p"
       ) {
-        this.enlightened[x][this.epSquare.y] = true;
-        break;
+        return true;
       }
     }
+    return false;
   }
 
   // Apply diff this.enlightened --> oldEnlightened on board
@@ -1560,8 +1567,8 @@ export default class ChessRules {
       return [];
     const piece = this.getPieceType(x, y);
     let moves = this.getPotentialMovesOf(piece, [x, y]);
-    if (piece == "p" && this.hasEnpassant && this.epSquare)
-      Array.prototype.push.apply(moves, this.getEnpassantCaptures([x, y]));
+    if (this.hasEnpassant && !!this.epSquare_s) {
+      moves = [...moves, this.getEnpassantCaptures(piece, [x, y])];
     if (this.isKing(0, 0, piece) && this.hasCastle)
       Array.prototype.push.apply(moves, this.getCastleMoves([x, y]));
     if (!noPP)
@@ -2005,21 +2012,25 @@ export default class ChessRules {
     return mv;
   }
 
-  // En-passant square, if any
-  getEpSquare(moveOrSquare) {
-    if (typeof moveOrSquare === "string") {
-      const square = moveOrSquare;
-      if (square == "-")
-        return undefined;
-      return C.SquareToCoords(square);
-    }
-    // Argument is a move:
-    const move = moveOrSquare;
+  // En-passant square from FEN string, if any
+  readEpSquare_s(fenSquare_s) {
+    if (fenSquare_s == "-")
+      return undefined;
+    let res = fenSquare_s.split(',').map(C.SquareToCoords);
+    if (res.length == 1) //most common case
+      return res[0];
+    return res;
+  }
+
+  // Extract potential en-passant square from just played move
+  setEpSquare_s(move) {
+    this.epSquare = undefined;
     const s = move.start,
           e = move.end;
+    const gap = Math.abs(e.x - s.x);
     if (
       s.y == e.y &&
-      Math.abs(s.x - e.x) == 2 &&
+      gap >= 2 &&
       // Next conditions for variants like Atomic or Rifle, Recycle...
       (
         move.appear.length > 0 &&
@@ -2031,16 +2042,18 @@ export default class ChessRules {
         this.getPieceType(0, 0, move.vanish[0].p) == 'p'
       )
     ) {
-      return {
+      const step = (e.x - s.x) / gap;
+      this.epSquare = {
         x: (s.x + e.x) / 2,
         y: s.y
       };
     }
-    return undefined; //default
   }
 
   // Special case of en-passant captures: treated separately
-  getEnpassantCaptures([x, y]) {
+  getEnpassantCaptures(piece, [x, y]) {
+    if (piece != 'p')
+      return [];
     const color = this.getColor(x, y);
     const shiftX = (color == 'w' ? -1 : 1);
     const oppCols = this.getOppCols(color);
@@ -2382,7 +2395,7 @@ export default class ChessRules {
   play(move) {
     this.prePlay(move);
     if (this.hasEnpassant)
-      this.epSquare = this.getEpSquare(move);
+      this.setEpSquare_s(move);
     this.playOnBoard(move);
     this.postPlay(move);
   }

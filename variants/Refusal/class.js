@@ -83,10 +83,9 @@ export default class RefusalRules extends ChessRules {
     return super.getPotentialMovesFrom([x, y]);
   }
 
-  getEpSquare(move) {
+  setEpSquare_s(move) {
     if (!move.refusal)
-      return super.getEpSquare(move);
-    return null;
+      super.setEpSquare_s(move);
   }
 
   filterValid(moves) {

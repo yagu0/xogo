@@ -1,33 +1,32 @@
-import { ChessRules, PiPo, Move } from "@/js/base_rules";
+import ChessRules from "/js/base_rules.js";
 
-export class EnpassantRules extends ChessRules {
+export default class EnpassantRules extends ChessRules {
 
-  static IsGoodEnpassant(enpassant) {
-    if (enpassant != "-") {
-      const squares = enpassant.split(",");
-      if (squares.length > 2) return false;
-      for (let sq of squares) {
-        const ep = V.SquareToCoords(sq);
-        if (isNaN(ep.x) || !V.OnBoard(ep)) return false;
-      }
-    }
-    return true;
+  static get Options() {
+    return {
+      select: C.Options.select,
+      input: C.Options.input,
+      styles: C.Options.styles.filter(s => s != "zen")
+    };
   }
 
-  getPpath(b) {
-    return (b[1] == V.KNIGHT ? "Enpassant/" : "") + b;
+  pieceDef(piece, color, x, y) {
+    let res = super.pieceDef(piece, color, x, y);
+    if (piece == 'n')
+      res.both[0].range = 8; //"infinite"
+    return res;
   }
 
-  getEpSquare(moveOrSquare) {
-    if (!moveOrSquare) return undefined;
-    if (typeof moveOrSquare === "string") {
-      const square = moveOrSquare;
-      if (square == "-") return undefined;
+  // TODO: comma separated (convention ?! yes..)
+  readEpSquare_s(squares) {
+      if (squares == "-")
+        return undefined;
       // Expand init + dest squares into a full path:
-      const init = V.SquareToCoords(square.substr(0, 2));
+      const init = C.SquareToCoords(square.substr(0, 2));
       let newPath = [init];
-      if (square.length == 2) return newPath;
-      const dest = V.SquareToCoords(square.substr(2));
+      if (square.length == 2)
+        return newPath;
+      const dest = C.SquareToCoords(square.substr(2));
       const delta = ['x', 'y'].map(i => Math.abs(dest[i] - init[i]));
       // Check if it's a knight(rider) movement:
       let step = [0, 0];
@@ -36,7 +35,8 @@ export class EnpassantRules extends ChessRules {
         const minShift = Math.min(delta[0], delta[1]);
         step[0] = (dest.x - init.x) / minShift;
         step[1] = (dest.y - init.y) / minShift;
-      } else {
+      }
+      else {
         // "Sliders"
         step = ['x', 'y'].map((i, idx) => {
           return (dest[i] - init[i]) / delta[idx] || 0
@@ -51,7 +51,9 @@ export class EnpassantRules extends ChessRules {
       }
       newPath.push(dest);
       return newPath;
-    }
+  }
+
+  setEpSquare_s(move) {
     // Argument is a move: all intermediate squares are en-passant candidates,
     // except if the moving piece is a king.
     const move = moveOrSquare;
@@ -168,11 +170,6 @@ export class EnpassantRules extends ChessRules {
     return moves;
   }
 
-  // Remove the "onestep" condition: knight promote to knightrider:
-  getPotentialKnightMoves(sq) {
-    return this.getSlideNJumpMoves(sq, V.steps[V.KNIGHT]);
-  }
-
   filterValid(moves) {
     const filteredMoves = super.filterValid(moves);
     // If at least one full move made, everything is allowed:
@@ -180,30 +177,6 @@ export class EnpassantRules extends ChessRules {
       return filteredMoves;
     // Else, forbid captures:
     return filteredMoves.filter(m => m.vanish.length == 1);
-  }
-
-  isAttackedByKnight(sq, color) {
-    return this.isAttackedBySlideNJump(
-      sq,
-      color,
-      V.KNIGHT,
-      V.steps[V.KNIGHT]
-    );
-  }
-
-  static get SEARCH_DEPTH() {
-    return 2;
-  }
-
-  static get VALUES() {
-    return {
-      p: 1,
-      r: 5,
-      n: 4,
-      b: 3,
-      q: 9,
-      k: 1000
-    };
   }
 
 };
