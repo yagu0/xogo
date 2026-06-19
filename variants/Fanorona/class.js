@@ -61,29 +61,6 @@ export class FanoronaRules extends ChessRules {
     return V.PAWN;
   }
 
-  static IsGoodPosition(position) {
-    if (position.length == 0) return false;
-    const rows = position.split("/");
-    if (rows.length != V.size.x) return false;
-    for (let row of rows) {
-      let sumElts = 0;
-      for (let i = 0; i < row.length; i++) {
-        if (row[i].toLowerCase() == V.PAWN) sumElts++;
-        else {
-          const num = parseInt(row[i], 10);
-          if (isNaN(num) || num <= 0) return false;
-          sumElts += num;
-        }
-      }
-      if (sumElts != V.size.y) return false;
-    }
-    return true;
-  }
-
-  getPpath(b) {
-    return "Fanorona/" + b;
-  }
-
   getPPpath(m, orientation) {
     // m.vanish.length >= 2, first capture gives direction
     const ref = (Math.abs(m.vanish[1].x - m.start.x) == 1 ? m.start : m.end);
@@ -233,18 +210,8 @@ export class FanoronaRules extends ChessRules {
     return moves;
   }
 
-  getAllValidMoves() {
-    const moves = super.getAllValidMoves();
-    if (moves.some(m => m.vanish.length >= 2)) return V.KeepCaptures(moves);
-    return moves;
-  }
-
   filterValid(moves) {
     return moves;
-  }
-
-  getCheckSquares() {
-    return [];
   }
 
   play(move) {
@@ -269,20 +236,6 @@ export class FanoronaRules extends ChessRules {
     }
   }
 
-  undo(move) {
-    V.UndoOnBoard(this.board, move);
-    if (!move.notTheEnd) {
-      this.turn = move.turn;
-      this.movesCount--;
-      this.captures.pop();
-    }
-    if (move.vanish.length >= 2) {
-      const L0 = this.captures.length;
-      let captures = this.captures[L0 - 1];
-      captures.pop();
-    }
-  }
-
   getCurrentScore() {
     const color = this.turn;
     // If no stones on board, I lose
@@ -296,47 +249,6 @@ export class FanoronaRules extends ChessRules {
       return (color == 'w' ? "0-1" : "1-0");
     }
     return "*";
-  }
-
-  getComputerMove() {
-    const moves = this.getAllValidMoves();
-    if (moves.length == 0) return null;
-    const color = this.turn;
-    // Capture available? If yes, play it
-    let captures = moves.filter(m => m.vanish.length >= 2);
-    let mvArray = [];
-    while (captures.length >= 1) {
-      // Then just pick random captures (trying to maximize)
-      let candidates = captures.filter(c => !!c.notTheEnd);
-      let mv = null;
-      if (candidates.length >= 1) mv = candidates[randInt(candidates.length)];
-      else mv = captures[randInt(captures.length)];
-      this.play(mv);
-      mvArray.push(mv);
-      captures = (this.turn == color ? this.getAllValidMoves() : []);
-    }
-    if (mvArray.length >= 1) {
-      for (let i = mvArray.length - 1; i >= 0; i--) this.undo(mvArray[i]);
-      return mvArray;
-    }
-    // Just play a random move, which if possible does not let a capture
-    let candidates = [];
-    for (let m of moves) {
-      this.play(m);
-      if (!this.atLeastOneCapture()) candidates.push(m);
-      this.undo(m);
-    }
-    if (candidates.length >= 1) return candidates[randInt(candidates.length)];
-    return moves[randInt(moves.length)];
-  }
-
-  getNotation(move) {
-    if (move.appear.length == 0) return "stop";
-    return (
-      V.CoordsToSquare(move.start) +
-      V.CoordsToSquare(move.end) +
-      (move.vanish.length >= 2 ? "X" : "")
-    );
   }
 
 };
