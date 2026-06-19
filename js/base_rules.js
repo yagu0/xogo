@@ -158,8 +158,8 @@ export default class ChessRules {
 
   // 3a --> {x:3, y:10}
   static SquareToCoords(sq) {
-    return ArrayFun.toObject(["x", "y"],
-                             [0, 1].map(i => parseInt(sq[i], 36)));
+    const [x, y] = [0, 1].map(i => parseInt(sq[i], 36));
+    return { x, y };
   }
 
   // {x:11, y:12} --> bc
@@ -452,14 +452,16 @@ export default class ChessRules {
     const counts = reserveStr.split("").map(c => parseInt(c, 36));
     const L = V.ReserveArray.length;
     this.reserve = {
-      w: ArrayFun.toObject(V.ReserveArray, counts.slice(0, L)),
-      b: ArrayFun.toObject(V.ReserveArray, counts.slice(L, 2 * L))
+      w: Object.fromEntries(V.ReserveArray.map((k, i) => [k, counts[i]])),
+      b: Object.fromEntries(V.ReserveArray.map((k, i) => [k, counts[L + i]]))
     };
   }
 
   initIspawn(ispawnStr) {
-    if (ispawnStr != "-")
-      this.ispawn = ArrayFun.toObject(ispawnStr.split(","), true);
+    if (ispawnStr != "-") {
+      this.ispawn =
+        Object.fromEntries(ispawnStr.split(",").map(k => [k, true]));
+    }
     else
       this.ispawn = {};
   }
@@ -1568,7 +1570,9 @@ export default class ChessRules {
     const piece = this.getPieceType(x, y);
     let moves = this.getPotentialMovesOf(piece, [x, y]);
     if (this.hasEnpassant && !!this.epSquare_s) {
-      moves = [...moves, this.getEnpassantCaptures(piece, [x, y])];
+      Array.prototype.push.apply(moves,
+        this.getEnpassantCaptures(piece, [x, y]));
+    }
     if (this.isKing(0, 0, piece) && this.hasCastle)
       Array.prototype.push.apply(moves, this.getCastleMoves([x, y]));
     if (!noPP)
@@ -1581,24 +1585,19 @@ export default class ChessRules {
       return [];
     const color = this.getColor(moves[0].start.x, moves[0].start.y);
     const oppCols = this.getOppCols(color);
-
     if (this.options["capture"] && this.atLeastOneCapture(color))
       moves = this.capturePostProcess(moves, oppCols);
-
     if (this.options["atomic"])
       moves = this.atomicPostProcess(moves, color, oppCols);
-
     if (
       moves.length > 0 &&
       this.getPieceType(moves[0].start.x, moves[0].start.y) == "p"
     ) {
       moves = this.pawnPostProcess(moves, color, oppCols);
     }
-
     if (this.options["cannibal"] && this.options["rifle"])
       // In this case a rifle-capture from last rank may promote a pawn
       moves = this.riflePromotePostProcess(moves, color);
-
     return moves;
   }
 
@@ -2024,7 +2023,7 @@ export default class ChessRules {
 
   // Extract potential en-passant square from just played move
   setEpSquare_s(move) {
-    this.epSquare = undefined;
+    this.epSquare_s = undefined;
     const s = move.start,
           e = move.end;
     const gap = Math.abs(e.x - s.x);
@@ -2043,37 +2042,45 @@ export default class ChessRules {
       )
     ) {
       const step = (e.x - s.x) / gap;
-      this.epSquare = {
-        x: (s.x + e.x) / 2,
-        y: s.y
-      };
+      this.epSquare_s = [
+        {
+          x: (s.x + e.x) / 2,
+          y: s.y
+        },
+        e //add endpoint (to know where captured piece is)
+      ];
     }
   }
 
-  // Special case of en-passant captures: treated separately
+  // Special case of (pawn) en-passant captures: treated separately
   getEnpassantCaptures(piece, [x, y]) {
-    if (piece != 'p')
+    if (piece != 'p' || !this.epSquare_s)
       return [];
     const color = this.getColor(x, y);
-    const shiftX = (color == 'w' ? -1 : 1);
-    const oppCols = this.getOppCols(color);
-    if (
-      this.epSquare &&
-      this.epSquare.x == x + shiftX && //NOTE: epSquare.x not on edge
-      Math.abs(this.getY(this.epSquare.y - y)) == 1 &&
-      // Doublemove (and Progressive?) guards:
-      this.board[this.epSquare.x][this.epSquare.y] == "" &&
-      oppCols.includes(this.getColor(x, this.epSquare.y))
-    ) {
-      const [epx, epy] = [this.epSquare.x, this.epSquare.y];
-      this.board[epx][epy] = this.board[x][this.epSquare.y];
-      let enpassantMove = this.getBasicMove([x, y], [epx, epy]);
-      this.board[epx][epy] = "";
-      const lastIdx = enpassantMove.vanish.length - 1; //think Rifle
-      enpassantMove.vanish[lastIdx].x = x;
-      return [enpassantMove];
+    const shiftX = (color == 'w' ? -1 : 1),
+          oppCols = this.getOppCols(color);
+    const L = this.epSquare_s.length;
+    const captSq = this.epSquare_s[L-1];
+    let res = [];
+    for (let i = 0; i < L-1; i++) {
+      const sq = this.epSquare_s[i];
+      if (
+        sq.x == x + shiftX && //NOTE: epSquare.x not on edge
+        Math.abs(this.getY(sq.y - y)) == 1 &&
+        // Doublemove (and Progressive?) guards:
+        this.board[sq.x][sq.y] == "" &&
+        oppCols.includes(this.getColor(captSq.x, captSq.y))
+      ) {
+        this.board[sq.x][sq.y] = this.board[captSq.x][captSq.y];
+        let enpassantMove = this.getBasicMove([x, y], [sq.x, sq.y]);
+        this.board[sq.x][sq.y] = "";
+        const lastIdx = enpassantMove.vanish.length - 1; //think Rifle
+        enpassantMove.vanish[lastIdx].x = captSq.x;
+        enpassantMove.vanish[lastIdx].y = captSq.y; //in case of (Enpassant..)
+        res.push(enpassantMove);
+      }
     }
-    return [];
+    return res;
   }
 
   getCastleMoves([x, y], finalSquares, castleWith, castleFlags) {
