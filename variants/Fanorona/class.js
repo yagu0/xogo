@@ -1,79 +1,76 @@
-import { ChessRules, Move, PiPo } from "@/js/base_rules";
-import { randInt } from "@/utils/alea";
+import ChessRules from "/js/base_rules.js";
+import WeiqiRules from "/variants/Weiqi/class.js";
+// TODO: PiPo
 
-export class FanoronaRules extends ChessRules {
+export default class FanoronaRules extends ChessRules {
 
   static get Options() {
-    return null;
+    return {};
   }
 
-  static get HasFlags() {
+  get hasFlags() {
     return false;
   }
 
-  static get HasEnpassant() {
+  get hasEnpassant() {
+    return false;
+  }
+  static get HasKing() {
     return false;
   }
 
-  static get Monochrome() {
-    return true;
-  }
-
-  static get Lines() {
-    let lines = [];
-    // Draw all inter-squares lines, shifted:
-    for (let i = 0; i < V.size.x; i++)
-      lines.push([[i+0.5, 0.5], [i+0.5, V.size.y-0.5]]);
-    for (let j = 0; j < V.size.y; j++)
-      lines.push([[0.5, j+0.5], [V.size.x-0.5, j+0.5]]);
-    const columnDiags = [
-      [[0.5, 0.5], [2.5, 2.5]],
-      [[0.5, 2.5], [2.5, 0.5]],
-      [[2.5, 0.5], [4.5, 2.5]],
-      [[4.5, 0.5], [2.5, 2.5]]
-    ];
-    for (let j of [0, 2, 4, 6]) {
-      lines = lines.concat(
-        columnDiags.map(L => [[L[0][0], L[0][1] + j], [L[1][0], L[1][1] + j]])
-      );
-    }
-    return lines;
-  }
-
-  static get Notoodark() {
-    return true;
-  }
-
-  static GenRandInitFen() {
-    return "ppppppppp/ppppppppp/pPpP1pPpP/PPPPPPPPP/PPPPPPPPP w 0";
+  genRandInitBaseFen() {
+    return {
+      fen: "sssssssss/sssssssss/sSsS1sSsS/SSSSSSSSS/SSSSSSSSS w 0",
+      o: {}
+    };
   }
 
   setOtherVariables(fen) {
     // Local stack of captures during a turn (squares + directions)
-    this.captures = [ [] ];
+    this.captures = [ [] ]; //TODO
   }
 
-  static get size() {
+  get size() {
     return { x: 5, y: 9 };
   }
 
-  getPiece() {
-    return V.PAWN;
+  getSvgChessboard() {
+    return WeiqiRules.SvgChessboard_share(
+      this.playerColor, this.size, this.coordsToId);
   }
 
-  getPPpath(m, orientation) {
-    // m.vanish.length >= 2, first capture gives direction
-    const ref = (Math.abs(m.vanish[1].x - m.start.x) == 1 ? m.start : m.end);
-    const step = [m.vanish[1].x - ref.x, m.vanish[1].y - ref.y];
-    const multStep = (orientation == 'w' ? 1 : -1);
-    const normalizedStep = [
-      multStep * step[0] / Math.abs(step[0]),
-      multStep * step[1] / Math.abs(step[1])
-    ];
-    return (
-      "Fanorona/arrow_" +
-      (normalizedStep[0] || 0) + "_" + (normalizedStep[1] || 0)
-    );
+  getPiece() {
+    return 's';
+  }
+
+  pieceDef(piece, color, x, y) {
+    if (piece == 's') //stone
+      return { "class": "stone" };
+    // Arrow
+    if (piece.charCodeAt(0) >= 105) {
+      return {
+        "class": "arrow-" + (piece.charCodeAt(0) >= 105 ? "base" : "point")
+      };
+    }
+  }
+
+  // a,b,c,d,e,f,g,h : dot on point, N to NO
+  // i,j,k,l,m,n,o,p : dot on base, N to NO
+  static ArrowToAngle(arrow) {
+    let ccode = arrow.charCodeAt(0);
+    if (ccode >= 105) { //i
+      ccode -= 8;
+      arrow = String.fromCharCode(ccode);
+    }
+    return (45 * (ccode - 97)) + "deg";
+  }
+
+  // Draw arrow
+  setPieceBackground(domPiece, piece) {
+    if (piece == 'p')
+      return;
+    domPiece.style.setProperty('--rotate-by', V.ArrowToAngle(piece));
   }
 
   // After moving, add stones captured in "step" direction from new location
@@ -82,16 +79,19 @@ export class FanoronaRules extends ChessRules {
     let [i, j] = [x + step[0], y + step[1]];
     const oppCol = V.GetOppCol(move.vanish[0].c);
     while (
-      V.OnBoard(i, j) &&
-      this.board[i][j] != V.EMPTY &&
+      this.onBoard(i, j) &&
+      this.board[i][j] != "" &&
       this.getColor(i, j) == oppCol
     ) {
-      move.vanish.push(new PiPo({ x: i, y: j, c: oppCol, p: V.PAWN }));
-      i += step[0];
-      j += step[1];
+      move.vanish.push(new PiPo({ x: i, y: j, c: oppCol, p: 's' }));
+      [i, j] = [i + step[0], j + step[1]];
     }
     return (move.vanish.length >= 2);
   }
+
+
+  // TODO from here
+
 
   getPotentialMovesFrom([x, y]) {
     const L0 = this.captures.length;
@@ -122,7 +122,7 @@ export class FanoronaRules extends ChessRules {
       let [i, j] = [x + s[0], y + s[1]];
       if (captures.some(c => c.square.x == i && c.square.y == j)) continue;
       if (V.OnBoard(i, j) && this.board[i][j] == V.EMPTY) {
-        // The move is potentially allowed. Might lead to 2 different captures
+        // The move is potentially allowed. Might lead to 2 different captures ---------> TODO
         let mv = super.getBasicMove([x, y], [i, j]);
         const capt = this.addCapture([i, j], s, mv);
         if (capt) {
