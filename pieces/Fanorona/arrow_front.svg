@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <g fill="black">
+    <!-- boule -->
+    <circle cx="50" cy="18" r="14"/>
+
+    <!-- corps -->
+    <rect x="42" y="30" width="16" height="58" rx="4"/>
+
+    <!-- ailes -->
+    <path d="
+      M50 24
+      L20 54
+      A6 6 0 0 0 28 62
+      L50 40
+      Z"/>
+
+    <path d="
+      M50 24
+      L80 54
+      A6 6 0 0 1 72 62
+      L50 40
+      Z"/>
+  </g>
+</svg>

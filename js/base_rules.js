@@ -865,11 +865,15 @@ export default class ChessRules {
       y = (this.playerColor == i ? y = r.height + 5 : - 5 - rsqSize);
     }
     else {
+      const delta = Math.abs(this.size.x - this.size.y);
       const sqSize = r.width / Math.max(this.size.x, this.size.y);
       const flipped = this.flippedBoard;
-      x = (flipped ? this.size.y - 1 - j : j) * sqSize +
-          Math.abs(this.size.x - this.size.y) * sqSize / 2;
+      x = (flipped ? this.size.y - 1 - j : j) * sqSize;
+      if (this.size.x > this.size.y)
+        x += delta * sqSize / 2;
       y = (flipped ? this.size.x - 1 - i : i) * sqSize;
+      if (this.size.y > this.size.x)
+        y += delta * sqSize / 2;
     }
     return [r.x + x, r.y + y];
   }

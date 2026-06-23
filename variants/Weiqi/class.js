@@ -1,9 +1,10 @@
 import ChessRules from "/js/base_rules.js";
+import AbstractOnGridRules from "/variants/_OnGrid/class.js";
 import Move from "/utils/Move.js";
 import PiPo from "/utils/PiPo.js";
 import {ArrayFun} from "/utils/array.js";
 
-export default class WeiqiRules extends ChessRules {
+export default class WeiqiRules extends AbstractOnGridRules {
 
   static get Options() {
     return {
@@ -36,48 +37,6 @@ export default class WeiqiRules extends ChessRules {
   }
   static get HasKing() {
     return false;
-  }
-
-  static SvgChessboard_share(color, bsize, coordsToId) {
-    const flipped = (color == 'b');
-    let board = `
-      <svg
-        viewBox="0 0 ${10*(bsize.y)} ${10*(bsize.x)}"
-        class="chessboard_SVG">`;
-    for (let i=0; i < bsize.x; i++) {
-      for (let j=0; j < bsize.y; j++) {
-        const ii = (flipped ? bsize.x - 1 - i : i);
-        const jj = (flipped ? bsize.y - 1 - j : j);
-        board += `
-          <rect
-            id="${coordsToId({x: ii, y: jj})}"
-            width="10"
-            height="10"
-            x="${10*j}"
-            y="${10*i}"
-            fill="transparent"
-          />`;
-      }
-    }
-    // Add lines to delimitate "squares"
-    for (let i = 0; i < bsize.x; i++) {
-      const y = i * 10 + 5, maxX = bsize.y * 10 - 5;
-      board += `
-        <line x1="5" y1="${y}" x2="${maxX}" y2="${y}"
-              stroke="black" stroke-width="0.2"/>`;
-    }
-    for (let i = 0; i < bsize.x; i++) {
-      const x = i * 10 + 5, maxY = bsize.x * 10 - 5;
-      board += `
-        <line x1="${x}" y1="5" x2="${x}" y2="${maxY}"
-              stroke="black" stroke-width="0.2"/>`;
-    }
-    board += "</svg>";
-    return board;
-  }
-
-  getSvgChessboard() {
-    return V.SvgChessboard_share(this.playerColor, this.size, this.coordsToId);
   }
 
   get size() {
@@ -133,6 +92,10 @@ export default class WeiqiRules extends ChessRules {
     if (this.options["onecolor"] && color == 'w') //'w' is black! (First move)
       classe_s.push("one-color");
     return {"class": classe_s};
+  }
+
+  canIplay(x, y) {
+    return (this.playerColor == this.turn && this.board[x][y] == "");
   }
 
   doClick(coords) {

@@ -54,7 +54,7 @@ const variants = [
   {name: 'Enpassant', desc: 'Capture en passant', disp: 'En-passant'},
   {name: 'Evolution', desc: 'Faster development'},
   {name: 'Extinction', desc: 'Capture all of a kind'},
-//  {name: 'Fanorona', desc: 'Malagasy Draughts'},
+  {name: 'Fanorona', desc: 'Malagasy Draughts'},
 //  {name: 'Football', desc: 'Score a goal'},
 //  {name: 'Forward', desc: 'Moving forward'},
 //  {name: 'Freecapture', desc: 'Capture both colors', disp: 'Free Capture'},

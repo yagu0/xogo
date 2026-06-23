@@ -9,12 +9,12 @@ piece.black.stone {
   background-image: url('/pieces/Weiqi/white_stone.svg');
 }
 
-.arrow-point {
-  background-image: url('/pieces/Fanorona/arrow_point.svg');
+.arrow-front {
+  background-image: url('/pieces/Fanorona/arrow_front.svg');
   rotate: var(--rotate-by);
 }
 
-.arrow-base {
-  background-image: url('/pieces/Fanorona/arrow_base.svg');
+.arrow-behind {
+  background-image: url('/pieces/Fanorona/arrow_behind.svg');
   rotate: var(--rotate-by);
 }
