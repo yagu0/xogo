@@ -972,8 +972,7 @@ export default class ChessRules {
         (landingElt ? this.idToCoords(landingElt.id) : undefined);
       if (cd) {
         // NOTE: clearly suboptimal, but much easier, and not a big deal.
-        const potentialMoves = this.getPotentialMovesFrom([x, y])
-          .filter(m => m.end.x == cd.x && m.end.y == cd.y);
+        const potentialMoves = this.getPotentialMove_s([x, y], [cd.x, cd.y]);
         const moves = this.filterValid(potentialMoves);
         if (moves.length >= 2)
           this.showChoices(moves, r);
