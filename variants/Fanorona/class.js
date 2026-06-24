@@ -1,5 +1,6 @@
 import ChessRules from "/js/base_rules.js";
 import AbstractOnGridRules from "/variants/_OnGrid/class.js";
+import Move from "/utils/Move.js";
 import PiPo from "/utils/PiPo.js";
 
 export default class FanoronaRules extends AbstractOnGridRules {
@@ -24,6 +25,30 @@ export default class FanoronaRules extends AbstractOnGridRules {
       fen: "sssssssss/sssssssss/sSsS1sSsS/SSSSSSSSS/SSSSSSSSS",
       o: {}
     };
+  }
+
+  getSvgChessboard() {
+    let board = super.getSvgChessboard().slice(0, -6);
+    // Add diagonals:
+    for (const i of [0, 2, 4]) {
+      const x1 = i * 10 + 5,
+            x2 = (4+i) * 10 + 5;
+      for (const [y1, y2] of [[5, 45], [45, 5]]) {
+        board += `
+          <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+              stroke="grey" stroke-width="0.2"/>`;
+      }
+    }
+    for (const i of [0,4]) {
+      const y2 = i * 10 + 5;
+      for (const [x1, x2] of [[5,2*10+5], [8*10+5, 6*10+5]]) {
+        board += `
+          <line x1="${x1}" y1="25" x2="${x2}" y2="${y2}"
+              stroke="grey" stroke-width="0.2"/>`;
+      }
+    }
+    board += "</svg>";
+    return board;
   }
 
   setOtherVariables(fen) {
@@ -68,10 +93,10 @@ export default class FanoronaRules extends AbstractOnGridRules {
   }
 
   getPotentialMovesFrom([x, y], justCapt) {
-    // After moving, add stones captured in "step" direction from new location
-    // [x, y] to mv.vanish (if any captured stone!)
     const oppCol = C.GetOppTurn(this.turn);
     const addCapture = ([x, y], step, move) => {
+      // After moving, add stones captured in "step" direction from new
+      // location [x, y] to mv.vanish (if any captured stone!)
       let [i, j] = [x + step[0], y + step[1]];
       while (
         this.onBoard(i, j) &&
@@ -103,8 +128,9 @@ export default class FanoronaRules extends AbstractOnGridRules {
       return ''; //never reached
     };
     const L = this.captures.length;
+    let c;
     if (L > 0) {
-      const c = this.captures[L-1];
+      c = this.captures[L-1];
       if (x != c.square.x + c.step[0] || y != c.square.y + c.step[1])
         return (!justCapt ? [] : false);
     }
@@ -115,14 +141,14 @@ export default class FanoronaRules extends AbstractOnGridRules {
     for (let s of steps) {
       if (!justCapt && L > 0 && c.step[0] == s[0] && c.step[1] == s[1]) {
         // Add a move to say "I'm done capturing"
-        moves.push(
-          new Move({
-            appear: [],
-            vanish: [],
-            start: { x: x, y: y },
-            end: { x: x - s[0], y: y - s[1] }
-          })
-        );
+        let mv = new Move({
+          appear: [],
+          vanish: [],
+          start: { x: x, y: y },
+          end: { x: x - s[0], y: y - s[1] }
+        });
+        mv.noAnimate = true;
+        moves.push(mv);
         continue;
       }
       let [i, j] = [x + s[0], y + s[1]];
@@ -155,12 +181,11 @@ export default class FanoronaRules extends AbstractOnGridRules {
   }
 
   atLeastOneCapture() {
-    const oppCol = C.GetOppTurn(this.turn);
     const L = this.captures.length;
-    // Called after at least one capture, so L > 0
     if (L > 0) {
       const c = this.captures[L-1];
-      return this.getPotentialMovesFrom([c.square.x, c.square.y], true);
+      return this.getPotentialMovesFrom(
+        [c.square.x + c.step[0], c.square.y + c.step[1]], true);
     }
     for (let i = 0; i < this.size.x; i++) {
       for (let j = 0; j < this.size.y; j++) {
@@ -177,7 +202,9 @@ export default class FanoronaRules extends AbstractOnGridRules {
   }
 
   filterValid(moves) {
-    return moves;
+    if (this.captures.length > 0 || !this.atLeastOneCapture())
+      return moves;
+    return moves.filter(m => m.vanish.length >= 2);
   }
 
   play(move) {

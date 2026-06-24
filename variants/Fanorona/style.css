@@ -3,10 +3,10 @@
 }
 
 piece.white.stone {
-  background-image: url('/pieces/Weiqi/black_stone.svg');
+  background-image: url('/pieces/Fanorona/black_stone.svg');
 }
 piece.black.stone {
-  background-image: url('/pieces/Weiqi/white_stone.svg');
+  background-image: url('/pieces/Fanorona/white_stone.svg');
 }
 
 .arrow-front {
