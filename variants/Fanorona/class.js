@@ -92,41 +92,47 @@ export default class FanoronaRules extends AbstractOnGridRules {
     domPiece.style.setProperty('--rotate-by', V.ArrowToAngle(piece));
   }
 
+  // After moving, add stones captured in "step" direction from new
+  // location [x, y] to mv.vanish (if any captured stone!)
+  addCapture([x, y], step, move) {
+    let [i, j] = [x + step[0], y + step[1]];
+    while (
+      this.onBoard(i, j) &&
+      this.board[i][j] != "" &&
+      this.getColor(i, j) == oppCol
+    ) {
+      move.vanish.push(new PiPo({ x: i, y: j, c: oppCol, p: 's' }));
+      [i, j] = [i + step[0], j + step[1]];
+    }
+    return (move.vanish.length >= 2);
+  }
+
+  stepToArrow(s, forward) {
+    const baseShift = (forward ? 0 : 8),
+          colShift = (this.playerColor=='w' ? 0 : 4);
+    const doShift = (c) => {
+      return String.fromCharCode(
+        97 + (c.charCodeAt(0) - 97 + colShift) % 8 + baseShift);
+    };
+    switch (s) {
+    case "-1_0": return doShift('a');
+    case "-1_1": return doShift('b');
+    case "0_1": return doShift('c');
+    case "1_1": return doShift('d');
+    case "1_0": return doShift('e');
+    case "1_-1": return doShift('f');
+    case "0_-1": return doShift('g');
+    case "-1_-1": return doShift('h');
+    }
+    return ''; //never reached
+  };
+
+
+// TODO: getPotentialMove_s() + pre-compute atLeastOneCapture() after each opponent move
+
+
   getPotentialMovesFrom([x, y], justCapt) {
     const oppCol = C.GetOppTurn(this.turn);
-    const addCapture = ([x, y], step, move) => {
-      // After moving, add stones captured in "step" direction from new
-      // location [x, y] to mv.vanish (if any captured stone!)
-      let [i, j] = [x + step[0], y + step[1]];
-      while (
-        this.onBoard(i, j) &&
-        this.board[i][j] != "" &&
-        this.getColor(i, j) == oppCol
-      ) {
-        move.vanish.push(new PiPo({ x: i, y: j, c: oppCol, p: 's' }));
-        [i, j] = [i + step[0], j + step[1]];
-      }
-      return (move.vanish.length >= 2);
-    };
-    const stepToArrow = (s, forward) => {
-      const baseShift = (forward ? 0 : 8),
-            colShift = (this.playerColor=='w' ? 0 : 4);
-      const doShift = (c) => {
-        return String.fromCharCode(
-          97 + (c.charCodeAt(0) - 97 + colShift) % 8 + baseShift);
-      };
-      switch (s) {
-      case "-1_0": return doShift('a');
-      case "-1_1": return doShift('b');
-      case "0_1": return doShift('c');
-      case "1_1": return doShift('d');
-      case "1_0": return doShift('e');
-      case "1_-1": return doShift('f');
-      case "0_-1": return doShift('g');
-      case "-1_-1": return doShift('h');
-      }
-      return ''; //never reached
-    };
     const L = this.captures.length;
     let c;
     if (L > 0) {
@@ -157,19 +163,19 @@ export default class FanoronaRules extends AbstractOnGridRules {
       if (this.onBoard(i, j) && this.board[i][j] == "") {
         // The move is possible. Might lead to 2 different captures
         let mv = super.getBasicMove([x, y], [i, j]);
-        const capt = addCapture([i, j], s, mv);
+        const capt = this.addCapture([i, j], s, mv);
         if (capt) {
           if (!!justCapt)
             return true;
-          mv.choice = stepToArrow(s[0] + "_" + s[1], true);
+          mv.choice = this.stepToArrow(s[0] + "_" + s[1], true);
           moves.push(mv);
           mv = super.getBasicMove([x, y], [i, j]); //cheap enough
         }
-        const capt_bw = addCapture([x, y], [-s[0], -s[1]], mv);
+        const capt_bw = this.addCapture([x, y], [-s[0], -s[1]], mv);
         if (capt_bw) {
           if (!!justCapt)
             return true;
-          mv.choice = stepToArrow(s[0] + "_" + s[1], false);
+          mv.choice = this.stepToArrow(s[0] + "_" + s[1], false);
           moves.push(mv);
         }
         // Captures take priority (if available)
