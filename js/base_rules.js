@@ -1108,7 +1108,7 @@ export default class ChessRules {
         }
       }
     }
-    if (this.epSquare_s)
+    if (!!this.epSquare_s)
       this.enlightEnpassant();
   }
 
@@ -2018,10 +2018,7 @@ export default class ChessRules {
   readEpSquare_s(fenSquare_s) {
     if (fenSquare_s == "-")
       return undefined;
-    let res = fenSquare_s.split(',').map(C.SquareToCoords);
-    if (res.length == 1) //most common case
-      return res[0];
-    return res;
+    return fenSquare_s.split(',').map(C.SquareToCoords);
   }
 
   // Extract potential en-passant square from just played move
@@ -2050,7 +2047,7 @@ export default class ChessRules {
           x: (s.x + e.x) / 2,
           y: s.y
         },
-        e //add endpoint (to know where captured piece is)
+        e //always add final square (generally deduced)
       ];
     }
   }
