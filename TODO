@@ -1,3 +1,6 @@
-https://fr.wikipedia.org/wiki/Unlur
+clarify moveStack logic around line 2600 baseRules.js
+implement in Fanorona getPotentialMove_s() function
 
+## New variants :
+https://fr.wikipedia.org/wiki/Unlur
 DuckChess + crazyduck --> move it at random ? Capturing ? Hmm.

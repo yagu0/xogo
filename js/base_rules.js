@@ -127,6 +127,11 @@ export default class ChessRules {
     return (this.playerColor == 'b');
   }
 
+  // Some variants do not precompute moves
+  get twoSquareMove() {
+    return false;
+  }
+
   // Some variants use click infos:
   doClick(coords) {
     if (typeof coords.x != "number")
@@ -396,6 +401,7 @@ export default class ChessRules {
     this.turn = fenParsed.turn;
     this.movesCount = parseInt(fenParsed.movesCount, 10);
     this.setOtherVariables(fenParsed);
+    this.re_setGameVariables();
   }
 
   // Turn position fen into double array ["wb","wp","bk",...]
@@ -464,6 +470,13 @@ export default class ChessRules {
     }
     else
       this.ispawn = {};
+  }
+
+  // Called before 1st move, and after receiving each opponent move.
+  re_setGameVariables() {
+    // Useful for example when captures are mandatory:
+    if (this.options["capture"])
+      this.canCapture = this.atLeastOneCapture(this.turn);
   }
 
   ////////////////
@@ -908,7 +921,8 @@ export default class ChessRules {
     let start = null,
         r = null,
         startPiece, curPiece = null,
-        pieceWidth;
+        pieceWidth,
+        potentialMoves;
     const mousedown = (e) => {
       // Disable zoom on smartphones:
       if (e.touches && e.touches.length > 1)
@@ -944,6 +958,8 @@ export default class ChessRules {
             startPiece.style.opacity = "0.4";
             chessboard.style.cursor = "none";
           }
+          if (!this.twoSquareMove)
+            potentialMoves = this.getPotentialMovesFrom([x, y]);
         }
       }
     };
@@ -971,8 +987,12 @@ export default class ChessRules {
       const cd =
         (landingElt ? this.idToCoords(landingElt.id) : undefined);
       if (cd) {
-        // NOTE: clearly suboptimal, but much easier, and not a big deal.
-        const potentialMoves = this.getPotentialMove_s([x, y], [cd.x, cd.y]);
+        if (this.twoSquareMove)
+          potentialMoves = this.getPotentialMove_s([x, y], [cd.x, cd.y]);
+        else {
+          potentialMoves =
+            potentialMoves.filter(m => m.end.x == cd.x && m.end.y == cd.y);
+        }
         const moves = this.filterValid(potentialMoves);
         if (moves.length >= 2)
           this.showChoices(moves, r);
@@ -1583,12 +1603,17 @@ export default class ChessRules {
     return moves;
   }
 
+  // Redefined in variants not computing everything on mousedown
+  getPotentialMove_s([x1, y1], [x2, y2]) {
+    return [];
+  }
+
   postProcessPotentialMoves(moves) {
     if (moves.length == 0)
       return [];
     const color = this.getColor(moves[0].start.x, moves[0].start.y);
     const oppCols = this.getOppCols(color);
-    if (this.options["capture"] && this.atLeastOneCapture(color))
+    if (this.options["capture"] && this.canCapture)
       moves = this.capturePostProcess(moves, oppCols);
     if (this.options["atomic"])
       moves = this.atomicPostProcess(moves, color, oppCols);
@@ -2556,7 +2581,7 @@ export default class ChessRules {
   buildMoveStack(move, r) {
     this.moveStack.push(move);
     this.computeNextMove(move);
-    const then = () => {
+    const actions = () => {
       const newTurn = this.turn;
       if (this.moveStack.length == 1 && !this.hideMoves)
         this.playVisual(move, r);
@@ -2584,9 +2609,9 @@ export default class ChessRules {
       }
     };
     // If hiding moves, then they are revealed in play() with callback
-    this.play(move, this.hideMoves ? then : null);
+    this.play(move, this.hideMoves ? actions : null);
     if (!this.hideMoves)
-      then();
+      actions();
   }
 
   // Implemented in variants using (automatic) moveStack

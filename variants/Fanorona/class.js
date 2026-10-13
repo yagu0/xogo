@@ -57,6 +57,10 @@ export default class FanoronaRules extends AbstractOnGridRules {
     this.captures = [];
   }
 
+  re_setGameVariables() {
+    this.canCapture = this.atLeastOneCapture();
+  }
+
   get size() {
     return { x: 5, y: 9 };
   }
@@ -158,7 +162,7 @@ export default class FanoronaRules extends AbstractOnGridRules {
         continue;
       }
       let [i, j] = [x + s[0], y + s[1]];
-      if (this.captures.some(c => c.square.x == i && c.square.y == j))
+      if (this.captures.some(cc => cc.square.x == i && cc.square.y == j))
         continue;
       if (this.onBoard(i, j) && this.board[i][j] == "") {
         // The move is possible. Might lead to 2 different captures
@@ -208,7 +212,7 @@ export default class FanoronaRules extends AbstractOnGridRules {
   }
 
   filterValid(moves) {
-    if (this.captures.length > 0 || !this.atLeastOneCapture())
+    if (this.captures.length > 0 || !this.canCapture)
       return moves;
     return moves.filter(m => m.vanish.length >= 2);
   }
