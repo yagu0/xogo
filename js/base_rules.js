@@ -128,7 +128,7 @@ export default class ChessRules {
   }
 
   // Some variants do not precompute moves
-  get twoSquareMove() {
+  static get TwoSquareMove() {
     return false;
   }
 
@@ -958,7 +958,7 @@ export default class ChessRules {
             startPiece.style.opacity = "0.4";
             chessboard.style.cursor = "none";
           }
-          if (!this.twoSquareMove)
+          if (!V.TwoSquareMove)
             potentialMoves = this.getPotentialMovesFrom([x, y]);
         }
       }
@@ -987,7 +987,7 @@ export default class ChessRules {
       const cd =
         (landingElt ? this.idToCoords(landingElt.id) : undefined);
       if (cd) {
-        if (this.twoSquareMove)
+        if (V.TwoSquareMove)
           potentialMoves = this.getPotentialMove_s([x, y], [cd.x, cd.y]);
         else {
           potentialMoves =

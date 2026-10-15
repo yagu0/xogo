@@ -16,8 +16,13 @@ export default class FanoronaRules extends AbstractOnGridRules {
   get hasEnpassant() {
     return false;
   }
+
   static get HasKing() {
     return false;
+  }
+
+  static get TwoSquareMove() {
+    return true;
   }
 
   genRandInitBaseFen() {
@@ -131,10 +136,6 @@ export default class FanoronaRules extends AbstractOnGridRules {
     return ''; //never reached
   };
 
-
-// TODO: getPotentialMove_s() + pre-compute atLeastOneCapture() after each opponent move
-
-
   getPotentialMovesFrom([x, y], justCapt) {
     const oppCol = C.GetOppTurn(this.turn);
     const L = this.captures.length;
@@ -188,6 +189,24 @@ export default class FanoronaRules extends AbstractOnGridRules {
       }
     }
     return (!justCapt ? moves : false);
+  }
+
+  getPotentialMove_s([x1, y1], [x2, y2]) {
+    if (
+      Math.abs(x2 - x1) > 1 ||
+      Math.abs(y2 - y1) > 1 ||
+      this.board[x2][y2] != ""
+    ) {
+      return [];
+    }
+    // If canCapture but nothing behind or in front, invalid
+    const step = [x2 - x1, y2 - y1];
+    if (
+      this.canCapture &&
+      ( // TODO...........
+        this.onBoard(x1 - step[0], y1 - step[1]) &&
+    let moves = [];
+
   }
 
   atLeastOneCapture() {
